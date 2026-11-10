@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/souls/soul_gate_screen.gd" id="1_screen"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC.ttf" id="2_font"]
+
+[node name="SoulGate" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_font")
+script = ExtResource("1_screen")

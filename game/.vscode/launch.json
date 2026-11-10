@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "运行骨灰级钓手",
+      "type": "godot",
+      "request": "launch",
+      "project": "${workspaceFolder}"
+    }
+  ]
+}

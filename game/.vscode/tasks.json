@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "检查开发环境",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/tools/Check-Environment.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "导出 Windows",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/tools/Build.ps1", "-Target", "Windows"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "导出 Web",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/tools/Build.ps1", "-Target", "Web"],
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}

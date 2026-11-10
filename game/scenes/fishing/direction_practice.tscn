@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/fishing/direction_fishing_screen.gd" id="1_screen"]
+[ext_resource type="Script" path="res://scripts/fishing/direction_fishing.gd" id="2_logic"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC.ttf" id="3_font"]
+
+[node name="DirectionPractice" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_font")
+script = ExtResource("1_screen")
+
+[node name="DirectionFishing" type="Node" parent="."]
+script = ExtResource("2_logic")

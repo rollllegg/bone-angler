@@ -1,0 +1,34 @@
+{
+  "godot": {
+    "version": "4.7.2",
+    "template_folder": "4.7.2.stable",
+    "file": "Godot_v4.7.2-stable_win64.exe.zip",
+    "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip",
+    "sha256": "731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953",
+    "executable": "Godot_v4.7.2-stable_win64.exe"
+  },
+  "templates": {
+    "file": "Godot_v4.7.2-stable_export_templates.tpz",
+    "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz",
+    "sha256": "f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011"
+  },
+  "krita": {
+    "version": "5.3.4.1",
+    "file": "krita-x64-5.3.4.1.zip",
+    "url": "https://download.kde.org/stable/krita/5.3.4.1/krita-x64-5.3.4.1.zip",
+    "sha256": "eda810059a120171d30d4661c7684c73a8feb72b01ad5709531cbebe6b84d032"
+  },
+  "audacity": {
+    "version": "4.0.2",
+    "file": "audacity-win-4.0.2-x86_64.7z",
+    "url": "https://github.com/audacity/audacity/releases/download/Audacity-4.0.2/audacity-win-4.0.2-x86_64.7z",
+    "sha256": "6f375602254672b4f0db959e8b1e6fd46a97462aeab85b7ff21e1e9d9a54c5b3"
+  },
+  "vscode_extension": {
+    "version": "2.7.1",
+    "id": "geequlim.godot-tools",
+    "file": "godot-tools-2.7.1.vsix",
+    "url": "https://github.com/godotengine/godot-vscode-plugin/releases/download/2.7.1/godot-tools-2.7.1.vsix",
+    "sha256": "3734bfd42e51ada62ee72dab8746a3fee5edf4d83a0e4adc2e01749ee35e8e62"
+  }
+}

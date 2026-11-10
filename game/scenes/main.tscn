@@ -1,0 +1,72 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/fishing/fishing_practice.tscn" id="2_fishing"]
+[ext_resource type="PackedScene" path="res://scenes/rod/rod_practice.tscn" id="3_rod"]
+[ext_resource type="FontFile" path="res://assets/fonts/NotoSansSC.ttf" id="4_font"]
+[ext_resource type="PackedScene" path="res://scenes/fishing/direction_practice.tscn" id="5_direction"]
+[ext_resource type="PackedScene" path="res://scenes/souls/soul_gate.tscn" id="6_gate"]
+[ext_resource type="Script" path="res://scripts/souls/soul_session.gd" id="7_session"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="FishingPractice" parent="." instance=ExtResource("2_fishing")]
+layout_mode = 1
+
+[node name="RodPractice" parent="." instance=ExtResource("3_rod")]
+layout_mode = 1
+
+[node name="DirectionPractice" parent="." instance=ExtResource("5_direction")]
+layout_mode = 1
+
+[node name="SoulGate" parent="." instance=ExtResource("6_gate")]
+layout_mode = 1
+
+[node name="SoulSession" type="Node" parent="."]
+script = ExtResource("7_session")
+
+[node name="ModuleNav" type="HBoxContainer" parent="."]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -570.0
+offset_top = 24.0
+offset_right = -56.0
+offset_bottom = 58.0
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_constants/separation = 8
+
+[node name="Direction" type="Button" parent="ModuleNav"]
+custom_minimum_size = Vector2(124, 34)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 15
+text = "Q 冥河岸"
+
+[node name="Gate" type="Button" parent="ModuleNav"]
+custom_minimum_size = Vector2(138, 34)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 15
+text = "E 冥府大门"
+
+[node name="Rod" type="Button" parent="ModuleNav"]
+custom_minimum_size = Vector2(112, 34)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 15
+text = "组装 / 拆解"
+
+[node name="Fishing" type="Button" parent="ModuleNav"]
+custom_minimum_size = Vector2(112, 34)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 15
+text = "字母钓鱼"

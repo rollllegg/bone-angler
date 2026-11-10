@@ -1,0 +1,25 @@
+# Local tools, downloads and generated files
+.tools/
+.godot/
+build/
+**/.vscode/settings.json
+*.tmp
+*.log
+.env
+.env.local
+.env.*
+export_credentials.cfg
+
+# Local planning, private project instructions and unused concept references
+/*.md
+!/README.md
+/*.txt
+/.agents/
+/.codex/
+/game/art/source/
+/game/assets/SOURCES.md
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
