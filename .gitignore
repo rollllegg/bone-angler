@@ -9,6 +9,8 @@ build/
 .env.local
 .env.*
 export_credentials.cfg
+__pycache__/
+*.py[cod]
 
 # Local planning, private project instructions and unused concept references
 /*.md

@@ -24,6 +24,14 @@
     "url": "https://github.com/audacity/audacity/releases/download/Audacity-4.0.2/audacity-win-4.0.2-x86_64.7z",
     "sha256": "6f375602254672b4f0db959e8b1e6fd46a97462aeab85b7ff21e1e9d9a54c5b3"
   },
+  "perfect_pixel": {
+    "version": "0.1.4",
+    "repository": "https://github.com/theamusing/perfectPixel",
+    "revision": "72096de5cf1bff9102687c4f89af6f62c4273a86",
+    "file": "source.zip",
+    "url": "https://codeload.github.com/theamusing/perfectPixel/zip/72096de5cf1bff9102687c4f89af6f62c4273a86",
+    "sha256": "07f147e35f1dcfb4fdbce13612fdacd97d547823d0f7b58ebc24d534474a50a5"
+  },
   "vscode_extension": {
     "version": "2.7.1",
     "id": "geequlim.godot-tools",

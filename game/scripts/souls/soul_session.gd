@@ -8,13 +8,13 @@ signal soul_fed(soul_id: int, fish_index: int)
 signal soul_released(soul_id: int, reward: int)
 signal day_changed(day_number: int)
 
-const ATTRIBUTE_NAMES := ["智力", "魅力", "勇气"]
+const ATTRIBUTE_NAMES := ["智慧", "情感", "意志"]
 const ATTRIBUTE_COLORS := [Color("91ddad"), Color("80b9f0"), Color("f18888")]
 const DAILY_REQUIREMENTS := [Vector3i(3, 3, 3), Vector3i(4, 3, 4), Vector3i(3, 5, 4), Vector3i(5, 4, 3)]
 const SOUL_NAMES := ["迷路的旅人", "沉默的诗人", "疲惫的守卫", "年轻的学徒", "漂泊的歌者", "胆怯的骑士"]
 
-@export_range(0.1, 60.0, 0.1) var spawn_interval_min: float = 10.0
-@export_range(0.1, 60.0, 0.1) var spawn_interval_max: float = 15.0
+@export_range(0.1, 60.0, 0.1) var spawn_interval_min: float = 20.0
+@export_range(0.1, 60.0, 0.1) var spawn_interval_max: float = 25.0
 @export_range(10.0, 600.0, 1.0) var day_duration: float = 90.0
 @export_range(1, 1000) var release_reward: int = 10
 

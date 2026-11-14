@@ -19,7 +19,7 @@ func _run() -> void:
 	model.soul_released.connect(func(_id: int, reward: int) -> void: _payments.append(reward))
 	_check(model.inventory == [0, 0, 0] and model.coins == 0 and model.souls.is_empty(), "Session starts without free fish, souls or coins")
 	var initial_delay := model.spawn_remaining
-	_check(initial_delay >= 10.0 and initial_delay <= 15.0, "First arrival also waits a random ten to fifteen seconds")
+	_check(initial_delay >= 20.0 and initial_delay <= 25.0, "First arrival also waits a random twenty to twenty-five seconds")
 	model.advance(-2.0)
 	model.advance(initial_delay - 0.01)
 	_check(model.souls.is_empty(), "First soul cannot arrive before its sampled deadline")
@@ -45,7 +45,7 @@ func _run() -> void:
 	_check(model.release_soul(1) and model.coins == 10 and model.released_count == 1, "One admission pays ten coins")
 	_check(not model.release_soul(1) and _payments == [10] and model.coins == 10, "A removed soul cannot pay a second reward")
 	model.advance(30.0)
-	_check(model.souls.size() >= 2 and model.souls.size() <= 3 and _arrivals.size() == model.souls.size() + 1, "Long frames preserve arrivals within the slower ten-to-fifteen-second cadence")
+	_check(model.souls.size() == 1 and _arrivals.size() == model.souls.size() + 1, "A thirty-second advance produces one arrival at the twenty-to-twenty-five-second cadence")
 	for index in _arrivals.size():
 		_check(_arrivals[index] == index + 1, "Every arriving soul retains a unique sequential ID")
 	for soul in model.souls:
@@ -77,7 +77,7 @@ func _run() -> void:
 	for index in 16:
 		var interval := cadence.spawn_remaining
 		intervals.append(interval)
-		_check(interval >= 10.0 and interval <= 15.0, "Every new arrival interval stays within ten to fifteen seconds")
+		_check(interval >= 20.0 and interval <= 25.0, "Every new arrival interval stays within twenty to twenty-five seconds")
 		var count := cadence.souls.size()
 		cadence.advance(interval - 0.01)
 		_check(cadence.souls.size() == count, "An arrival never fires before its random deadline")
@@ -110,7 +110,7 @@ func _test_live_loop() -> void:
 	_check(river.visible, "Key repeats, shortcuts and releases do not switch location")
 	_send_key(KEY_E)
 	_check(gate.visible and main.current_module == "Gate", "Physical E opens the underworld gate")
-	_check("10～15" in gate._soul_note.text, "Empty gate explains the slower ten-to-fifteen-second cadence")
+	_check("20～25" in gate._soul_note.text, "Empty gate explains the twenty-to-twenty-five-second cadence")
 	await _capture("01-empty-gate")
 	_send_key(KEY_SPACE)
 	_send_key(KEY_1)

@@ -1,0 +1,147 @@
+{
+  "river": {
+    "file": "river.png",
+    "source": "art/source/processed/fishing-perfect-v1/acheron-fishing-background-v2.perfect.png",
+    "sha256": "7f0c79fe68b27b23372ead51deb5d4705c5821ab5404bf5b653e487261719496",
+    "size": [
+      405,
+      243
+    ],
+    "mode": "RGB",
+    "alpha_values": null
+  },
+  "shop": {
+    "file": "shop.png",
+    "source": "art/source/processed/soul-reception-v1/soul-reception-background-v1.perfect.png",
+    "sha256": "f702eb956e7bd7555aebd19634eecc546fec513f41e9ecf6f6b9a4ee5ebb0855",
+    "size": [
+      405,
+      243
+    ],
+    "mode": "RGB",
+    "alpha_values": null
+  },
+  "rod_idle": {
+    "file": "rod_idle.png",
+    "source": "art/source/processed/fishing-idle-no-line-v1/rod-idle-no-line.perfect.png",
+    "sha256": "cc2383d17c96ea56b148326689210048ef362db24201eedcd4692424701ad5a4",
+    "size": [
+      405,
+      243
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "cover": {
+    "file": "cover.png",
+    "source": "art/source/concepts/game-cover-river-pixel-v3.perfect.png",
+    "sha256": "35cb7c8fc9da4a87e796b411140ea5768b12ba1c7b8c750da94a485c9ce585e0",
+    "size": [
+      418,
+      235
+    ],
+    "mode": "RGB",
+    "alpha_values": null
+  },
+  "cast_01": {
+    "file": "cast_01.png",
+    "source": "art/source/processed/fishing-perfect-v1/cast-01.perfect.png",
+    "sha256": "830f8a7e07f4a33a2481d43635e762efba0e2faaef0e001996e519a00f1a6187",
+    "size": [
+      405,
+      243
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "cast_02": {
+    "file": "cast_02.png",
+    "source": "art/source/processed/fishing-perfect-v1/cast-02.perfect.png",
+    "sha256": "924765412076c190c1bc5fc0df731fdc433d94f383f8036e122bf721c67d0aaf",
+    "size": [
+      405,
+      243
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "cast_03": {
+    "file": "cast_03.png",
+    "source": "art/source/processed/fishing-perfect-v1/cast-03.perfect.png",
+    "sha256": "676e775801e1a1884c00180c917cd4341535abb33519a589a1d12ad0879229aa",
+    "size": [
+      405,
+      243
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "guest_front": {
+    "file": "guest_front.png",
+    "source": "art/source/characters/soul-guest-demo-v1/guest_front.perfect.png",
+    "sha256": "b371a89be82b7aad7d1b5e3a62ff62ec46b9ff554220d818c780b08953fc2321",
+    "size": [
+      48,
+      64
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "guest_turn": {
+    "file": "guest_turn.png",
+    "source": "art/source/characters/soul-guest-demo-v1/guest_turn.perfect.png",
+    "sha256": "594b2f0d9c4f8f61f160b4069ac5cc016fb4692078e9c86b01cd5b9e5c724f22",
+    "size": [
+      48,
+      64
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "guest_back_01": {
+    "file": "guest_back_01.png",
+    "source": "art/source/characters/soul-guest-demo-v1/guest_back_01.perfect.png",
+    "sha256": "2803215b54beb1f0b911cc2a49584e085870c12e30da1a01f018034551668585",
+    "size": [
+      48,
+      64
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  },
+  "guest_back_02": {
+    "file": "guest_back_02.png",
+    "source": "art/source/characters/soul-guest-demo-v1/guest_back_02.perfect.png",
+    "sha256": "46bec29caeddbba1d3adbfe8ad8de3ce917479fa9f57c74323e9f18740c319d2",
+    "size": [
+      48,
+      64
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ]
+  }
+}
