@@ -10,6 +10,14 @@
     "mode": "RGB",
     "alpha_values": null
   },
+  "soul_ferry": {
+    "file": "soul_ferry.png",
+    "source": "art/source/concepts/acheron-ferry-concept-v4-64.png",
+    "sha256": "7b0509bf3abb7877e884107e342c896e495e0ffb47143923eb801f6dc1a2269a",
+    "size": [64, 64],
+    "mode": "RGBA",
+    "alpha_values": [0, 255]
+  },
   "shop": {
     "file": "shop.png",
     "source": "art/source/processed/soul-reception-v1/soul-reception-background-v1.perfect.png",
@@ -142,6 +150,30 @@
     "alpha_values": [
       0,
       255
+    ]
+  },
+  "river_ambient": {
+    "file": "river_ambient.png",
+    "source": "art/source/animations/river-ambient-v1/frames/river_*.perfect.png",
+    "base": "river.png",
+    "base_sha256": "7f0c79fe68b27b23372ead51deb5d4705c5821ab5404bf5b653e487261719496",
+    "sha256": "0c8cfa6046d6986af74998766a34a8d03742eacbcdb94d83caa53fdc327ce4a9",
+    "size": [
+      3240,
+      954
+    ],
+    "mode": "RGB",
+    "alpha_values": null,
+    "frame_count": 48,
+    "frames_per_second": 12,
+    "columns": 8,
+    "frame_size": [
+      405,
+      159
+    ],
+    "frame_offset": [
+      0,
+      77
     ]
   }
 }

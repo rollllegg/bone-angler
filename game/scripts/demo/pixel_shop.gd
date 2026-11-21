@@ -15,21 +15,24 @@ const WALK_DURATION := 4.0
 const FADE_DURATION := 0.45
 const START_SCALE := 1.45
 
-var session: SoulSession
+const Session := preload("res://scripts/systems/playtest_session.gd")
+
+var session: Session
 var active: bool = false
 var selected_id: int = -1
 var departing: bool = false
 var departure_elapsed: float = 0.0
 var departure_soul: Dictionary = {}
-var satisfied_elapsed: float = 0.0
+var departure_day := 1
+var departure_requirements: Array[Vector3i] = []
 var fed_flash: float = 0.0
 var clock: float = 0.0
 
 
-func bind(value: SoulSession) -> void:
+func bind(value: Session) -> void:
 	session = value
 	session.state_changed.connect(_sync_selection)
-	session.soul_fed.connect(_on_fed)
+	session.soul_served.connect(_on_served)
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_sync_selection()
 
@@ -37,7 +40,6 @@ func bind(value: SoulSession) -> void:
 func _sync_selection() -> void:
 	if not departing and session.get_soul(selected_id).is_empty():
 		selected_id = -1 if session.souls.is_empty() else int(session.souls[0]["id"])
-		satisfied_elapsed = 0.0
 	presentation_changed.emit()
 	queue_redraw()
 
@@ -46,21 +48,14 @@ func select_guest(id: int) -> void:
 	if departing or session.paused or session.get_soul(id).is_empty():
 		return
 	selected_id = id
-	satisfied_elapsed = 0.0
+	fed_flash = 0.0
 	presentation_changed.emit()
 	queue_redraw()
 
 
-func feed(index: int) -> bool:
-	if departing:
-		return false
-	return session.feed_fish(selected_id, index)
-
-
-func _on_fed(id: int, _fish_index: int) -> void:
+func _on_served(id: int) -> void:
 	if id == selected_id:
 		fed_flash = 0.65
-		satisfied_elapsed = 0.0
 		presentation_changed.emit()
 
 
@@ -68,6 +63,8 @@ func begin_departure() -> bool:
 	if departing or session.paused or not session.can_release(selected_id):
 		return false
 	departure_soul = session.get_soul(selected_id).duplicate(true)
+	departure_day = session.day
+	departure_requirements = session.requirements.duplicate()
 	departing = true
 	departure_elapsed = 0.0
 	if not session.release_soul(selected_id):
@@ -80,7 +77,7 @@ func begin_departure() -> bool:
 
 
 func advance_presentation(delta: float) -> void:
-	if not active or session == null or session.paused or delta <= 0.0:
+	if not active or session == null or session.is_time_suspended() or delta <= 0.0:
 		return
 	clock += delta
 	fed_flash = maxf(fed_flash - delta, 0.0)
@@ -90,10 +87,6 @@ func advance_presentation(delta: float) -> void:
 			departing = false
 			departure_soul = {}
 			_sync_selection()
-	elif session.can_release(selected_id):
-		satisfied_elapsed += delta
-		if satisfied_elapsed >= 0.75:
-			begin_departure()
 	queue_redraw()
 
 

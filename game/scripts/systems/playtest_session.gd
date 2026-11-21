@@ -1,0 +1,405 @@
+extends Node
+
+signal state_changed
+signal soul_served(id: int)
+
+const Data := preload("res://scripts/systems/playtest_data.gd")
+const DAY_COUNT := 5
+const GUESTS_PER_DAY := 6
+const OLD_SHIFT_TOTAL := 12
+const STAT_MAX := 10
+const STAT_CEILING := Vector3i.ONE * STAT_MAX
+const STAT_ORDERS := [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
+const DAY_FOUR_BANDS := [Vector2i(4, 7), Vector2i(5, 8), Vector2i(6, 9)]
+const DAY_FIVE_BANDS := [Vector2i(4, 7), Vector2i(6, 8), Vector2i(7, 9)]
+const LEGACY_REQUIREMENTS: Array[Vector3i] = [Vector3i(7, 7, 7), Vector3i(9, 9, 9)]
+const STARTER_RAISE_FISH := [0, 1, Data.LANTERN]
+const STARTER_LOWER_FISH := [5, 6, 7]
+const HIGH_STAT_GUESTS := [4, 3, 7]
+
+var catches: Array[Dictionary] = []
+var essences: Array[int] = []
+var potions: Array[Dictionary] = []
+var souls: Array[Dictionary] = []
+var concentrate := 0
+var recovered_bones := 0
+var finger_bones := 0
+var released_count := 0
+var day := 1
+var requirements: Array[Vector3i] = [Vector3i.ZERO, STAT_CEILING]
+var coins := Data.STARTING_COINS
+var last_payout := 0
+var _first_services: Dictionary = {}
+var spawn_remaining := 0.0
+var paused := false
+var choosing := false
+var active := false
+var _arrived := 0
+var _day_guests: Array[Vector2i] = []
+var _day_arrived := 0
+var _next_item_id := 1
+var _rng := RandomNumberGenerator.new()
+
+
+func _ready() -> void:
+	_rng.randomize()
+	essences.resize(Data.FISH.size())
+	essences.fill(0)
+	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+
+
+func _process(delta: float) -> void:
+	advance(delta)
+
+
+func is_time_suspended() -> bool:
+	return paused or choosing
+
+
+func start_shift() -> void:
+	_open_day(1)
+	active = true
+
+
+func has_more_arrivals() -> bool:
+	return _day_arrived < _day_guests.size()
+
+
+func is_complete() -> bool:
+	return day == DAY_COUNT and souls.is_empty() and not has_more_arrivals()
+
+
+func total_guests() -> int:
+	var remaining := souls.size() + _day_guests.size() - _day_arrived + (DAY_COUNT - day) * GUESTS_PER_DAY
+	return mini(Data.SOULS.size(), released_count + remaining)
+
+
+func advance(delta: float) -> void:
+	if not active or is_time_suspended() or not has_more_arrivals() or delta <= 0.0:
+		return
+	spawn_remaining -= delta
+	var arrived := false
+	while spawn_remaining <= 0.0 and has_more_arrivals():
+		var guest := _day_guests[_day_arrived]
+		var entry: Array = Data.SOULS[guest.x]
+		var stats: Vector3i = entry[1]
+		if guest.y >= 0:
+			stats = _starter_stats(stats, guest.y)
+		_day_arrived += 1
+		_arrived += 1
+		souls.append({
+			"id": _arrived, "case_id": guest.x, "name": entry[0], "stats": stats,
+			"before": stats, "served": false, "fee": service_fee(stats),
+		})
+		spawn_remaining += _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+		arrived = true
+	if arrived:
+		state_changed.emit()
+
+
+static func roll_requirements(number: int, rng: RandomNumberGenerator) -> Array[Vector3i]:
+	var order: Array = STAT_ORDERS[rng.randi_range(0, STAT_ORDERS.size() - 1)]
+	var lower := Vector3i.ZERO
+	var upper := STAT_CEILING
+	match number:
+		1:
+			lower[order[0]] = 7
+			lower[order[1]] = 7
+		2:
+			lower[order[0]] = rng.randi_range(6, 7)
+			upper[order[1]] = rng.randi_range(8, 9)
+		3:
+			lower[order[0]] = rng.randi_range(6, 8)
+			lower[order[1]] = rng.randi_range(6, 8)
+			upper[order[2]] = rng.randi_range(7, 9)
+		_:
+			var bands: Array = DAY_FOUR_BANDS if number == 4 else DAY_FIVE_BANDS
+			for index in 3:
+				lower[order[index]] = bands[index].x
+				upper[order[index]] = bands[index].y
+	return [lower, upper]
+
+
+func _open_day(number: int) -> void:
+	day = number
+	requirements = roll_requirements(day, _rng)
+	_day_guests.clear()
+	_day_arrived = 0
+	_fill_day_roster()
+
+
+func _fill_day_roster() -> void:
+	var scheduled := _day_guests.map(func(guest: Vector2i) -> int: return guest.x)
+	var available := Data.SOUL_ORDER.filter(func(case_id: int) -> bool:
+		return not _first_services.has(case_id) and not scheduled.has(case_id)
+	)
+	var raise_axes: Array[int] = []
+	if day <= 2:
+		for axis in [Data.Attribute.EMOTION, Data.Attribute.WILL, Data.Attribute.WISDOM]:
+			if requirements[0][axis] > 0:
+				raise_axes.append(axis)
+		if scheduled.is_empty():
+			for axis in raise_axes:
+				_schedule_starter(available, axis, axis)
+			if day == 2:
+				for axis in 3:
+					if requirements[1][axis] < STAT_MAX:
+						_schedule_starter(available, HIGH_STAT_GUESTS[axis], axis)
+	var seats := maxi(0, GUESTS_PER_DAY - _day_guests.size())
+	for index in mini(seats, available.size()):
+		# Extra guests on the first two days can still be served with one shallow-water dose.
+		var focus := -1 if raise_axes.is_empty() else raise_axes[index % raise_axes.size()]
+		_day_guests.append(Vector2i(available[index], focus))
+
+
+func _schedule_starter(available: Array, preferred: int, axis: int) -> void:
+	if available.is_empty():
+		return
+	var index := available.find(preferred)
+	var case_id: int = available.pop_at(maxi(0, index))
+	_day_guests.append(Vector2i(case_id, axis))
+
+
+func _starter_stats(stats: Vector3i, axis: int) -> Vector3i:
+	var lower := requirements[0]
+	var upper := requirements[1]
+	var raises := lower[axis] > 0
+	var fish: int = STARTER_RAISE_FISH[axis] if raises else STARTER_LOWER_FISH[axis]
+	var effect: Vector3i = Data.FISH[fish].effect
+	# Keep the other required attributes in bounds both before and after one dose.
+	var safe_low := lower.max(lower - effect)
+	var safe_high := upper.min(upper - effect)
+	for index in 3:
+		if lower[index] == 0:
+			safe_low[index] = 0
+		if upper[index] == STAT_MAX:
+			safe_high[index] = STAT_MAX
+	var starter := stats.clamp(safe_low, safe_high)
+	starter[axis] = maxi(0, lower[axis] - effect[axis]) if raises else mini(STAT_MAX, upper[axis] - effect[axis])
+	return starter
+
+
+func save_day() -> Dictionary:
+	var bounds: Array = []
+	for limit in requirements:
+		bounds.append([limit.x, limit.y, limit.z])
+	var guests: Array = []
+	for guest in _day_guests:
+		guests.append([guest.x, guest.y])
+	return {"number": day, "bounds": bounds, "guests": guests, "arrivals": _day_arrived, "daily_quota": GUESTS_PER_DAY}
+
+
+func restore_day(saved: Dictionary) -> void:
+	if saved.is_empty():
+		day = mini(DAY_COUNT, 1 + floori(float(released_count) / GUESTS_PER_DAY))
+		if souls.is_empty() and released_count < OLD_SHIFT_TOTAL:
+			_open_day(day)
+			return
+		# Unscheduled legacy queues keep their original admission terms.
+		day = DAY_COUNT if souls.is_empty() else ceili(float(released_count + souls.size()) / GUESTS_PER_DAY)
+		requirements = LEGACY_REQUIREMENTS.duplicate()
+		_day_guests.clear()
+		for soul in souls:
+			_day_guests.append(Vector2i(soul.case_id, -1))
+		_day_arrived = _day_guests.size()
+		return
+	day = int(saved.number)
+	var low: Array = saved.bounds[0]
+	var high: Array = saved.bounds[1]
+	requirements = [Vector3i(int(low[0]), int(low[1]), int(low[2])), Vector3i(int(high[0]), int(high[1]), int(high[2]))]
+	_day_guests.clear()
+	for guest in saved.guests:
+		_day_guests.append(Vector2i(int(guest[0]), int(guest[1])))
+	_day_arrived = int(saved.arrivals)
+	if int(saved.get("daily_quota", 0)) < GUESTS_PER_DAY and not is_complete():
+		_fill_day_roster()
+
+
+func get_soul(id: int) -> Dictionary:
+	for soul in souls:
+		if soul.id == id:
+			return soul
+	return {}
+
+
+func can_release(id: int) -> bool:
+	var soul := get_soul(id)
+	return not soul.is_empty() and is_eligible(soul.stats)
+
+
+func is_eligible(stats: Vector3i) -> bool:
+	return meets_requirements(stats, requirements)
+
+
+static func meets_requirements(stats: Vector3i, bounds: Array[Vector3i]) -> bool:
+	return stats == stats.clamp(bounds[0], bounds[1])
+
+
+func service_fee(stats: Vector3i) -> int:
+	var adjustment := (stats - stats.clamp(requirements[0], requirements[1])).abs()
+	var total := adjustment.x + adjustment.y + adjustment.z
+	if total >= 8:
+		return 120
+	if total >= 5:
+		return 90
+	if total >= 3:
+		return 60
+	return 40 if total > 0 else 0
+
+
+func first_service(soul: Dictionary) -> bool:
+	return not _first_services.has(soul.case_id)
+
+
+func spend(cost: int) -> bool:
+	if not active or paused or cost < 0 or coins < cost:
+		return false
+	coins -= cost
+	return true
+
+
+func release_soul(id: int) -> bool:
+	if not active or paused or not can_release(id):
+		return false
+	var soul := get_soul(id)
+	var extra := int(first_service(soul))
+	# The economy sheet supplies the boatman as the first commission example.
+	var stats: Vector3i = soul.stats
+	if int(soul.case_id) == 2 and stats.z == 9:
+		extra += 1
+	last_payout = int(soul.fee) + int(soul.fee * 0.20) * extra
+	coins += last_payout
+	_first_services[soul.case_id] = true
+	souls.erase(soul)
+	released_count += 1
+	if souls.is_empty() and not has_more_arrivals() and not is_complete():
+		_open_day(day + 1)
+		spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	state_changed.emit()
+	return true
+
+
+func record_catch(result: Dictionary) -> void:
+	var catch := result.duplicate()
+	catch["id"] = _allocate_item()
+	catches.append(catch)
+	finger_bones += int(catch.get("finger_bones", 0))
+	state_changed.emit()
+
+
+func record_bone() -> void:
+	recovered_bones += 1
+	state_changed.emit()
+
+
+func refine(id: int) -> bool:
+	if not active or paused:
+		return false
+	for catch in catches:
+		if catch.id != id:
+			continue
+		var species: int = catch.species
+		essences[species] += yield_for(catch)
+		if species == Data.LANTERN and catch.size == 0:
+			concentrate += 1
+		catches.erase(catch)
+		state_changed.emit()
+		return true
+	return false
+
+
+static func yield_for(catch: Dictionary) -> int:
+	return 2 if catch.species == Data.VARIANT else int(catch.size) + 1
+
+
+func can_mix(first: int, second: int) -> bool:
+	if Data.recipe(first, second).is_empty():
+		return false
+	return essences[first] >= (2 if first == second else 1) and essences[second] > 0
+
+
+func mix(first: int, second: int) -> bool:
+	if not active or paused or not can_mix(first, second):
+		return false
+	var recipe := Data.recipe(first, second)
+	essences[first] -= 1
+	essences[second] -= 1
+	_add_potion(recipe.id, recipe.name, recipe.effect, -1, 0)
+	state_changed.emit()
+	return true
+
+
+func get_potion(id: int) -> Dictionary:
+	for potion in potions:
+		if potion.id == id:
+			return potion
+	return {}
+
+
+func dose(essence: bool, id: int) -> Dictionary:
+	if not essence:
+		return get_potion(id)
+	if id < 0 or id >= essences.size() or essences[id] == 0:
+		return {}
+	var fish: Dictionary = Data.FISH[id]
+	return {"name": fish.essence, "effect": fish.effect, "kind": fish.id, "attribute": -1}
+
+
+func preview(id: int, essence: bool, item: int) -> Dictionary:
+	var soul := get_soul(id)
+	var medicine := dose(essence, item)
+	if soul.is_empty() or medicine.is_empty():
+		return {}
+	var before: Vector3i = soul.stats
+	var effect: Vector3i = medicine.effect
+	var after := (before + effect).clamp(Vector3i.ZERO, STAT_CEILING)
+	return {"name": medicine.name, "before": before, "after": after, "effect": effect}
+
+
+func serve(id: int, essence: bool, item: int) -> bool:
+	if not active or paused:
+		return false
+	var change := preview(id, essence, item)
+	if change.is_empty():
+		return false
+	if essence:
+		essences[item] -= 1
+	else:
+		potions.erase(get_potion(item))
+	var soul := get_soul(id)
+	soul.before = change.before
+	soul.stats = change.after
+	soul.served = true
+	soul_served.emit(id)
+	state_changed.emit()
+	return true
+
+
+func strengthen(essence: bool, item: int, attribute: int, amount: int) -> bool:
+	if not active or paused or concentrate <= 0 or attribute < 0 or attribute >= 3 or absi(amount) != 1:
+		return false
+	var medicine := dose(essence, item)
+	if medicine.is_empty() or medicine.attribute >= 0:
+		return false
+	var effect: Vector3i = medicine.effect
+	effect[attribute] += amount
+	concentrate -= 1
+	if essence:
+		essences[item] -= 1
+		_add_potion(medicine.kind, medicine.name, effect, attribute, amount)
+	else:
+		medicine.effect = effect
+		medicine.attribute = attribute
+		medicine.adjustment = amount
+	state_changed.emit()
+	return true
+
+
+func _add_potion(kind: String, title: String, effect: Vector3i, attribute: int, adjustment: int) -> void:
+	potions.append({"id": _allocate_item(), "kind": kind, "name": title, "effect": effect, "attribute": attribute, "adjustment": adjustment})
+
+
+func _allocate_item() -> int:
+	var id := _next_item_id
+	_next_item_id += 1
+	return id

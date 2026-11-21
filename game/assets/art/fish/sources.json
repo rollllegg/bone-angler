@@ -1,0 +1,170 @@
+{
+  "fish_01": {
+    "file": "fish_01.png",
+    "source": "art/source/fish/fish_01.perfect.png",
+    "size": [
+      93,
+      35
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "4cfb847d031f2351a2a971ca6b5ba451e74a657c923e2c07c7ce38898bdb9195"
+  },
+  "fish_01_variant": {
+    "file": "fish_01_variant.png",
+    "source": "art/source/fish/fish_01_variant.perfect.png",
+    "size": [
+      303,
+      160
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "75353e3a849f896ab8af785696128d5f7467da446d45651479ba199f4e5eef33"
+  },
+  "fish_02": {
+    "file": "fish_02.png",
+    "source": "art/source/fish/fish_02.perfect.png",
+    "size": [
+      179,
+      111
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "4470ca05a943b41cc795d9b256911f3e9236d81a8b48eff4a9ca2b6911513637"
+  },
+  "fish_03": {
+    "file": "fish_03.png",
+    "source": "art/source/fish/fish_03.perfect.png",
+    "size": [
+      207,
+      113
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "f978ef4d8c3988d73e1e054e3e27e61c1e055dd69e99be697d9df6346e41ea81"
+  },
+  "fish_03_condensed": {
+    "file": "fish_03_condensed.png",
+    "source": "art/source/fish/fish_03_condensed.perfect.png",
+    "size": [
+      123,
+      68
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "6f11ed6943019328a39c5677dc76190270f14a30829c7a03cb6442f69ac5ccb1"
+  },
+  "fish_04": {
+    "file": "fish_04.png",
+    "source": "art/source/fish/fish_04.perfect.png",
+    "size": [
+      234,
+      94
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "cbd78ec4a4c2913b0561b72464bdffd3fdd7520e4190f5fa1644f7ee71dd6cc7"
+  },
+  "fish_05": {
+    "file": "fish_05.png",
+    "source": "art/source/fish/fish_05.perfect.png",
+    "size": [
+      298,
+      100
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "812ab89efc6a33f788596484ba8afd9b88d80ab7d4614ae918a3c33aed6d922d"
+  },
+  "fish_06": {
+    "file": "fish_06.png",
+    "source": "art/source/fish/fish_06.perfect.png",
+    "size": [
+      281,
+      91
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "cf6751a42bb446b6595c1d542e818f4b56ddc024a33d43602b7b32c15636edce"
+  },
+  "fish_07": {
+    "file": "fish_07.png",
+    "source": "art/source/fish/fish_07.perfect.png",
+    "size": [
+      227,
+      68
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "86cc8c7ebaef742ef94056aeaff3a0268f032119c93943503a303ccde234b525"
+  },
+  "fish_08": {
+    "file": "fish_08.png",
+    "source": "art/source/fish/fish_08.perfect.png",
+    "size": [
+      246,
+      208
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "d52d4d454f80e65b314bc319c95471e8961d8485fba3f53631ee52c35259a8d3"
+  },
+  "fish_09": {
+    "file": "fish_09.png",
+    "source": "art/source/fish/fish_09.perfect.png",
+    "size": [
+      235,
+      122
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "9ec807ea880be2f117e448d478aea8f31973a2709d38a23dfcd16cf0e5cda2d7"
+  },
+  "fish_10": {
+    "file": "fish_10.png",
+    "source": "art/source/fish/fish_10.perfect.png",
+    "size": [
+      123,
+      45
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "00918238ddd32ffce8d3617a042dad368d0f84ee3eaf420d1e5de3b65cc6cd99"
+  }
+}
