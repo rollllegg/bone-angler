@@ -26,11 +26,13 @@ const DEVICE_DESCS := [
 	"新增一根满耐久基础握柄，可在河岸切换备用",
 	"自动挂在竿体上，扩大拉鱼判定窗口 +10%",
 ]
+const QUANTITIES := [1, 5, 10]
 
 var fishing: Fishing
 var active_filter: int = Filter.ALL
 var selected_key: String = "device:1"
 var selected_quantity: int = 1
+var browsing_wares := false
 
 var filter_buttons: Array[Button] = []
 var ware_buttons: Array[Button] = []
@@ -39,6 +41,7 @@ var action_button: Button
 var _filter_pointer: Label
 var _list_title: Label
 var _list_watermark: Label
+var _ware_scroll: ScrollContainer
 var _ware_list: VBoxContainer
 var _wallet_value: Label
 
@@ -59,6 +62,7 @@ var _rig_lines: Array[Label] = []
 var _rig_mini_bar: Control
 
 var _status: Label
+var _controls_hint: Label
 var _catalog: Array[Dictionary] = []
 
 
@@ -78,7 +82,9 @@ func setup(value: Fishing) -> void:
 	bot_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bot_bar.add_theme_stylebox_override("panel", _translucent_box(Color("12101e", 0.92), Color("9a7750")))
 	add_child(bot_bar)
-	_status = UI.label(self, "在左侧筛选商品类别，点击列表中的商品即可预览并购买。", Rect2(50, 912, 1520, 36), 20, UI.CREAM)
+	_controls_hint = UI.label(self, "", Rect2(50, 912, 720, 36), 18, UI.CREAM)
+	_status = UI.label(self, "", Rect2(780, 912, 790, 36), 18, UI.GOLD)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	reset_to_all()
 
@@ -87,20 +93,51 @@ func reset_to_all() -> void:
 	active_filter = Filter.ALL
 	selected_key = "device:1"
 	selected_quantity = 1
+	browsing_wares = false
+	_ware_scroll.scroll_vertical = 0
+	_status.text = ""
 	refresh()
+
+
+func handle_key(code: Key) -> bool:
+	match code:
+		KEY_W, KEY_S:
+			var step := 1 if code == KEY_S else -1
+			if browsing_wares:
+				var items := _filtered_catalog()
+				for i in items.size():
+					if items[i]["key"] == selected_key:
+						selected_key = items[posmod(i + step, items.size())]["key"]
+						refresh()
+						break
+			else:
+				select_filter(posmod(active_filter + step, FILTER_META.size()))
+		KEY_SPACE:
+			if browsing_wares:
+				UI.activate(action_button)
+			else:
+				browsing_wares = true
+				refresh()
+		KEY_A, KEY_D:
+			if not browsing_wares or not _qty_row.visible:
+				return false
+			var step := 1 if code == KEY_D else -1
+			var index := posmod(QUANTITIES.find(selected_quantity) + step, QUANTITIES.size())
+			UI.activate(_qty_buttons[index])
+		KEY_C:
+			if not browsing_wares:
+				return false
+			browsing_wares = false
+			refresh()
+		_:
+			return false
+	return true
 
 
 func select_filter(filter_id: int) -> void:
 	active_filter = filter_id
-	_rebuild_catalog()
-	var visible_items := _filtered_catalog()
-	var found := false
-	for item in visible_items:
-		if str(item["key"]) == selected_key:
-			found = true
-			break
-	if not found and not visible_items.is_empty():
-		selected_key = str(visible_items[0]["key"])
+	browsing_wares = false
+	_ware_scroll.scroll_vertical = 0
 	refresh()
 
 
@@ -193,10 +230,10 @@ func _build_center_list() -> void:
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(line)
 
-	var scroll := UI.create_scroll(self, Rect2(176, 214, 880, 666))
+	_ware_scroll = UI.create_scroll(self, Rect2(176, 214, 880, 666))
 	_ware_list = VBoxContainer.new()
 	_ware_list.add_theme_constant_override("separation", 4)
-	scroll.add_child(_ware_list)
+	_ware_scroll.add_child(_ware_list)
 
 
 func _build_right_column() -> void:
@@ -227,9 +264,8 @@ func _build_right_column() -> void:
 	_qty_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_qty_row)
 	UI.label(_qty_row, "数量", Rect2(4, 8, 66, 40), 19, UI.MUTED)
-	var qtys := [1, 5, 10]
-	for i in qtys.size():
-		var qty: int = qtys[i]
+	for i in QUANTITIES.size():
+		var qty: int = QUANTITIES[i]
 		var qbtn := Button.new()
 		qbtn.position = Vector2(76 + i * 132, 2)
 		qbtn.size = Vector2(122, 50)
@@ -414,6 +450,7 @@ func refresh() -> void:
 	_wallet_value.text = str(money)
 
 	# Update left rail filter tabs
+	_filter_pointer.visible = not browsing_wares
 	for i in FILTER_META.size():
 		var meta: Dictionary = FILTER_META[i]
 		var is_active := int(meta["id"]) == active_filter
@@ -426,8 +463,7 @@ func refresh() -> void:
 	# Rebuild center ware rows
 	var items := _filtered_catalog()
 	var selected := _find_selected(items)
-	for child in _ware_list.get_children():
-		child.queue_free()
+	UI.clear_cards(_ware_list)
 	ware_buttons.clear()
 
 	for item in items:
@@ -448,13 +484,16 @@ func refresh() -> void:
 		row.add_theme_stylebox_override("pressed", _translucent_box(Color("4a3d5c", 0.95), UI.GOLD, 2))
 		row.pressed.connect(func() -> void:
 			selected_key = key
+			browsing_wares = true
 			refresh()
 		)
 		_ware_list.add_child(row)
 		ware_buttons.append(row)
 
-		if is_sel:
+		if is_sel and browsing_wares:
 			UI.label(row, "▶", Rect2(8, 8, 22, 32), 16, UI.GOLD)
+			if visible:
+				UI.reveal(_ware_scroll, row)
 
 		# Small category pixel icon on every row!
 		var icon_rect := UI.icon_rect(row, item["icon"], Rect2(32, 10, 28, 28))
@@ -479,9 +518,8 @@ func refresh() -> void:
 		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	# Update Right Checkout Panel
-	var qtys := [1, 5, 10]
-	for i in qtys.size():
-		UI.style_slot_button(_qty_buttons[i], qtys[i] == selected_quantity, false)
+	for i in QUANTITIES.size():
+		UI.style_slot_button(_qty_buttons[i], QUANTITIES[i] == selected_quantity, false)
 
 	if not selected.is_empty():
 		var kind := str(selected["kind"])
@@ -514,6 +552,11 @@ func refresh() -> void:
 		action_button.disabled = not can_act
 	else:
 		action_button.disabled = true
+	_controls_hint.text = "W / S 选类别　空格 确认　C 返回河岸"
+	if browsing_wares:
+		_controls_hint.text = "W / S 选商品　空格 购买／维修　C 返回类别"
+		if _qty_row.visible:
+			_controls_hint.text += "　A / D 数量"
 
 	# Update Right-Bottom Current Rig Summary
 	_rig_lines[0].text = "竿体：%s" % Data.RODS[fishing.rod]

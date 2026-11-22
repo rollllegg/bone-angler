@@ -2,7 +2,7 @@ extends RefCounted
 ## Fishing, QTE and potion configurations from the Feishu playtest specifications.
 
 enum Attribute { WISDOM, EMOTION, WILL }
-enum Bait { DEFAULT, SMALL, NORMAL, LARGE, WISDOM, EMOTION, WILL, FOOLISHNESS, HATRED, DAZE, VARIANT, BONE }
+enum Bait { DEFAULT, WISDOM, EMOTION, WILL, FOOLISHNESS, HATRED, DAZE, VARIANT, BONE }
 
 const FISH := [
 	{"id": "fish_01", "name": "灰鳞鱼", "essence": "灰鳞原液", "effect": Vector3i(1, 0, 1), "primary_stat": Attribute.WISDOM, "cm": Vector2(2, 6), "water": [25, 0], "tier": 0},
@@ -15,22 +15,23 @@ const FISH := [
 	{"id": "fish_08", "name": "回声鳊", "essence": "回声原液", "effect": Vector3i(-1, 1, -2), "primary_stat": Attribute.WILL, "cm": Vector2(22, 34), "water": [5, 15], "tier": 1},
 	{"id": "fish_09", "name": "镜骨鲈", "essence": "镜骨原液", "effect": Vector3i(2, 0, 1), "primary_stat": Attribute.WISDOM, "cm": Vector2(45, 65), "water": [0, 10], "tier": 1},
 	{"id": "fish_10", "name": "负碑鳢", "essence": "负碑原液", "effect": Vector3i(3, 1, -1), "primary_stat": Attribute.WISDOM, "cm": Vector2(95, 130), "water": [0, 5], "tier": 2},
+	# Fish indices are saved in catches and essence inventories.
 	{"id": "fish_01_variant", "name": "巨刺灰鳞鱼", "essence": "巨刺原液", "effect": Vector3i(5, 0, -2), "cm": Vector2(30, 38), "water": [0, 0], "tier": -1},
+	{"id": "fish_11", "name": "静鳍鳅", "essence": "静鳍原液", "effect": Vector3i(0, 0, -1), "primary_stat": Attribute.WILL, "cm": Vector2(10, 18), "water": [15, 5], "tier": 0},
 ]
-const SPECIES_COUNT := 10
 const VARIANT := 10
+const STILLFIN := 11
 const LANTERN := 2
 const CHAIN := 3
 const SIZE_NAMES := ["小型", "正常", "大型", "异变"]
 const SIZE_WEIGHTS := [20.0, 65.0, 15.0]
-const LANTERN_SIZE_WEIGHTS := [15.0, 70.0, 15.0]
 const RODS := ["短杆／浅水", "长杆／深水"]
 const HOOKS := ["小号钩", "中号钩", "大号钩"]
 const HOOK_WEIGHTS := [Vector3(4, 1, 0.1), Vector3(1, 4, 1), Vector3(0.1, 1, 4)]
 const GRIP_CAPACITY := 10
 const SCHOOL_SPECIES := [-1, LANTERN, 4]
 const BAITS := [
-	"素指骨饵", "细屑饵", "匀魂饵", "厚髓饵",
+	"素指骨饵",
 	"智慧饵", "情感饵", "意志饵", "愚笨饵", "憎恨饵", "恍惚饵",
 	"异刺指骨拟饵", "遗骨饵",
 ]
@@ -45,20 +46,21 @@ const ATTRIBUTE_BAITS := {
 const ATTRIBUTE_BAIT_MULTIPLIER := 3.0
 const VARIANT_BAIT := Bait.VARIANT
 const BONE_BAIT := Bait.BONE
-# Map the 16-slot save format from before attribute baits to current inventory slots.
-const LEGACY_BAIT_MAP := [
-	Bait.DEFAULT, Bait.SMALL, Bait.NORMAL, Bait.LARGE,
-	Bait.WISDOM, Bait.EMOTION, Bait.WILL, Bait.WILL, Bait.EMOTION,
-	Bait.FOOLISHNESS, Bait.HATRED, Bait.DAZE, Bait.WISDOM, Bait.WISDOM,
-	Bait.VARIANT, Bait.BONE,
-]
+# Older inventory formats, identified by the number of saved bait slots.
+const LEGACY_BAIT_MAPS := {
+	12: [Bait.DEFAULT, Bait.DEFAULT, Bait.DEFAULT, Bait.DEFAULT, Bait.WISDOM,
+		Bait.EMOTION, Bait.WILL, Bait.FOOLISHNESS, Bait.HATRED, Bait.DAZE, Bait.VARIANT, Bait.BONE],
+	16: [Bait.DEFAULT, Bait.DEFAULT, Bait.DEFAULT, Bait.DEFAULT, Bait.WISDOM,
+		Bait.EMOTION, Bait.WILL, Bait.WILL, Bait.EMOTION, Bait.FOOLISHNESS,
+		Bait.HATRED, Bait.DAZE, Bait.WISDOM, Bait.WISDOM, Bait.VARIANT, Bait.BONE],
+}
 const VARIANT_CHANCE := 0.20
 const BITE_MIN := 3.0
 const BITE_MODE := 5.0
 const BITE_MAX := 8.0
 const STARTING_COINS := 40
 const STARTING_BAIT := 10
-const BAIT_PRICES := [2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 6, 3]
+const BAIT_PRICES := [2, 4, 4, 4, 4, 4, 4, 6, 3]
 const DEVICES := [
 	["短杆", 40], ["长杆", 80],
 	["小号钩", 20], ["中号钩", 20], ["大号钩", 20],
@@ -79,6 +81,7 @@ const FISH_TEXTURES := {
 	"fish_08": preload("res://assets/art/fish/fish_08.png"),
 	"fish_09": preload("res://assets/art/fish/fish_09.png"),
 	"fish_10": preload("res://assets/art/fish/fish_10.png"),
+	"fish_11": preload("res://assets/art/fish/fish_11.png"),
 }
 const ROD_DESCS := ["浅水区 · 1 个指骨挂槽", "深水区 · 2 个指骨挂槽"]
 const HOOK_DESCS := ["偏向小型鱼获", "偏向正常体型", "偏向大型鱼获"]
@@ -197,6 +200,18 @@ const RECIPES := {
 	"fish_09+fish_09": {"id": "potion_71", "name": "明镜药", "effect": Vector3i(4, 0, 2), "reaction": ""},
 	"fish_09+fish_10": {"id": "potion_72", "name": "照铭药", "effect": Vector3i(5, 1, 0), "reaction": ""},
 	"fish_10+fish_10": {"id": "potion_73", "name": "双碑药", "effect": Vector3i(6, 2, -2), "reaction": ""},
+	"fish_01+fish_11": {"id": "potion_74", "name": "清识药", "effect": Vector3i(1, 0, 0), "reaction": ""},
+	"fish_02+fish_11": {"id": "potion_75", "name": "温情药", "effect": Vector3i(0, 2, -1), "reaction": ""},
+	"fish_03+fish_11": {"id": "potion_76", "name": "缓志药", "effect": Vector3i(0, 0, 1), "reaction": ""},
+	"fish_04+fish_11": {"id": "potion_77", "name": "敛锋药", "effect": Vector3i(1, -1, 2), "reaction": ""},
+	"fish_05+fish_11": {"id": "potion_78", "name": "栖情药", "effect": Vector3i(-1, 3, 0), "reaction": ""},
+	"fish_06+fish_11": {"id": "potion_79", "name": "三息药", "effect": Vector3i(-1, -1, -1), "reaction": ""},
+	"fish_07+fish_11": {"id": "potion_80", "name": "宁情药", "effect": Vector3i(0, -2, -1), "reaction": ""},
+	"fish_08+fish_11": {"id": "potion_81", "name": "寂响药", "effect": Vector3i(-1, 1, -3), "reaction": ""},
+	"fish_09+fish_11": {"id": "potion_82", "name": "静识药", "effect": Vector3i(2, 0, 0), "reaction": ""},
+	"fish_10+fish_11": {"id": "potion_83", "name": "息碑药", "effect": Vector3i(3, 1, -2), "reaction": ""},
+	"fish_01_variant+fish_11": {"id": "potion_84", "name": "澄骨药", "effect": Vector3i(5, 0, -3), "reaction": ""},
+	"fish_11+fish_11": {"id": "potion_85", "name": "息志药", "effect": Vector3i(0, 0, -2), "reaction": ""},
 }
 
 
@@ -216,7 +231,7 @@ static func fish_texture(species: int, size: int = 1) -> Texture2D:
 
 
 static func bait_matches_fish(index: int, species: int) -> bool:
-	if not ATTRIBUTE_BAITS.has(index) or species < 0 or species >= SPECIES_COUNT:
+	if not ATTRIBUTE_BAITS.has(index) or species < 0 or species >= FISH.size() or species == VARIANT:
 		return false
 	var rule: Vector2i = ATTRIBUTE_BAITS[index]
 	var fish: Dictionary = FISH[species]
@@ -228,14 +243,8 @@ static func bait_matches_fish(index: int, species: int) -> bool:
 
 static func bait_hint(index: int, include_targets: bool = false) -> String:
 	match index:
-		0:
+		Bait.DEFAULT:
 			return "通用基础鱼饵"
-		1:
-			return "提升小型鱼概率"
-		2:
-			return "提升正常体型概率"
-		3:
-			return "提升大型鱼概率"
 		VARIANT_BAIT:
 			return "深水触发巨刺异变"
 		BONE_BAIT:
@@ -248,7 +257,7 @@ static func bait_hint(index: int, include_targets: bool = false) -> String:
 	if not include_targets:
 		return hint
 	var names := PackedStringArray()
-	for species in SPECIES_COUNT:
+	for species in FISH.size():
 		if bait_matches_fish(index, species):
 			names.append(FISH[species].name)
 	return hint + "\n" + "、".join(names)

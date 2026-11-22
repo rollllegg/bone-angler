@@ -2,6 +2,7 @@ extends Node
 
 signal state_changed
 signal pull_judged(success: bool, message: String)
+signal bone_recovered
 
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
@@ -116,11 +117,12 @@ func buy_bait(index: int, quantity: int) -> bool:
 
 
 func restore_bait_inventory(saved_stock: Array, equipped_bait: int) -> void:
-	if saved_stock.size() == Data.LEGACY_BAIT_MAP.size():
+	if Data.LEGACY_BAIT_MAPS.has(saved_stock.size()):
+		var mapping: Array = Data.LEGACY_BAIT_MAPS[saved_stock.size()]
 		bait_stock.fill(0)
 		for index in saved_stock.size():
-			bait_stock[Data.LEGACY_BAIT_MAP[index]] += int(saved_stock[index])
-		bait = Data.LEGACY_BAIT_MAP[clampi(equipped_bait, 0, saved_stock.size() - 1)]
+			bait_stock[mapping[index]] += int(saved_stock[index])
+		bait = mapping[clampi(equipped_bait, 0, saved_stock.size() - 1)]
 		return
 	for index in mini(saved_stock.size(), bait_stock.size()):
 		bait_stock[index] = int(saved_stock[index])
@@ -361,7 +363,7 @@ func _start_fish_capture() -> void:
 
 func fish_weights(water: int, selected_bait: int, selected_school: int = 0) -> Array[float]:
 	var weights: Array[float] = []
-	for index in Data.SPECIES_COUNT:
+	for index in Data.FISH.size():
 		var weight: float = Data.FISH[index]["water"][water]
 		if Data.bait_matches_fish(selected_bait, index):
 			weight *= Data.ATTRIBUTE_BAIT_MULTIPLIER
@@ -371,12 +373,10 @@ func fish_weights(water: int, selected_bait: int, selected_school: int = 0) -> A
 	return weights
 
 
-func size_weights(species: int, selected_hook: int, selected_bait: int) -> Array[float]:
-	var base: Array = Data.LANTERN_SIZE_WEIGHTS if species == Data.LANTERN else Data.SIZE_WEIGHTS
+func size_weights(selected_hook: int) -> Array[float]:
 	var weights: Array[float] = []
 	for size in 3:
-		var multiplier := 3.0 if selected_bait == size + 1 else 1.0
-		weights.append(base[size] * Data.HOOK_WEIGHTS[selected_hook][size] * multiplier)
+		weights.append(Data.SIZE_WEIGHTS[size] * Data.HOOK_WEIGHTS[selected_hook][size])
 	return weights
 
 
@@ -384,7 +384,7 @@ func _roll_fish(water: int, selected_bait: int) -> Dictionary:
 	var species := _weighted_index(fish_weights(water, selected_bait))
 	if species < 0:
 		return {}
-	var size := _weighted_index(size_weights(species, _snapshot.hook, selected_bait))
+	var size := _weighted_index(size_weights(_snapshot.hook))
 	var bounds: Vector2 = Data.FISH[species]["cm"]
 	var from := [bounds.x * 0.5, bounds.x, bounds.y + 0.0001]
 	var to := [bounds.x - 0.0001, bounds.y, bounds.y * 1.5]
@@ -451,6 +451,7 @@ func _land() -> void:
 		disturb(10.0)
 		session.record_bone()
 		last_message = "已自动回收遗骨 ×1。"
+		bone_recovered.emit()
 	else:
 		var species: int = locked.species
 		var size: int = locked.size

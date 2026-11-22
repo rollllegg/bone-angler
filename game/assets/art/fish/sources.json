@@ -166,5 +166,19 @@
       255
     ],
     "sha256": "00918238ddd32ffce8d3617a042dad368d0f84ee3eaf420d1e5de3b65cc6cd99"
+  },
+  "fish_11": {
+    "file": "fish_11.png",
+    "source": "art/source/fish/fish_11.perfect.png",
+    "size": [
+      272,
+      66
+    ],
+    "mode": "RGBA",
+    "alpha_values": [
+      0,
+      255
+    ],
+    "sha256": "9026ad7d41c9e77ea62a8654a547a501d1166b2e00b3f47fd181fb1125ed81af"
   }
 }

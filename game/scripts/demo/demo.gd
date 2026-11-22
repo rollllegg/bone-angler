@@ -13,6 +13,8 @@ const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const BASE_SIZE := Vector2(1620, 972)
 const SAVE_PATH := "user://bone_angler_save.json"
 const RIVER_TAB_TEXT := "Q 河岸"
+const RIVER_ALERT_COLOR := Color("ff5353")
+const BONE_NOTICE_DURATION := 4.0
 const FONT := preload("res://assets/fonts/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf.woff2")
 const FONT_FALLBACK := preload("res://assets/fonts/NotoSansSC.ttf")
 const COVER := preload("res://assets/art/demo/cover.png")
@@ -31,6 +33,7 @@ const FISH_MOUTH_PIXELS := {
 	"fish_08": Vector2(4, 107),
 	"fish_09": Vector2(4, 71),
 	"fish_10": Vector2(4, 27),
+	"fish_11": Vector2(4, 46),
 }
 
 var session: Session
@@ -53,8 +56,13 @@ var quit_button: Button
 var _stage: Control
 var _menu: Control
 var _menu_pointer: Label
+var _menu_buttons: Array[Button] = []
+var _menu_cursor := 0
 var _settings_backdrop: Button
 var _settings_panel: Panel
+var _settings_pointer: Label
+var _settings_buttons: Array[Button] = []
+var _settings_cursor := 0
 var _window_mode_btn: Button
 var _fullscreen_mode_btn: Button
 var _autopause_on_btn: Button
@@ -71,6 +79,10 @@ var _summary: Label
 var _place_title: Label
 var _river_button: Button
 var _river_bite_alert: Label
+var _river_notice: Panel
+var _river_notice_title: Label
+var _river_notice_detail: Label
+var _bone_notice_remaining := 0.0
 var _shop_button: Button
 var _alchemy_button: Button
 var _market_button: Button
@@ -100,6 +112,8 @@ var _rig_popup_icon: TextureRect
 var _rig_popup_scroll: ScrollContainer
 var _rig_popup_grid: GridContainer
 var _rig_open_slot: int = -1
+var _rig_slot_cursor := -1
+var _rig_option_cursor := 0
 var _rig_option_buttons: Array[Button] = []
 
 # Shop / Reception UI (zero dropdowns)
@@ -110,6 +124,8 @@ var _guest_state: Label
 var _arrival: Label
 var _service_fee: Label
 var _dialog: Label
+var _payout_notice: Label
+var _dose_scroll: ScrollContainer
 var _dose_list: VBoxContainer
 var _dose_buttons: Array[Button] = []
 var _dose_empty: Label
@@ -172,11 +188,13 @@ func _ready() -> void:
 	market.setup(qte)
 
 	_build_pause()
+	_build_river_notice()
 
 	shop.presentation_changed.connect(_refresh_shared)
 	session.state_changed.connect(save_progress)
 	qte.state_changed.connect(_refresh_river)
-	qte.state_changed.connect(_refresh_river_bite_alert)
+	qte.state_changed.connect(_refresh_river_notice)
+	qte.bone_recovered.connect(_show_bone_notice)
 	qte.state_changed.connect(_refresh_economy)
 	qte.state_changed.connect(save_progress)
 	resized.connect(_resize)
@@ -233,14 +251,15 @@ func _build_menu() -> void:
 	_menu_pointer = UI.label(_menu, "▶", Rect2(menu_x - 42.0, start_y, 34, btn_h), 26, UI.GOLD)
 	_menu_pointer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
-	start_button = _make_title_button("开始游戏", UI.ICON_ROD, Rect2(menu_x, start_y, menu_w, btn_h), _start_game, true)
+	start_button = _make_title_button("开始游戏", UI.ICON_ROD, Rect2(menu_x, start_y, menu_w, btn_h), _start_game)
 	start_button.name = "StartGame"
-	continue_button = _make_title_button("继续游戏", UI.ICON_SOUL, Rect2(menu_x, start_y + (btn_h + gap) * 1.0, menu_w, btn_h), _continue_game, false)
+	continue_button = _make_title_button("继续游戏", UI.ICON_SOUL, Rect2(menu_x, start_y + (btn_h + gap) * 1.0, menu_w, btn_h), _continue_game)
 	continue_button.name = "ContinueGame"
-	settings_button = _make_title_button("游戏设置", UI.ICON_WRENCH, Rect2(menu_x, start_y + (btn_h + gap) * 2.0, menu_w, btn_h), _open_settings, false)
+	settings_button = _make_title_button("游戏设置", UI.ICON_WRENCH, Rect2(menu_x, start_y + (btn_h + gap) * 2.0, menu_w, btn_h), _open_settings)
 	settings_button.name = "SettingsButton"
-	quit_button = _make_title_button("退出游戏", UI.ICON_EXIT, Rect2(menu_x, start_y + (btn_h + gap) * 3.0, menu_w, btn_h), func() -> void: get_tree().quit(), false)
+	quit_button = _make_title_button("退出游戏", UI.ICON_EXIT, Rect2(menu_x, start_y + (btn_h + gap) * 3.0, menu_w, btn_h), func() -> void: get_tree().quit())
 	quit_button.name = "QuitGame"
+	UI.label(_menu, "W / S  选择　　空格  确认", Rect2(menu_x, 826, menu_w, 36), 18, UI.CREAM)
 	_refresh_continue_button()
 
 	# Pixel-art Settings overlay modal (hidden by default)
@@ -278,15 +297,19 @@ func _build_menu() -> void:
 	# Row 3: Keybinds reference box
 	UI.panel(_settings_panel, Rect2(34, 224, 612, 198), "slot")
 	UI.label(_settings_panel, "操作按键", Rect2(54, 236, 200, 32), 20, UI.MINT)
-	var controls_lbl := UI.label(_settings_panel, "空格：抛竿　　　X：收竿\nWASD / 方向键：逆向拉鱼\nQ：河岸　E：接待　R：炼药　T：市场\nP / Esc：暂停或继续", Rect2(54, 274, 572, 134), 19, UI.CREAM)
+	var controls_lbl := UI.label(_settings_panel, "Q 河岸　E 接待　R 炼药　T 市场\nWASD 选择／拉鱼　空格 确认／抛竿\nShift 更换部件／放行　C 取消／返回\nX 收竿　P / Esc 暂停或继续", Rect2(54, 274, 572, 134), 19, UI.CREAM)
 	controls_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	var ok_btn := UI.button(_settings_panel, "确定", Rect2(210, 442, 260, 56), _close_settings, true)
 	ok_btn.add_theme_font_size_override("font_size", 23)
+	_settings_buttons.assign([_window_mode_btn, _fullscreen_mode_btn, _autopause_on_btn, _autopause_off_btn, ok_btn])
+	_settings_pointer = UI.label(_settings_panel, "▶", Rect2(0, 0, 20, 48), 18, UI.GOLD)
+	for i in _settings_buttons.size():
+		_settings_buttons[i].mouse_entered.connect(_move_settings_pointer.bind(i))
 	_refresh_settings_ui()
 
 
-func _make_title_button(title: String, icon: Texture2D, rect: Rect2, callback: Callable, primary: bool) -> Button:
+func _make_title_button(title: String, icon: Texture2D, rect: Rect2, callback: Callable) -> Button:
 	var shadow := ColorRect.new()
 	shadow.position = rect.position + Vector2(5, 6)
 	shadow.size = rect.size
@@ -294,15 +317,31 @@ func _make_title_button(title: String, icon: Texture2D, rect: Rect2, callback: C
 	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_menu.add_child(shadow)
 
-	var btn := UI.button(_menu, title, rect, callback, primary)
+	var index := _menu_buttons.size()
+	var btn := UI.button(_menu, title, rect, callback, index == _menu_cursor)
 	btn.add_theme_font_size_override("font_size", 25)
 	if icon != null:
 		UI.icon_rect(btn, icon, Rect2(26, (rect.size.y - 30.0) * 0.5, 30, 30))
+	_menu_buttons.append(btn)
 	btn.mouse_entered.connect(func() -> void:
 		if not btn.disabled:
-			_menu_pointer.position.y = rect.position.y
+			_select_title_button(index)
 	)
 	return btn
+
+
+func _select_title_button(index: int) -> void:
+	if index == _menu_cursor:
+		return
+	UI.set_button_primary(_menu_buttons[_menu_cursor], false)
+	_menu_cursor = index
+	UI.set_button_primary(_menu_buttons[index], true)
+	_menu_pointer.position.y = _menu_buttons[index].position.y
+
+
+func _move_settings_pointer(index: int) -> void:
+	_settings_cursor = index
+	_settings_pointer.position = _settings_buttons[index].position + Vector2(9, 0)
 
 
 func _refresh_continue_button() -> void:
@@ -318,6 +357,7 @@ func _refresh_continue_button() -> void:
 
 func _open_settings() -> void:
 	_refresh_settings_ui()
+	_move_settings_pointer(0)
 	_settings_backdrop.visible = true
 	_settings_panel.visible = true
 
@@ -369,7 +409,7 @@ func _build_hud() -> void:
 	var text_left := floorf((_river_button.size.x - caption_width) * 0.5)
 	var alert_shift_left := 3.0
 	var height := _river_button.size.y
-	_river_bite_alert = UI.label(_river_button, "!", Rect2(text_left - alert_shift_left, 0, shortcut_width, height), 24, Color("ff5353"))
+	_river_bite_alert = UI.label(_river_button, "!", Rect2(text_left - alert_shift_left, 0, shortcut_width, height), 24, RIVER_ALERT_COLOR)
 	var alert_font := FontVariation.new()
 	alert_font.base_font = FONT
 	alert_font.variation_transform = Transform2D(Vector2(1.8, 0), Vector2.DOWN, Vector2.ZERO)
@@ -377,6 +417,22 @@ func _build_hud() -> void:
 	_river_bite_alert.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UI.label(_river_bite_alert, "河岸", Rect2(name_offset + alert_shift_left, 0, caption_width - name_offset, height), tab_font_size)
 	_river_bite_alert.hide()
+
+
+func _build_river_notice() -> void:
+	_river_notice = UI.panel(_stage, Rect2(38, 704, 248, 94), "popup")
+	var tail := Polygon2D.new()
+	tail.polygon = PackedVector2Array([Vector2(5, 34), Vector2(-12, 48), Vector2(5, 58)])
+	tail.color = UI.GOLD
+	_river_notice.add_child(tail)
+	var badge := UI.panel(_river_notice, Rect2(16, 18, 56, 58), "wood_inset")
+	badge.draw.connect(func() -> void:
+		badge.draw_rect(Rect2(24, 10, 8, 26), RIVER_ALERT_COLOR)
+		badge.draw_rect(Rect2(24, 40, 8, 8), RIVER_ALERT_COLOR)
+	)
+	_river_notice_title = UI.label(_river_notice, "", Rect2(84, 14, 148, 34), 25, UI.GOLD)
+	_river_notice_detail = UI.label(_river_notice, "", Rect2(84, 48, 148, 30), 19)
+	_river_notice.hide()
 
 
 func _build_river_ui() -> void:
@@ -396,7 +452,7 @@ func _build_river_ui() -> void:
 	UI.panel(_river_ui, Rect2(1240, 112, 352, 514), "dark_wood")
 	UI.icon_rect(_river_ui, UI.ICON_ROD, Rect2(1260, 128, 30, 30))
 	UI.label(_river_ui, "钓组装备", Rect2(1298, 126, 200, 36), 24, UI.GOLD)
-	var swap_tip := UI.label(_river_ui, "点击换件", Rect2(1474, 130, 96, 28), 16, UI.MUTED)
+	var swap_tip := UI.label(_river_ui, "Shift 换件", Rect2(1466, 130, 104, 28), 16, UI.MUTED)
 	swap_tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	var rig_slots := ["竿体", "鱼钩", "握柄", "鱼饵"]
@@ -465,7 +521,7 @@ func _build_river_ui() -> void:
 	_rig_backdrop.add_theme_stylebox_override("normal", empty_sb)
 	_rig_backdrop.add_theme_stylebox_override("hover", empty_sb)
 	_rig_backdrop.add_theme_stylebox_override("pressed", empty_sb)
-	_rig_backdrop.pressed.connect(_close_rig_popup)
+	_rig_backdrop.pressed.connect(_close_rig_popup.bind(true))
 	_river_ui.add_child(_rig_backdrop)
 
 	_rig_popup = UI.panel(_river_ui, Rect2(760, 112, 468, 514), "popup")
@@ -473,7 +529,7 @@ func _build_river_ui() -> void:
 	_rig_popup.visible = false
 	_rig_popup_icon = UI.icon_rect(_rig_popup, UI.ICON_ROD, Rect2(20, 18, 32, 32))
 	_rig_popup_title = UI.label(_rig_popup, "更换部件", Rect2(60, 16, 320, 36), 23, UI.GOLD)
-	var close_btn := UI.button(_rig_popup, "×", Rect2(406, 14, 44, 40), _close_rig_popup, false)
+	var close_btn := UI.button(_rig_popup, "×", Rect2(406, 14, 44, 40), _close_rig_popup.bind(true), false)
 	close_btn.add_theme_font_size_override("font_size", 24)
 	_rig_popup_scroll = UI.create_scroll(_rig_popup, Rect2(18, 66, 432, 430))
 	_rig_popup_grid = GridContainer.new()
@@ -499,13 +555,13 @@ func _build_shop_ui() -> void:
 	UI.panel(_shop_ui, Rect2(28, 354, 448, 594), "dark_wood")
 	UI.icon_rect(_shop_ui, UI.ICON_POTION, Rect2(48, 370, 30, 30))
 	UI.label(_shop_ui, "调配药剂列表", Rect2(86, 368, 220, 34), 22, UI.GOLD)
-	var tip := UI.label(_shop_ui, "点击预览变化", Rect2(316, 372, 140, 28), 16, UI.MINT)
+	var tip := UI.label(_shop_ui, "W / S  选药剂", Rect2(288, 372, 168, 28), 16, UI.MINT)
 	tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
-	var dose_scroll := UI.create_scroll(_shop_ui, Rect2(44, 412, 416, 404))
+	_dose_scroll = UI.create_scroll(_shop_ui, Rect2(44, 412, 416, 404))
 	_dose_list = VBoxContainer.new()
 	_dose_list.add_theme_constant_override("separation", 8)
-	dose_scroll.add_child(_dose_list)
+	_dose_scroll.add_child(_dose_list)
 	_dose_empty = UI.label(_shop_ui, "暂无可用药剂\n按 R 前往炼药台提炼鱼获", Rect2(56, 548, 392, 86), 20, UI.MUTED)
 	_dose_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
@@ -513,18 +569,19 @@ func _build_shop_ui() -> void:
 	_dose_preview = UI.label(_shop_ui, "点击上方药剂查看属性变化预览", Rect2(54, 826, 396, 36), 17, UI.CREAM)
 	_dose_preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_dose_preview.clip_text = true
-	_serve_button = UI.button(_shop_ui, "端上所选药剂", Rect2(44, 872, 416, 58), _serve_dose, true)
+	_serve_button = UI.button(_shop_ui, "空格  端上所选药剂", Rect2(44, 872, 416, 58), _serve_dose, true)
 	_serve_button.add_theme_font_size_override("font_size", 22)
 
 	# 3. Top-Center: Guest Speech Parchment Box (floating above guest, open counter!)
 	UI.panel(_shop_ui, Rect2(492, 112, 578, 116), "parchment")
 	_dialog = UI.label(_shop_ui, "", Rect2(516, 124, 530, 92), 22, UI.CREAM)
 	_dialog.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_payout_notice = UI.label(_shop_ui, "", Rect2(516, 232, 530, 34), 20, UI.GOLD)
 
 	# 4. Top-Right: Compact Waiting Queue in Sky (keeps underworld gate 100% visible!)
 	UI.panel(_shop_ui, Rect2(1086, 112, 506, 166), "dark_wood")
 	UI.icon_rect(_shop_ui, UI.ICON_SOUL, Rect2(1106, 126, 28, 28))
-	UI.label(_shop_ui, "门前等候", Rect2(1142, 124, 150, 32), 21, UI.MINT)
+	UI.label(_shop_ui, "门前等候 · A / D", Rect2(1142, 124, 184, 32), 20, UI.MINT)
 	_arrival = UI.label(_shop_ui, "", Rect2(1300, 126, 272, 28), 16, UI.MUTED)
 	_arrival.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
@@ -543,7 +600,7 @@ func _build_shop_ui() -> void:
 	_guest_state = UI.label(_shop_ui, "等待用药", Rect2(1204, 740, 220, 32), 21, UI.GOLD)
 	_service_fee = UI.label(_shop_ui, "", Rect2(1168, 778, 404, 74), 18, UI.CREAM)
 	_service_fee.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_release_button = UI.button(_shop_ui, "确认放行", Rect2(1168, 862, 404, 68), func() -> void: shop.begin_departure(), true)
+	_release_button = UI.button(_shop_ui, "Shift  放行", Rect2(1168, 862, 404, 68), func() -> void: shop.begin_departure(), true)
 	_release_button.add_theme_font_size_override("font_size", 25)
 
 
@@ -554,7 +611,7 @@ func _build_pause() -> void:
 	_pause_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(_pause_banner)
 	UI.label(_pause_banner, "已暂停　P / Esc / 空格继续", Rect2(4, 0, 580, 48), 22, UI.MINT)
-	UI.button(_pause_banner, "返回封面", Rect2(666, 0, 196, 48), _return_to_title)
+	UI.button(_pause_banner, "C 返回封面", Rect2(666, 0, 196, 48), _return_to_title)
 
 
 func _resize() -> void:
@@ -756,10 +813,11 @@ func _update_activation() -> void:
 	UI.set_tab_active(_market_button, current_location == "Market")
 	_pause_button.text = "P 继续" if session.paused else "P 暂停"
 	_place_title.text = {"River": "阿刻戎河 · 钓鱼", "Shop": "灵魂店铺 · 接待", "Alchemy": "炼药台 · 收纳", "Market": "市场 · 钓组整备"}[current_location]
+	_refresh_river_notice()
 
 
 func _cast_line() -> void:
-	if started and current_location == "River" and not session.is_time_suspended():
+	if started and current_location == "River" and _rig_slot_cursor < 0 and not session.is_time_suspended():
 		river.start_cast()
 		_refresh_river()
 
@@ -776,12 +834,13 @@ func _toggle_rig_popup(slot: int) -> void:
 	if river.casting or qte.is_busy() or session.paused:
 		return
 	if _rig_open_slot == slot:
-		_close_rig_popup()
+		_close_rig_popup(true)
 		return
 	_open_rig_popup(slot)
 
 
 func _open_rig_popup(slot: int) -> void:
+	_rig_slot_cursor = slot
 	_rig_open_slot = slot
 	_rig_backdrop.visible = true
 	_rig_popup.visible = true
@@ -798,27 +857,24 @@ func _open_rig_popup(slot: int) -> void:
 	_rig_popup_icon.texture = UI.RIG_ICONS[slot]
 	_rig_popup_title.text = titles[slot]
 	_populate_rig_popup(slot)
-	session.choosing = true
-	river.paused = session.is_time_suspended()
-	_refresh_summary()
-	_refresh_rig_slots()
+	_rig_option_cursor = [qte.rod, qte.hook, qte.grip, qte.bait][slot]
+	_highlight_rig_option()
+	_refresh_river()
 
 
-func _close_rig_popup() -> void:
-	if _rig_open_slot < 0 and not _rig_popup.visible:
+func _close_rig_popup(return_to_slots: bool = false) -> void:
+	if _rig_slot_cursor < 0:
 		return
 	_rig_open_slot = -1
+	if not return_to_slots:
+		_rig_slot_cursor = -1
 	_rig_backdrop.visible = false
 	_rig_popup.visible = false
-	session.choosing = false
-	river.paused = session.is_time_suspended()
-	_refresh_summary()
-	_refresh_rig_slots()
+	_refresh_river()
 
 
 func _populate_rig_popup(slot: int) -> void:
-	for child in _rig_popup_grid.get_children():
-		child.queue_free()
+	UI.clear_cards(_rig_popup_grid)
 	_rig_option_buttons.clear()
 	_rig_popup_grid.columns = 2 if slot == 3 else 1
 
@@ -871,6 +927,65 @@ func _add_rig_option(icon: Texture2D, title: String, subtitle: String, badge: St
 	b_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 
+func _highlight_rig_option() -> void:
+	for i in _rig_option_buttons.size():
+		var btn := _rig_option_buttons[i]
+		UI.style_slot_button(btn, i == _rig_option_cursor, btn.disabled)
+	UI.reveal(_rig_popup_scroll, _rig_option_buttons[_rig_option_cursor])
+
+
+func _begin_rig_selection() -> void:
+	if river.casting or qte.is_busy():
+		return
+	_clear_pull_input()
+	_rig_slot_cursor = 0
+	_refresh_river()
+
+
+func _rig_key(code: Key) -> bool:
+	match code:
+		KEY_C:
+			_close_rig_popup(_rig_open_slot >= 0)
+		KEY_ESCAPE:
+			_close_rig_popup()
+		KEY_W, KEY_A, KEY_S, KEY_D:
+			if _rig_open_slot >= 0 and _rig_popup_grid.columns > 1:
+				_move_rig_grid_cursor(code)
+			elif code in [KEY_W, KEY_S]:
+				var step := 1 if code == KEY_S else -1
+				if _rig_open_slot >= 0:
+					_rig_option_cursor = UI.next_button(_rig_option_buttons, _rig_option_cursor, step)
+					_highlight_rig_option()
+				else:
+					_rig_slot_cursor = UI.next_button(_rig, _rig_slot_cursor, step)
+					_refresh_rig_slots()
+		KEY_SPACE:
+			if _rig_open_slot >= 0:
+				UI.activate(_rig_option_buttons[_rig_option_cursor])
+			else:
+				_open_rig_popup(_rig_slot_cursor)
+		_:
+			return false
+	return true
+
+
+func _move_rig_grid_cursor(code: Key) -> void:
+	var columns := _rig_popup_grid.columns
+	var index := _rig_option_cursor
+	var column := index % columns
+	var last := _rig_option_buttons.size() - 1
+	match code:
+		KEY_W: index = maxi(index - columns, column)
+		KEY_S:
+			if index - column + columns <= last:
+				index = mini(index + columns, last)
+		KEY_A: index = maxi(index - 1, index - column)
+		KEY_D: index = mini(index + 1, mini(index - column + columns - 1, last))
+	if index != _rig_option_cursor:
+		_rig_option_cursor = index
+		_highlight_rig_option()
+
+
 func _set_paused(value: bool) -> void:
 	if not started or session.paused == value:
 		return
@@ -900,25 +1015,19 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key.echo or key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
 		return
-	if started and session.choosing:
-		if code == KEY_ESCAPE:
-			_close_rig_popup()
-			get_viewport().set_input_as_handled()
-		return
+	var handled := true
 	if not started:
-		if _settings_panel.visible:
-			if code == KEY_ESCAPE:
-				_close_settings()
-				get_viewport().set_input_as_handled()
-			return
-		if code in [KEY_ENTER, KEY_KP_ENTER]:
-			_start_game()
-		else:
-			return
-	elif code in [KEY_P, KEY_ESCAPE] or (session.paused and code == KEY_SPACE):
+		handled = _title_key(code)
+	elif code == KEY_P:
+		_set_paused(not session.paused)
+	elif _rig_slot_cursor >= 0:
+		handled = _rig_key(code)
+	elif code == KEY_ESCAPE or (session.paused and code == KEY_SPACE):
 		_set_paused(not session.paused)
 	elif session.paused:
-		return
+		if code != KEY_C:
+			return
+		_return_to_title()
 	elif code == KEY_Q:
 		_show_location("River")
 	elif code == KEY_E:
@@ -927,23 +1036,82 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_show_location("Alchemy")
 	elif code == KEY_T:
 		_show_location("Market")
-	elif current_location == "River":
-		if code == KEY_X:
-			_retract()
-		elif code == KEY_SPACE:
-			_cast_line()
-		elif qte.phase == Fishing.Phase.TRUE_NAME and code >= KEY_A and code <= KEY_Z:
-			qte.submit_letter(OS.get_keycode_string(code))
-		else:
-			var direction := Fishing.DIRECTION_KEYS.find(code)
-			if direction < 0:
-				direction = Fishing.ARROW_KEYS.find(code)
-			if direction < 0:
-				return
-			_queue_pull(code, direction)
 	else:
-		return
-	get_viewport().set_input_as_handled()
+		match current_location:
+			"River": handled = _river_key(code)
+			"Shop": handled = _reception_key(code)
+			"Alchemy": handled = alchemy.handle_key(code)
+			"Market": handled = market.handle_key(code)
+		if not handled and code == KEY_C and current_location != "River":
+			_show_location("River")
+			handled = true
+	if handled:
+		get_viewport().set_input_as_handled()
+
+
+func _title_key(code: Key) -> bool:
+	var in_settings := _settings_panel.visible
+	var buttons := _settings_buttons if in_settings else _menu_buttons
+	var cursor := _settings_cursor if in_settings else _menu_cursor
+	match code:
+		KEY_W, KEY_S:
+			cursor = UI.next_button(buttons, cursor, 1 if code == KEY_S else -1)
+			if in_settings:
+				_move_settings_pointer(cursor)
+			else:
+				_select_title_button(cursor)
+		KEY_SPACE, KEY_ENTER, KEY_KP_ENTER:
+			UI.activate(buttons[cursor])
+		KEY_C, KEY_ESCAPE:
+			if not in_settings:
+				return false
+			_close_settings()
+		_:
+			return false
+	return true
+
+
+func _river_key(code: Key) -> bool:
+	if code == KEY_X:
+		_retract()
+	elif code == KEY_SPACE:
+		_cast_line()
+	elif code == KEY_SHIFT:
+		_begin_rig_selection()
+	elif qte.phase == Fishing.Phase.TRUE_NAME and code >= KEY_A and code <= KEY_Z:
+		qte.submit_letter(OS.get_keycode_string(code))
+	else:
+		var direction := Fishing.DIRECTION_KEYS.find(code)
+		if direction < 0:
+			direction = Fishing.ARROW_KEYS.find(code)
+		if direction < 0:
+			return false
+		_queue_pull(code, direction)
+	return true
+
+
+func _reception_key(code: Key) -> bool:
+	match code:
+		KEY_W, KEY_S:
+			_move_dose(1 if code == KEY_S else -1)
+		KEY_A, KEY_D:
+			for i in session.souls.size():
+				if session.souls[i].id == shop.selected_id:
+					var index := posmod(i + (1 if code == KEY_D else -1), session.souls.size())
+					shop.select_guest(session.souls[index].id)
+					UI.reveal(_queue_box.get_parent() as ScrollContainer, _queue_buttons[index])
+					break
+		KEY_SPACE:
+			UI.activate(_serve_button)
+		KEY_SHIFT:
+			UI.activate(_release_button)
+		KEY_C:
+			if _selected_dose == null:
+				return false
+			_select_dose(_selected_dose)
+		_:
+			return false
+	return true
 
 
 func _queue_pull(code: int, direction: int) -> void:
@@ -972,17 +1140,23 @@ func _clear_pull_input() -> void:
 
 
 func _refresh_summary() -> void:
-	if session.choosing:
-		_summary.text = "选择中 · 计时暂停"
-	else:
-		_summary.text = "第 %d 天　鱼篓 %d　等候 %d　放行 %d / %d　渡魂币 %d" % [session.day, session.catches.size(), session.souls.size(), session.released_count, session.total_guests(), session.coins]
+	_summary.text = "第 %d 天　鱼篓 %d　等候 %d　放行 %d / %d　渡魂币 %d" % [session.day, session.catches.size(), session.souls.size(), session.released_count, session.total_guests(), session.coins]
 
 
-func _refresh_river_bite_alert() -> void:
-	var show_alert := qte.phase == Fishing.Phase.AWAITING_RETURN
-	_river_bite_alert.visible = show_alert
-	_river_button.text = "" if show_alert else RIVER_TAB_TEXT
-	_river_button.accessibility_name = "有鱼上钩了，返回河岸" if show_alert else ""
+func _show_bone_notice() -> void:
+	_bone_notice_remaining = BONE_NOTICE_DURATION
+	_refresh_river_notice()
+
+
+func _refresh_river_notice() -> void:
+	var fish_hooked := started and current_location != "River" and qte.phase == Fishing.Phase.AWAITING_RETURN
+	_river_bite_alert.visible = fish_hooked
+	_river_button.text = "" if fish_hooked else RIVER_TAB_TEXT
+	_river_button.accessibility_name = "有鱼上钩了，返回河岸" if fish_hooked else ""
+	_river_notice.visible = started and (fish_hooked or _bone_notice_remaining > 0.0)
+	if _river_notice.visible:
+		_river_notice_title.text = "有鱼上钩了！" if fish_hooked else "钓到了遗骨！"
+		_river_notice_detail.text = "按 Q 返回河岸" if fish_hooked else "已回收遗骨 ×1"
 
 
 func _refresh_economy() -> void:
@@ -997,23 +1171,22 @@ func _refresh_shared() -> void:
 	_rebuild_queue()
 	_rebuild_dose_list()
 
-	var selected := shop.departure_soul if shop.departing else session.get_soul(shop.selected_id)
+	var selected := session.get_soul(shop.selected_id)
 	var ready := session.can_release(shop.selected_id)
-	_guest_state.text = "正在前往冥府…" if shop.departing else ("达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂"))
+	_guest_state.text = "达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂")
 	_guest_state.add_theme_color_override("font_color", UI.GOOD if ready else UI.GOLD)
-	_release_button.disabled = shop.departing or session.paused or not ready
+	_release_button.disabled = session.paused or not ready
 
 	_service_fee.text = ""
-	if not selected.is_empty() and not shop.departing:
+	if not selected.is_empty():
 		_service_fee.text = "基础服务费 %d 枚" % selected.fee
 		if session.first_service(selected):
 			_service_fee.text += "　首次 +%d 枚" % int(selected.fee * 0.20)
 		if selected.case_id == 2 and session.requirements[1].z >= 9:
 			_service_fee.text += "\n特殊委托：意志达到 9　+%d 枚" % int(selected.fee * 0.20)
 
-	if shop.departing:
-		_dialog.text = "谢谢，我准备好继续走了。\n获得渡魂币 +%d" % session.last_payout
-	elif session.is_complete():
+	_payout_notice.text = "放行成功　渡魂币 +%d" % session.last_payout if not shop.departure_times.is_empty() else ""
+	if session.is_complete():
 		_dialog.text = "五天的灵魂都已放行。"
 	elif selected.is_empty():
 		_dialog.text = "还没有来客，可以先去冥河备料。"
@@ -1027,8 +1200,7 @@ func _refresh_shared() -> void:
 
 
 func _rebuild_queue() -> void:
-	for child in _queue_box.get_children():
-		child.queue_free()
+	UI.clear_cards(_queue_box)
 	_queue_buttons.clear()
 	_queue_empty.visible = session.souls.is_empty()
 	for soul in session.souls:
@@ -1036,7 +1208,7 @@ func _rebuild_queue() -> void:
 		var is_sel := sid == shop.selected_id
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(224, 30)
-		btn.disabled = shop.departing or session.paused
+		btn.disabled = session.paused
 		UI.style_slot_button(btn, is_sel, false)
 		btn.pressed.connect(func() -> void: shop.select_guest(sid))
 		_queue_box.add_child(btn)
@@ -1058,8 +1230,7 @@ func _rebuild_dose_list() -> void:
 	if not still_valid:
 		_selected_dose = null
 
-	for child in _dose_list.get_children():
-		child.queue_free()
+	UI.clear_cards(_dose_list)
 	_dose_buttons.clear()
 	_dose_empty.visible = rows.is_empty()
 
@@ -1071,7 +1242,7 @@ func _rebuild_dose_list() -> void:
 		var is_sel: bool = _selected_dose != null and _selected_dose == key
 		var card := Button.new()
 		card.custom_minimum_size = Vector2(398, 78)
-		card.disabled = shop.departing or session.paused
+		card.disabled = session.paused
 		UI.style_slot_button(card, is_sel, false)
 		card.pressed.connect(_select_dose.bind(key))
 		_dose_list.add_child(card)
@@ -1086,7 +1257,7 @@ func _rebuild_dose_list() -> void:
 
 
 func _select_dose(key: Array) -> void:
-	if shop.departing or session.paused:
+	if session.paused:
 		return
 	if _selected_dose != null and _selected_dose == key:
 		_selected_dose = null
@@ -1096,20 +1267,30 @@ func _select_dose(key: Array) -> void:
 	_refresh_dose()
 
 
+func _move_dose(step: int) -> void:
+	var rows := Alchemy.medicine_rows(session)
+	if rows.is_empty():
+		return
+	var current := -1 if step > 0 else 0
+	for i in rows.size():
+		if rows[i][1] == _selected_dose:
+			current = i
+			break
+	var next := posmod(current + step, rows.size())
+	if rows[next][1] != _selected_dose:
+		_select_dose(rows[next][1])
+	UI.reveal(_dose_scroll, _dose_buttons[next])
+
+
 func _refresh_dose() -> void:
-	var selected := shop.departure_soul if shop.departing else session.get_soul(shop.selected_id)
+	var selected := session.get_soul(shop.selected_id)
 	var preview := {}
-	if _selected_dose != null and not shop.departing:
+	if _selected_dose != null:
 		preview = session.preview(shop.selected_id, _selected_dose[0], _selected_dose[1])
-	var limits := shop.departure_requirements if shop.departing else session.requirements
-	var day_number := shop.departure_day if shop.departing else session.day
-	soul_hud.set_state(selected, shop.departing, preview, day_number, limits)
-	_serve_button.disabled = shop.departing or session.paused or preview.is_empty()
-	if shop.departing:
-		_dose_preview.text = "正在目送灵魂前往冥府…"
-		_dose_preview.add_theme_color_override("font_color", UI.MINT)
-	elif preview.is_empty():
-		_dose_preview.text = "点击上方药剂，在左上角预览属性变化"
+	soul_hud.set_state(selected, preview, session.day, session.requirements)
+	_serve_button.disabled = session.paused or preview.is_empty()
+	if preview.is_empty():
+		_dose_preview.text = "按 W / S 选择药剂，预览属性变化"
 		_dose_preview.add_theme_color_override("font_color", UI.MUTED)
 	else:
 		var after: Vector3i = preview.after
@@ -1119,7 +1300,7 @@ func _refresh_dose() -> void:
 
 
 func _serve_dose() -> void:
-	if _selected_dose != null and not shop.departing:
+	if not _serve_button.disabled:
 		var chosen: Array = _selected_dose
 		_selected_dose = null
 		session.serve(shop.selected_id, chosen[0], chosen[1])
@@ -1141,7 +1322,7 @@ func _refresh_rig_slots() -> void:
 	]
 	for i in 4:
 		_rig[i].disabled = busy or session.paused
-		UI.style_slot_button(_rig[i], _rig_open_slot == i, false)
+		UI.style_slot_button(_rig[i], _rig_open_slot == i or _rig_slot_cursor == i, false)
 		_rig_value_labels[i].text = values[i]
 		_rig_badge_labels[i].text = badges[i]
 		var depleted := (i == 2 and qte.durability() == 0) or (i == 3 and qte.bait_stock[qte.bait] == 0)
@@ -1171,8 +1352,9 @@ func _refresh_river() -> void:
 	if not is_instance_valid(_cast_button):
 		return
 	var busy := river.casting or qte.is_busy()
-	if busy and _rig_open_slot >= 0:
+	if busy and _rig_slot_cursor >= 0:
 		_close_rig_popup()
+		return
 
 	var show_fish := not river.casting and qte.phase == Fishing.Phase.CAUGHT and qte.locked.has("species")
 	_catch_fish_rect.visible = show_fish
@@ -1189,7 +1371,7 @@ func _refresh_river() -> void:
 		_catch_fish_rect.pivot_offset = mouth * fit
 		_catch_fish_rect.position = anchor - _catch_fish_rect.pivot_offset
 
-	_cast_button.disabled = busy or not qte.can_cast()
+	_cast_button.disabled = busy or _rig_slot_cursor >= 0 or not qte.can_cast()
 	if river.casting:
 		_cast_button.text = "抛竿中…"
 	elif busy:
@@ -1220,6 +1402,14 @@ func _refresh_river() -> void:
 	_hit.text = ""
 	if river.hit_timer > 0.0 and not river.casting and qte.phase in [Fishing.Phase.REELING, Fishing.Phase.FEEDBACK, Fishing.Phase.CAUGHT, Fishing.Phase.ESCAPED]:
 		_hit.text = "完美 +%d" % qte.last_progress_gain if qte.last_judgement == Fishing.Judgement.PERFECT else ("+%d" % qte.last_progress_gain if qte.last_success else "失误")
+	if _rig_slot_cursor >= 0:
+		_river_status.text = "更换钓组部件"
+		if _rig_open_slot >= 0:
+			var keys := "WASD" if _rig_popup_grid.columns > 1 else "W / S"
+			_river_hint.text = "%s 选择　空格 确认更换　C 返回槽位" % keys
+		else:
+			_river_hint.text = "W / S 选槽位　空格 查看可选部件　C 结束换件"
+		return
 	if river.casting:
 		_river_status.text = "抛竿中　%d / 4" % (river.get_cast_frame() + 1)
 		_river_hint.text = "浮漂入水后开始候鱼。"
@@ -1230,7 +1420,7 @@ func _refresh_river() -> void:
 			_river_hint.text = "空格抛竿，钓获可带去提炼。"
 		Fishing.Phase.WAITING:
 			_river_status.text = "候鱼中…"
-			_river_hint.text = "可按 X 收竿。离开河岸后看到红色感叹号，请在 3 秒内返回。"
+			_river_hint.text = "按 X 收竿。离开河岸后看到上钩气泡，请在 3 秒内按 Q 返回。"
 		Fishing.Phase.PREPARING, Fishing.Phase.REELING, Fishing.Phase.FEEDBACK:
 			_river_status.text = "有鱼上钩了！"
 			_river_hint.text = "入水点靠近虚线时，按箭头对应的 WASD 或方向键。"
@@ -1249,15 +1439,19 @@ func _refresh_river() -> void:
 		if qte.durability() == 0 and qte.bait_stock[qte.bait] == 0:
 			_river_hint.text = "握柄耐久与当前鱼饵均已耗尽，按 T 去市场维修并补充鱼饵。"
 		elif qte.durability() == 0:
-			_river_hint.text = "当前握柄耐久已耗尽，按 T 去市场维修，或在右侧更换备用握柄。"
+			_river_hint.text = "当前握柄耐久已耗尽，按 T 去市场维修，或按 Shift 更换备用握柄。"
 		elif qte.has_any_bait():
-			_river_hint.text = "当前「%s」已耗尽！点击右侧「鱼饵」切换已有库存鱼饵，或按 T 购买。" % Data.BAITS[qte.bait]
+			_river_hint.text = "当前「%s」已耗尽，按 Shift 换饵，或按 T 购买。" % Data.BAITS[qte.bait]
 		else:
 			_river_hint.text = "当前「%s」已耗尽，按 T 去市场补充鱼饵。" % Data.BAITS[qte.bait]
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not started:
 		return
+	if _bone_notice_remaining > 0.0 and not session.paused:
+		_bone_notice_remaining = maxf(_bone_notice_remaining - delta, 0.0)
+		if _bone_notice_remaining == 0.0:
+			_refresh_river_notice()
 	_refresh_river()
 	_arrival.text = "本班来客已全部到达" if not session.has_more_arrivals() else "%.0f 秒后有新来客" % ceilf(session.spawn_remaining)

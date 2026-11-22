@@ -27,6 +27,8 @@ var _tab_views: Array[Control] = []
 var _stock_concentrate: Label
 var _stock_bones: Label
 var _status: Label
+var _controls_hint: Label
+var _essence_cursor := 0
 
 # Refine view nodes
 var _fish_grid: GridContainer
@@ -84,7 +86,9 @@ func setup(value: Session) -> void:
 	_build_strengthen_tab()
 
 	UI.panel(self, Rect2(28, 906, 1564, 48), "dark_wood")
-	_status = UI.label(self, "点击左侧鱼获或原液，即可在右侧预览药效并确认制作。", Rect2(48, 912, 1524, 36), 20, UI.GOLD)
+	_controls_hint = UI.label(self, "", Rect2(48, 912, 946, 36), 18, UI.CREAM)
+	_status = UI.label(self, "", Rect2(1002, 912, 570, 36), 18, UI.GOLD)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_switch_tab(0)
 	refresh()
 
@@ -98,7 +102,7 @@ func _build_refine_tab() -> void:
 	# Left: Visual Fish Basket Grid
 	UI.panel(view, Rect2(28, 190, 924, 704), "dark_wood")
 	UI.icon_rect(view, UI.ICON_BASKET, Rect2(50, 206, 32, 32))
-	UI.label(view, "鱼篓 · 点击鱼获预览产出的药剂", Rect2(92, 204, 700, 38), 24, UI.GOLD)
+	UI.label(view, "鱼篓 · WASD 选择鱼获", Rect2(92, 204, 700, 38), 24, UI.GOLD)
 	var scroll := UI.create_scroll(view, Rect2(46, 252, 888, 624))
 	_fish_grid = GridContainer.new()
 	_fish_grid.columns = 3
@@ -138,7 +142,7 @@ func _build_refine_tab() -> void:
 	_refine_stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.add_child(_refine_stats_box)
 
-	refine_button = UI.button(view, "确认提炼", Rect2(996, 800, 570, 72), _refine, true)
+	refine_button = UI.button(view, "空格  确认提炼", Rect2(996, 800, 570, 72), _refine, true)
 	refine_button.add_theme_font_size_override("font_size", 25)
 
 
@@ -151,7 +155,7 @@ func _build_mix_tab() -> void:
 	# Left: Owned Essences Grid (showing source fish + vial)
 	UI.panel(view, Rect2(28, 190, 924, 704), "dark_wood")
 	UI.icon_rect(view, UI.ICON_ESSENCE, Rect2(50, 206, 32, 32))
-	UI.label(view, "原液库存 · 点击两份原液配制复方", Rect2(92, 204, 740, 38), 24, UI.GOLD)
+	UI.label(view, "原液库存 · 选两份原液配制复方", Rect2(92, 204, 740, 38), 24, UI.GOLD)
 	var scroll := UI.create_scroll(view, Rect2(46, 252, 888, 624))
 	_essence_grid = GridContainer.new()
 	_essence_grid.columns = 3
@@ -171,6 +175,7 @@ func _build_mix_tab() -> void:
 	UI.style_slot_button(_slot_a_btn, false, false)
 	_slot_a_btn.pressed.connect(func() -> void:
 		mix_first = -1
+		_highlight_essences()
 		_update_previews()
 	)
 	view.add_child(_slot_a_btn)
@@ -187,6 +192,7 @@ func _build_mix_tab() -> void:
 	UI.style_slot_button(_slot_b_btn, false, false)
 	_slot_b_btn.pressed.connect(func() -> void:
 		mix_second = -1
+		_highlight_essences()
 		_update_previews()
 	)
 	view.add_child(_slot_b_btn)
@@ -210,7 +216,7 @@ func _build_mix_tab() -> void:
 	_mix_stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.add_child(_mix_stats_box)
 
-	mix_button = UI.button(view, "确认配制复方", Rect2(996, 800, 570, 72), _mix, true)
+	mix_button = UI.button(view, "F  确认配制复方", Rect2(996, 800, 570, 72), _mix, true)
 	mix_button.add_theme_font_size_override("font_size", 25)
 
 
@@ -295,7 +301,72 @@ func _switch_tab(index: int) -> void:
 	for i in _tab_views.size():
 		_tab_views[i].visible = i == active_tab
 		UI.set_tab_active(_tab_buttons[i], i == active_tab)
+	_controls_hint.text = [
+		"WASD 选鱼　空格 提炼　Shift 切换页签　C 返回河岸",
+		"WASD 选原液　空格 放入　F 配制　Shift 切换页签　C 撤回／返回",
+		"WASD 选药剂　X 切换属性　V 切换增减　空格 强化　Shift 切换页签　C 返回河岸",
+	][active_tab]
+	_status.text = ""
 	_update_previews()
+
+
+func handle_key(code: Key) -> bool:
+	match code:
+		KEY_W, KEY_A, KEY_S, KEY_D:
+			_move_card(code)
+		KEY_SHIFT:
+			_switch_tab(posmod(active_tab + 1, _tab_views.size()))
+		KEY_SPACE:
+			match active_tab:
+				0: UI.activate(refine_button)
+				1:
+					if not essence_cards.is_empty():
+						UI.activate(essence_cards[_essence_cursor])
+				2: UI.activate(strengthen_button)
+		KEY_F:
+			if active_tab != 1:
+				return false
+			UI.activate(mix_button)
+		KEY_X, KEY_V:
+			if active_tab != 2:
+				return false
+			if code == KEY_X:
+				UI.activate(_str_attr_btns[posmod(selected_attribute + 1, _str_attr_btns.size())])
+			else:
+				UI.activate(_str_adj_btns[1 if selected_adjustment == 1 else 0])
+		KEY_C:
+			if active_tab != 1 or (mix_first < 0 and mix_second < 0):
+				return false
+			UI.activate(_slot_b_btn if mix_second >= 0 else _slot_a_btn)
+		_:
+			return false
+	return true
+
+
+func _move_card(code: Key) -> void:
+	var cards: Array[Button] = [fish_cards, essence_cards, medicine_cards][active_tab]
+	if cards.is_empty():
+		return
+	var grid: GridContainer = [_fish_grid, _essence_grid, _med_grid][active_tab]
+	var index := _essence_cursor if active_tab == 1 else 0
+	if active_tab != 1:
+		var selected: Variant = selected_fish_id if active_tab == 0 else selected_medicine
+		for i in cards.size():
+			if cards[i].get_meta("item") == selected:
+				index = i
+				break
+	var last := cards.size() - 1
+	match code:
+		KEY_W: index = index - grid.columns if index >= grid.columns else index
+		KEY_S: index = mini(index + grid.columns, last) if index - index % grid.columns + grid.columns <= last else index
+		KEY_A: index = index - 1 if index % grid.columns > 0 else index
+		KEY_D: index = index + 1 if index < last and index % grid.columns < grid.columns - 1 else index
+	if active_tab == 1:
+		_essence_cursor = index
+		_highlight_essences()
+	else:
+		UI.activate(cards[index])
+	UI.reveal(grid.get_parent() as ScrollContainer, cards[index])
 
 
 static func medicine_rows(session_value: Session, only_unstrengthened: bool = false) -> Array:
@@ -357,8 +428,7 @@ func refresh() -> void:
 
 
 func _rebuild_fish_grid() -> void:
-	for child in _fish_grid.get_children():
-		child.queue_free()
+	UI.clear_cards(_fish_grid)
 	fish_cards.clear()
 	_fish_empty.visible = session.catches.is_empty()
 	for catch in session.catches:
@@ -367,10 +437,12 @@ func _rebuild_fish_grid() -> void:
 		var fish_size: int = int(catch.size)
 		var card := Button.new()
 		card.custom_minimum_size = Vector2(282, 184)
+		card.set_meta("item", cid)
 		UI.style_slot_button(card, cid == selected_fish_id, false)
 		card.pressed.connect(func() -> void:
 			selected_fish_id = cid
-			_rebuild_fish_grid()
+			for fish_card in fish_cards:
+				UI.style_slot_button(fish_card, fish_card == card, false)
 			_update_previews()
 		)
 		_fish_grid.add_child(card)
@@ -400,21 +472,21 @@ func _rebuild_fish_grid() -> void:
 
 
 func _rebuild_essence_grid() -> void:
-	for child in _essence_grid.get_children():
-		child.queue_free()
+	UI.clear_cards(_essence_grid)
 	essence_cards.clear()
-	var any_owned := false
 	for species in session.essences.size():
 		var count := session.essences[species]
 		if count <= 0:
 			continue
-		any_owned = true
 		var fish: Dictionary = Data.FISH[species]
-		var chosen := species == mix_first or species == mix_second
 		var card := Button.new()
 		card.custom_minimum_size = Vector2(282, 152)
-		UI.style_slot_button(card, chosen, false)
-		card.pressed.connect(_pick_essence.bind(species))
+		card.set_meta("item", species)
+		var index := essence_cards.size()
+		card.pressed.connect(func() -> void:
+			_essence_cursor = index
+			_pick_essence(species)
+		)
 		_essence_grid.add_child(card)
 		essence_cards.append(card)
 
@@ -427,7 +499,19 @@ func _rebuild_essence_grid() -> void:
 		var eff := UI.make_effect_row(fish.effect, 22, 18, false)
 		eff.position = Vector2(18, 96)
 		card.add_child(eff)
-	_essence_empty.visible = not any_owned
+		var pointer := UI.label(card, "▶", Rect2(250, 112, 22, 28), 18, UI.GOLD)
+		pointer.name = "SelectionPointer"
+	_essence_empty.visible = essence_cards.is_empty()
+	_essence_cursor = clampi(_essence_cursor, 0, maxi(essence_cards.size() - 1, 0))
+	_highlight_essences()
+
+
+func _highlight_essences() -> void:
+	for i in essence_cards.size():
+		var card := essence_cards[i]
+		var species: int = card.get_meta("item")
+		UI.style_slot_button(card, species == mix_first or species == mix_second, false)
+		card.get_node("SelectionPointer").visible = i == _essence_cursor
 
 
 func _pick_essence(species: int) -> void:
@@ -445,13 +529,12 @@ func _pick_essence(species: int) -> void:
 			_status.text = "同种原液配制需要至少 2 份库存。"
 		else:
 			mix_second = species
-	_rebuild_essence_grid()
+	_highlight_essences()
 	_update_previews()
 
 
 func _rebuild_medicine_grid(med_rows: Array) -> void:
-	for child in _med_grid.get_children():
-		child.queue_free()
+	UI.clear_cards(_med_grid)
 	medicine_cards.clear()
 	_med_empty.visible = med_rows.is_empty()
 	for row in med_rows:
@@ -461,10 +544,12 @@ func _rebuild_medicine_grid(med_rows: Array) -> void:
 			continue
 		var card := Button.new()
 		card.custom_minimum_size = Vector2(430, 102)
+		card.set_meta("item", key)
 		UI.style_slot_button(card, selected_medicine == key, false)
 		card.pressed.connect(func() -> void:
 			selected_medicine = key
-			_rebuild_medicine_grid(medicine_rows(session, true))
+			for medicine_card in medicine_cards:
+				UI.style_slot_button(medicine_card, medicine_card == card, false)
 			_update_previews()
 		)
 		_med_grid.add_child(card)
@@ -566,7 +651,7 @@ func _update_previews() -> void:
 	var recipe := Data.recipe(mix_first, mix_second) if mix_first >= 0 and mix_second >= 0 else {}
 	if recipe.is_empty():
 		_mix_out_title.text = "请放入两份原液"
-		_mix_out_note.text = "点击左侧原液自动填入槽位"
+		_mix_out_note.text = "按空格将选中的原液放入槽位"
 		_populate_big_stat_cards(_mix_stats_box, null)
 	else:
 		_mix_out_title.text = "%s ×1" % recipe.name
@@ -605,8 +690,10 @@ func _refine() -> void:
 
 
 func _mix() -> void:
-	if mix_first >= 0 and mix_second >= 0 and session.mix(mix_first, mix_second):
+	if not mix_button.disabled:
 		var recipe := Data.recipe(mix_first, mix_second)
+		if not session.mix(mix_first, mix_second):
+			return
 		_status.text = "配制完成，获得 %s ×1。" % recipe.name
 
 

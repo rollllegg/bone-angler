@@ -8,7 +8,7 @@ const AMBIENT_ATLAS := preload("res://assets/art/demo/river_ambient.png")
 const AMBIENT_STRIP := Rect2(0, 77, 405, 159)
 const AMBIENT_COLUMNS := 8
 const AMBIENT_FRAME_COUNT := 48
-const AMBIENT_FPS := 12.0
+const AMBIENT_FPS := 16.0
 const FERRY := preload("res://assets/art/demo/soul_ferry.png")
 # The visible hull and passengers inside the sprite's transparent 64-by-64 canvas.
 const FERRY_REGION := Rect2(10, 20, 43, 24)

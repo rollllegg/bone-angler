@@ -14,7 +14,7 @@ const DAY_FOUR_BANDS := [Vector2i(4, 7), Vector2i(5, 8), Vector2i(6, 9)]
 const DAY_FIVE_BANDS := [Vector2i(4, 7), Vector2i(6, 8), Vector2i(7, 9)]
 const LEGACY_REQUIREMENTS: Array[Vector3i] = [Vector3i(7, 7, 7), Vector3i(9, 9, 9)]
 const STARTER_RAISE_FISH := [0, 1, Data.LANTERN]
-const STARTER_LOWER_FISH := [5, 6, 7]
+const STARTER_LOWER_FISH := [5, 6, Data.STILLFIN]
 const HIGH_STAT_GUESTS := [4, 3, 7]
 
 var catches: Array[Dictionary] = []
@@ -32,7 +32,6 @@ var last_payout := 0
 var _first_services: Dictionary = {}
 var spawn_remaining := 0.0
 var paused := false
-var choosing := false
 var active := false
 var _arrived := 0
 var _day_guests: Array[Vector2i] = []
@@ -53,7 +52,7 @@ func _process(delta: float) -> void:
 
 
 func is_time_suspended() -> bool:
-	return paused or choosing
+	return paused
 
 
 func start_shift() -> void:

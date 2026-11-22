@@ -9,7 +9,6 @@ const UI := preload("res://scripts/demo/demo_ui.gd")
 const MAX_STAT := Session.STAT_MAX
 
 var soul: Dictionary = {}
-var departing: bool = false
 var preview: Dictionary = {}
 var requirements: Array[Vector3i] = [Vector3i.ZERO, Session.STAT_CEILING]
 
@@ -75,13 +74,12 @@ func _outlined_label(rect: Rect2, font_size: int, color: Color) -> Label:
 	return lbl
 
 
-func set_state(selected_soul: Dictionary, is_departing: bool, dose_preview: Dictionary, day: int, limits: Array[Vector3i]) -> void:
+func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, limits: Array[Vector3i]) -> void:
 	soul = selected_soul
-	departing = is_departing
 	preview = dose_preview
 	requirements = limits
 	var has_soul := not soul.is_empty()
-	var has_preview := has_soul and not preview.is_empty() and not departing
+	var has_preview := has_soul and not preview.is_empty()
 	var legend := PackedStringArray(["第 %d 天" % day])
 
 	if not has_soul:
@@ -91,10 +89,7 @@ func set_state(selected_soul: Dictionary, is_departing: bool, dose_preview: Dict
 	else:
 		_name_label.text = str(soul.name)
 		var ready := Session.meets_requirements(soul.stats, requirements)
-		if departing:
-			_state_label.text = "放行中…"
-			_state_label.add_theme_color_override("font_color", UI.MINT)
-		elif has_preview:
+		if has_preview:
 			var will_ready := Session.meets_requirements(preview.after, requirements)
 			_state_label.text = "预览·达标" if will_ready else "预览中"
 			_state_label.add_theme_color_override("font_color", UI.GOOD if will_ready else UI.GOLD)
@@ -157,7 +152,7 @@ func _draw_bars() -> void:
 	var w := _bars_canvas.size.x
 	var row_h := 46.0
 	var has_soul := not soul.is_empty()
-	var has_preview := has_soul and not preview.is_empty() and not departing
+	var has_preview := has_soul and not preview.is_empty()
 	var bar_x := 48.0
 	var status_w := 88.0
 	var bar_w := w - bar_x - status_w - 8.0

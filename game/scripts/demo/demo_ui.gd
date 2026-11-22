@@ -147,18 +147,17 @@ static func button(parent: Node, text: String, rect: Rect2, callback: Callable, 
 	control.add_theme_color_override("font_shadow_color", Color(INK, 0.9))
 	control.add_theme_constant_override("shadow_offset_x", 2)
 	control.add_theme_constant_override("shadow_offset_y", 2)
-	if primary:
-		control.add_theme_stylebox_override("normal", box(BTN_GOLD_NORMAL, 12.0, 12.0, 6.0))
-		control.add_theme_stylebox_override("hover", box(BTN_GOLD_HOVER, 12.0, 12.0, 6.0))
-		control.add_theme_stylebox_override("pressed", box(BTN_GOLD_PRESSED, 12.0, 12.0, 6.0))
-	else:
-		control.add_theme_stylebox_override("normal", box(BTN_NORMAL, 12.0, 12.0, 6.0))
-		control.add_theme_stylebox_override("hover", box(BTN_HOVER, 12.0, 12.0, 6.0))
-		control.add_theme_stylebox_override("pressed", box(BTN_PRESSED, 12.0, 12.0, 6.0))
+	set_button_primary(control, primary)
 	control.add_theme_stylebox_override("disabled", box(BTN_DISABLED, 12.0, 12.0, 6.0))
 	control.pressed.connect(callback)
 	parent.add_child(control)
 	return control
+
+
+static func set_button_primary(control: Button, primary: bool) -> void:
+	control.add_theme_stylebox_override("normal", box(BTN_GOLD_NORMAL if primary else BTN_NORMAL, 12.0, 12.0, 6.0))
+	control.add_theme_stylebox_override("hover", box(BTN_GOLD_HOVER if primary else BTN_HOVER, 12.0, 12.0, 6.0))
+	control.add_theme_stylebox_override("pressed", box(BTN_GOLD_PRESSED if primary else BTN_PRESSED, 12.0, 12.0, 6.0))
 
 
 static func set_tab_active(control: Button, is_active: bool) -> void:
@@ -205,6 +204,31 @@ static func create_scroll(parent: Node, rect: Rect2) -> ScrollContainer:
 	scroll.follow_focus = false
 	parent.add_child(scroll)
 	return scroll
+
+
+static func activate(button: Button) -> void:
+	if not button.disabled:
+		button.pressed.emit()
+
+
+static func next_button(buttons: Array[Button], current: int, step: int) -> int:
+	for offset in range(1, buttons.size() + 1):
+		var index := posmod(current + step * offset, buttons.size())
+		if not buttons[index].disabled:
+			return index
+	return current
+
+
+static func clear_cards(container: Container) -> void:
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
+
+
+static func reveal(scroll: ScrollContainer, card: Control) -> void:
+	await scroll.get_tree().process_frame
+	if is_instance_valid(scroll) and is_instance_valid(card) and scroll.is_ancestor_of(card):
+		scroll.ensure_control_visible(card)
 
 
 static func make_effect_row(effect: Vector3i, icon_size: int = 24, font_size: int = 19, show_names: bool = false, highlight_stat: int = -1) -> HBoxContainer:
