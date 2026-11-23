@@ -1,5 +1,6 @@
 {
   "slots": [
-    {"day": 5, "slot": 5, "case": "wukong"}
+    {"day": 5, "slot": 4, "case": "wukong"},
+    {"day": 5, "slot": 5, "case": "orpheus"}
   ]
 }

@@ -28,7 +28,7 @@ func _run() -> void:
 		if soul.has("story_case"):
 			story_soul = soul
 			break
-	_check(str(story_soul.get("story_case", "")) == "wukong", "last guest is wukong")
+	_check(str(story_soul.get("story_case", "")) == "wukong", "first story guest is wukong")
 	_check(str(story_soul.get("name", "")) == "史密斯", "queue name is the disguise")
 	_check(not session.can_release(int(story_soul.id)), "story guest bypasses the normal release gate")
 
@@ -74,6 +74,36 @@ func _run() -> void:
 	_check(str(session.story_state.ledger[0].get("who", "")) == "孙悟空", "ledger records the called-out name")
 	_check(bool(session.story_state.world["world.hades_rampage"]), "named refusal still rampages")
 	_check(session.get_ending_lines().size() > 0, "ending lines resolve")
+
+	# Orpheus follows Wukong and uses the rampage flag.
+	var orpheus_soul: Dictionary = {}
+	for soul in session.souls:
+		if str(soul.get("story_case", "")) == "orpheus":
+			orpheus_soul = soul
+			break
+	_check(not orpheus_soul.is_empty(), "orpheus is waiting after wukong")
+	_check(str(orpheus_soul.get("name", "")) == "亚历克斯", "orpheus queue name is the alias")
+	var orpheus_id := int(orpheus_soul.id)
+	var orpheus = session.get_story_runtime(orpheus_id)
+	_check(orpheus != null, "orpheus runtime is created")
+	_settle(orpheus)
+	session._add_potion("test", "极识药", Vector3i(10, 0, -4), -1, 0)
+	var orpheus_potion := int(session.potions[0]["id"])
+	_check(session.feed_story_potion(orpheus_id, false, orpheus_potion), "orpheus potion is consumed")
+	_settle(orpheus)
+	_check(int(orpheus.flags["dose.score"]) == -6, "orpheus confusion score")
+	_check(not bool(orpheus.flags["confused"]), "orpheus potion clears confusion")
+	_check(orpheus.choose("admit"), "orpheus admission works")
+	_settle(orpheus)
+	_check(orpheus.is_closed(), "orpheus story closes")
+	_check(orpheus.get_outcome_id() == "accepted.reunion", "orpheus reunion with wukong rampage")
+	_check(session.finish_story(orpheus_id), "session finishes orpheus")
+	_check(session.released_count == 1 and session.rejected_count == 1, "orpheus release counts")
+	_check(session.coins == 100, "orpheus pays the fee")
+	_check(session.story_state.ledger.size() == 2, "ledger gets two entries")
+	_check(str(session.story_state.ledger[1].get("who", "")) == "亚历克斯", "orpheus ledger keeps the alias")
+	_check(str(session.story_state.ledger[1].get("result", "")) == "已入境", "orpheus ledger records admission")
+	_check(bool(session.story_state.world["world.orpheus_reunion"]), "orpheus reunion reaches the world state")
 
 	# Story panel suspends the shift clock.
 	var clock := Session.new()

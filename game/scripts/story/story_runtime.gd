@@ -100,6 +100,7 @@ func visible_choices() -> Array:
 			reason = _text(str(choice.locked_text))
 		result.append({
 			"id": str(choice.get("id", "")),
+			"kind": str(choice.get("kind", "")),
 			"text": _text(str(choice.get("text", ""))),
 			"locked": locked,
 			"reason": reason,
@@ -193,6 +194,14 @@ func get_outcome_id() -> String:
 	return outcome_id
 
 
+func get_aftermath_lines() -> Array:
+	var outcome: Dictionary = case_data.get("outcomes", {}).get(outcome_id, {})
+	var result: Array = []
+	for key in outcome.get("aftermath", []):
+		result.append(_text(str(key)))
+	return result
+
+
 func get_node_id() -> String:
 	return node_id
 
@@ -261,6 +270,18 @@ func get_dose_label() -> String:
 
 func has_fed_potion() -> bool:
 	return dose_fed
+
+
+func get_score_name() -> String:
+	return str(case_data.get("potion", {}).get("score_name", "药性"))
+
+
+func get_portrait_id() -> String:
+	var portrait: Dictionary = case_data.get("portrait", {})
+	for rule in portrait.get("rules", []):
+		if not rule.has("if") or _test(str(rule.if)):
+			return str(rule.get("id", ""))
+	return str(portrait.get("default", ""))
 
 
 func get_signature() -> String:
@@ -365,16 +386,22 @@ func _build_steps() -> void:
 func _step_dict(raw: Dictionary) -> Dictionary:
 	var key := str(raw.get("text", ""))
 	var speaker_key := str(raw.get("speaker", ""))
-	var speaker_name := ""
-	if speaker_key != "":
-		var speaker: Dictionary = case_data.get("speakers", {}).get(speaker_key, {})
-		speaker_name = str(speaker.get("name", speaker_key))
+	var speaker_name := _speaker_name(speaker_key) if speaker_key != "" else ""
 	return {
 		"speaker": speaker_key,
 		"speaker_name": speaker_name,
 		"text": _text(key),
 		"key": key,
+		"cues": raw.get("cues", []),
 	}
+
+
+func _speaker_name(key: String) -> String:
+	var speaker: Dictionary = case_data.get("speakers", {}).get(key, {})
+	for rule in speaker.get("name_if", []):
+		if _test(str(rule.get("if", "true"))):
+			return str(rule.get("name", speaker.get("name", key)))
+	return str(speaker.get("name", key))
 
 
 func _text(key: String) -> String:
@@ -382,7 +409,12 @@ func _text(key: String) -> String:
 		return key
 	if not text_db.has(key):
 		text_missing.emit(key)
-	return text_db.get_text(key)
+	var raw: String = text_db.get_text(key)
+	return text_db.render(raw, _context())
+
+
+func get_context() -> Dictionary:
+	return _context()
 
 
 func _context() -> Dictionary:

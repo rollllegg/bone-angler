@@ -5,6 +5,7 @@ extends Control
 const UI := preload("res://scripts/demo/demo_ui.gd")
 const TypingChallenge := preload("res://scripts/systems/typing_challenge.gd")
 const LetterBubbleRow := preload("res://scripts/demo/letter_bubble_row.gd")
+const StoryDirector := preload("res://scripts/story/story_director.gd")
 
 signal advance_requested
 signal choice_requested(choice_id: String)
@@ -12,6 +13,9 @@ signal finish_requested
 
 var _runtime = null
 var _signature := ""
+var _stage = null
+var _director = null
+var _cue_step := ""
 var _backdrop: ColorRect
 var _frame: Panel
 var _speaker: Label
@@ -21,6 +25,7 @@ var _choices_root: Control
 var _advance: Button
 var _finish: Button
 var _buttons: Array = []
+var _decision_buttons: Array = []
 var _typing
 var _bubbles: LetterBubbleRow
 var _callout_prompt: Label
@@ -55,7 +60,6 @@ func _ready() -> void:
 
 	_typing = TypingChallenge.new()
 	_typing.name = "TypingChallenge"
-	_typing.hint_delay = 0.2
 	add_child(_typing)
 	_typing.set_process(false)
 	_typing.state_changed.connect(_on_typing_changed)
@@ -89,7 +93,8 @@ func _ready() -> void:
 	_cancel_button = UI.button(self, "放弃（Esc）", Rect2(24, 540, 530, 42), _on_cancel_pressed, false)
 	_cancel_button.visible = false
 	visibility_changed.connect(_on_visibility_changed)
-	set_process(false)
+	_director = StoryDirector.new()
+	set_process(true)
 	visible = false
 
 
@@ -112,30 +117,48 @@ func render(runtime) -> void:
 	if step.is_empty():
 		_speaker.text = ""
 		_speaker.add_theme_color_override("font_color", UI.MUTED)
-		_body.text = "（你合上了账本。）" if runtime.is_closed() else "……"
+		_body.text = "（你合上了账本。）" if runtime.is_closed() else ""
 	else:
 		var speaker := str(step.get("speaker_name", ""))
 		_speaker.text = speaker if speaker != "" else "旁白"
 		_speaker.add_theme_color_override("font_color", UI.MINT if speaker != "" else UI.MUTED)
 		_body.text = str(step.get("text", ""))
 
+	_sync_cues(runtime, step)
+
 	_clear_choices()
 	var choices: Array = runtime.visible_choices()
 	var closed: bool = runtime.is_closed()
-	var height := 360.0 if closed else 600.0
+	var has_choices := not choices.is_empty()
+	var decisions: Array = []
+	for choice in choices:
+		var kind := str(choice.get("kind", ""))
+		if kind == "accept" or kind == "refuse":
+			decisions.append(choice)
+	var has_decisions := not decisions.is_empty()
+	var height := 600.0
 	size.y = height
 	_backdrop.size.y = height
 	_frame.size.y = height
+	_body.size.y = 160.0 if has_choices else 340.0
+	_hint.position.y = 242.0 if has_choices else 430.0
 	_advance.position.y = height - 60.0
 	_finish.position.y = height - 60.0
-	_callout_button.position.y = height - 60.0
+	_callout_button.position.y = 492.0 if has_decisions else height - 60.0
 	_cancel_button.position.y = height - 60.0
-	_advance.visible = not closed and choices.is_empty()
+	_advance.visible = not closed and not has_choices
 	_finish.visible = closed
+	if _finish.visible:
+		_finish.position = Vector2(24, height - 60)
+		_finish.size = Vector2(530, 42)
 	_callout_button.visible = false
 	_cancel_button.visible = false
+	var normal_index := 0
 	for index in choices.size():
 		var choice: Dictionary = choices[index]
+		var kind := str(choice.get("kind", ""))
+		if kind == "accept" or kind == "refuse":
+			continue
 		var label := "%d. %s" % [index + 1, str(choice.get("text", ""))]
 		if bool(choice.get("locked", false)):
 			var reason := str(choice.get("reason", ""))
@@ -143,13 +166,32 @@ func render(runtime) -> void:
 		var button := UI.button(
 			_choices_root,
 			label,
-			Rect2(0, index * 42, 530, 38),
+			Rect2(0, normal_index * 42, 530, 38),
 			_on_choice.bind(str(choice.get("id", ""))),
 			false
 		)
 		button.add_theme_font_size_override("font_size", 18)
 		button.disabled = bool(choice.get("locked", false))
 		_buttons.append(button)
+		normal_index += 1
+
+	if not closed and has_decisions:
+		var gap := 10.0
+		var width := (530.0 - gap * maxf(float(decisions.size() - 1), 0.0)) / maxf(float(decisions.size()), 1.0)
+		for index in decisions.size():
+			var choice: Dictionary = decisions[index]
+			var kind := str(choice.get("kind", ""))
+			var button := UI.button(
+				self,
+				str(choice.get("text", "")),
+				Rect2(24.0 + index * (width + gap), height - 60.0, width, 42),
+				_on_choice.bind(str(choice.get("id", ""))),
+				false
+			)
+			button.add_theme_font_size_override("font_size", 20)
+			button.disabled = bool(choice.get("locked", false))
+			_style_decision(button, kind)
+			_decision_buttons.append(button)
 
 	if not closed and not choices.is_empty() and runtime.can_callout():
 		_callout_button.text = runtime.get_callout_button_text()
@@ -162,7 +204,7 @@ func render(runtime) -> void:
 		_hint.text = "左侧选一味药，按 F 请他喝下"
 		_hint.add_theme_color_override("font_color", UI.GOLD)
 	elif runtime.has_fed_potion():
-		_hint.text = "他喝过：%s　火气 %+d" % [runtime.get_dose_label(), runtime.get_dose_score()]
+		_hint.text = "他喝过：%s　%s %+d" % [runtime.get_dose_label(), runtime.get_score_name(), runtime.get_dose_score()]
 		_hint.add_theme_color_override("font_color", UI.MINT)
 	else:
 		_hint.text = ""
@@ -174,12 +216,37 @@ func reset() -> void:
 	visible = false
 	_runtime = null
 	_signature = ""
+	_cue_step = ""
+	if _director != null:
+		_director.cancel()
+	if _stage != null and _stage.has_method("reset"):
+		_stage.reset()
 	_clear_choices()
 	_hide_callout_ui()
 	_callout_button.visible = false
 	_cancel_button.visible = false
 	_finish.visible = false
 	_advance.visible = true
+
+
+func set_stage(stage) -> void:
+	_stage = stage
+	if _director == null:
+		_director = StoryDirector.new()
+	_director.set_stage(stage)
+
+
+func is_playing_cues() -> bool:
+	return _director != null and _director.is_playing()
+
+
+func blocks_advance() -> bool:
+	return _director != null and _director.blocks_advance()
+
+
+func skip_cues() -> void:
+	if _director != null:
+		_director.skip()
 
 
 func submit_letter(letter: String) -> void:
@@ -219,7 +286,7 @@ func _on_callout_pressed() -> void:
 	if answer.length() > 8:
 		bubble_size = clampf(530.0 / maxf(float(answer.length()), 1.0) - 6.0, 36.0, 56.0)
 	_bubbles.setup(bubble_size, int(bubble_size * 0.42))
-	_bubbles.render(_typing.target, _typing.typed_count, _typing.revealed_count)
+	_bubbles.render(_typing.target, _typing.typed_count)
 	_bubbles.visible = true
 	_callout_prompt.text = str(config.get("prompt_text", ""))
 	if _callout_prompt.text == "":
@@ -234,6 +301,7 @@ func _on_callout_pressed() -> void:
 	_advance.visible = false
 	_finish.visible = false
 	_clear_choices()
+	_body.visible = false
 	_hint.visible = false
 	_update_callout_timer()
 	set_process(true)
@@ -249,16 +317,39 @@ func _on_visibility_changed() -> void:
 
 
 func _process(delta: float) -> void:
+	if _director != null and visible:
+		_director.tick(delta)
 	if not _callout_mode:
 		return
 	_typing.tick(delta)
 	_update_callout_timer()
 
 
+func _sync_cues(runtime, step: Dictionary) -> void:
+	if _director == null:
+		return
+	var portrait: String = runtime.get_portrait_id()
+	if portrait != "" and _stage != null and _stage.has_method("ensure_story_sprite"):
+		_stage.ensure_story_sprite(portrait)
+	if step.is_empty():
+		_cue_step = ""
+		_director.cancel()
+		return
+	var identity := "%s|%d|%s" % [
+		runtime.get_node_id(),
+		runtime.step_index,
+		str(step.get("key", "")),
+	]
+	if identity == _cue_step:
+		return
+	_cue_step = identity
+	_director.play(str(step.get("key", "")), step.get("cues", []), runtime.get_context())
+
+
 func _on_typing_changed() -> void:
 	if not _callout_mode:
 		return
-	_bubbles.render(_typing.target, _typing.typed_count, _typing.revealed_count)
+	_bubbles.render(_typing.target, _typing.typed_count)
 	if _typing.active and _typing.typed_count > 0:
 		_callout_feedback.text = "继续输入……"
 		_callout_feedback.add_theme_color_override("font_color", UI.MUTED)
@@ -298,6 +389,7 @@ func _hide_callout_ui() -> void:
 	_callout_timer.visible = false
 	_callout_feedback.visible = false
 	_cancel_button.visible = false
+	_body.visible = true
 	_hint.visible = true
 
 
@@ -310,6 +402,30 @@ func _update_callout_timer() -> void:
 		_callout_timer.add_theme_color_override("font_color", UI.MUTED)
 
 
+func _style_decision(button: Button, kind: String) -> void:
+	var is_accept := kind == "accept"
+	var border := UI.GOOD if is_accept else UI.WARN
+	var normal := Color("1d5a3f") if is_accept else Color("5f2626")
+	var hover := Color("2a7a55") if is_accept else Color("833333")
+	var pressed := Color("14402d") if is_accept else Color("3f1919")
+	button.add_theme_stylebox_override("normal", _decision_style(normal, border))
+	button.add_theme_stylebox_override("hover", _decision_style(hover, border))
+	button.add_theme_stylebox_override("pressed", _decision_style(pressed, border))
+	button.add_theme_color_override("font_color", UI.CREAM)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", UI.CREAM)
+
+
+func _decision_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(8)
+	return style
+
+
 func _on_choice(choice_id: String) -> void:
 	choice_requested.emit(choice_id)
 
@@ -318,4 +434,9 @@ func _clear_choices() -> void:
 	for child in _choices_root.get_children():
 		_choices_root.remove_child(child)
 		child.queue_free()
+	for child in _decision_buttons:
+		if is_instance_valid(child):
+			remove_child(child)
+			child.queue_free()
 	_buttons.clear()
+	_decision_buttons.clear()

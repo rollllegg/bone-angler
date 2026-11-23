@@ -1,0 +1,42 @@
+{
+  "id": "wukong_turn",
+  "kind": "sprite",
+  "prompt": "保持同一个孙悟空角色、同一套红色袈裟和金箍；让他转身背对镜头，展示背影，正面全身构图；纯白背景，无阴影，无文字，16-bit 像素风",
+  "source": "game/art/source/story/wukong_turn_raw.png",
+  "source_sha256": "f986b98ad494b982717fc24f87e0b65a03236a7d332e288a8366d40c8c079067",
+  "input_size": [
+    1056,
+    1056
+  ],
+  "output": "game/assets/art/story/sprites/wukong_turn.png",
+  "output_sha256": "1bb4816a69e4c5886b5869f379e0d4cd58c75bdebcc98d01e354c692bc56bcd9",
+  "output_size": [
+    64,
+    96
+  ],
+  "pixel_grid": [
+    117,
+    123
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 1,
+  "outline": 1,
+  "white_specks": 24,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    37,
+    6,
+    80,
+    111
+  ],
+  "processed_at_utc": "2026-11-23T18:33:05.585652+00:00"
+}

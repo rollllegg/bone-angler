@@ -1,0 +1,522 @@
+{
+  "callout": {
+    "answer": "ORPHEUS",
+    "button": "orpheus.callout.button.1",
+    "case_sensitive": false,
+    "failure": "inspect",
+    "once": false,
+    "success": "identify",
+    "time_limit": 20.0
+  },
+  "canon": [
+    "world.orpheus_case_seen = true"
+  ],
+  "entry": "arrival",
+  "fee": 60.0,
+  "id": "orpheus",
+  "nodes": [
+    {
+      "id": "arrival",
+      "next": "inspect",
+      "steps": [
+        {
+          "cues": [
+            {
+              "id": "orpheus_front",
+              "type": "sprite"
+            },
+            {
+              "alpha": 0.22,
+              "color": "#cdbdf0",
+              "duration": 0.25,
+              "type": "flash"
+            },
+            {
+              "duration": 0.25,
+              "type": "wait"
+            }
+          ],
+          "text": "orpheus.arrival.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.arrival.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.arrival.3"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.arrival.4"
+        }
+      ]
+    },
+    {
+      "choices": [
+        {
+          "id": "registry",
+          "locked_if": "clue.registry != 0",
+          "locked_text": "orpheus.choice.registry.locked",
+          "next": "inspect.registry",
+          "set": [
+            "clue.registry = 1"
+          ],
+          "text": "orpheus.choice.registry"
+        },
+        {
+          "id": "eurydice",
+          "locked_if": "clue.eurydice",
+          "locked_text": "orpheus.choice.eurydice.locked",
+          "next": "inspect.eurydice",
+          "set": [
+            "clue.eurydice = true"
+          ],
+          "text": "orpheus.choice.eurydice"
+        },
+        {
+          "id": "lyre",
+          "locked_if": "clue.lyre",
+          "locked_text": "orpheus.choice.lyre.locked",
+          "next": "inspect.lyre",
+          "set": [
+            "clue.lyre = true"
+          ],
+          "text": "orpheus.choice.lyre"
+        },
+        {
+          "id": "admit",
+          "kind": "accept",
+          "next": "end.accepted",
+          "text": "orpheus.choice.admit"
+        },
+        {
+          "id": "refuse",
+          "kind": "refuse",
+          "next": "end.refused",
+          "text": "orpheus.choice.refuse"
+        }
+      ],
+      "id": "inspect",
+      "steps": []
+    },
+    {
+      "id": "inspect.registry",
+      "next": "inspect",
+      "steps": [
+        {
+          "cues": [
+            {
+              "duration": 0.35,
+              "strength": 4.0,
+              "type": "shake"
+            },
+            {
+              "alpha": 0.4,
+              "color": "#e7cf8a",
+              "duration": 0.22,
+              "type": "flash"
+            },
+            {
+              "duration": 0.9,
+              "type": "wait"
+            }
+          ],
+          "text": "orpheus.inspect.registry.1"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.registry.2"
+        }
+      ]
+    },
+    {
+      "id": "inspect.eurydice",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.eurydice.1"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.eurydice.2"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.eurydice.3"
+        },
+        {
+          "cues": [
+            {
+              "alpha": 0.15,
+              "color": "#e8e0c8",
+              "duration": 0.15,
+              "type": "flash"
+            }
+          ],
+          "speaker": "圣",
+          "text": "orpheus.inspect.eurydice.4"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.eurydice.5"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.eurydice.6"
+        }
+      ]
+    },
+    {
+      "id": "inspect.lyre",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.lyre.1"
+        },
+        {
+          "cues": [
+            {
+              "duration": 0.3,
+              "strength": 3.0,
+              "type": "shake"
+            }
+          ],
+          "speaker": "俄",
+          "text": "orpheus.inspect.lyre.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.lyre.3"
+        },
+        {
+          "cues": [
+            {
+              "duration": 0.35,
+              "strength": 4.0,
+              "type": "shake"
+            },
+            {
+              "alpha": 0.2,
+              "color": "#9b8fb5",
+              "duration": 0.2,
+              "type": "flash"
+            },
+            {
+              "id": "orpheus_turn",
+              "type": "sprite"
+            },
+            {
+              "delay": 1.0,
+              "id": "orpheus_front",
+              "type": "sprite"
+            }
+          ],
+          "speaker": "俄",
+          "text": "orpheus.inspect.lyre.4"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.lyre.5"
+        }
+      ]
+    },
+    {
+      "id": "identify",
+      "next": "inspect",
+      "set": [
+        "named = true"
+      ],
+      "steps": [
+        {
+          "cues": [
+            {
+              "duration": 0.35,
+              "strength": 4.0,
+              "type": "shake"
+            },
+            {
+              "alpha": 0.4,
+              "color": "#e7cf8a",
+              "duration": 0.22,
+              "type": "flash"
+            },
+            {
+              "duration": 0.4,
+              "type": "wait"
+            }
+          ],
+          "speaker": "圣",
+          "text": "orpheus.identify.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.identify.2"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "dose.score > 0",
+          "next": "inspect",
+          "set": [
+            "confused = true"
+          ]
+        },
+        {
+          "if": "dose.score <= 0",
+          "next": "inspect",
+          "set": [
+            "confused = false"
+          ]
+        }
+      ],
+      "id": "potion.react",
+      "next": "inspect",
+      "steps": [
+        {
+          "cues": [
+            {
+              "action": "show",
+              "id": "bowl",
+              "scale": 0.65,
+              "type": "prop"
+            },
+            {
+              "alpha": 0.35,
+              "color": "#9ac47a",
+              "duration": 0.25,
+              "type": "flash"
+            },
+            {
+              "duration": 0.4,
+              "type": "wait"
+            },
+            {
+              "action": "hide",
+              "delay": 1.0,
+              "id": "bowl",
+              "type": "prop"
+            }
+          ],
+          "speaker": "圣",
+          "text": "orpheus.potion.react.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.potion.react.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.potion.react.3"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.potion.react.4"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "confused",
+          "next": "end.accepted.confused"
+        },
+        {
+          "if": "world.hades_rampage",
+          "next": "end.accepted.reunion"
+        },
+        {
+          "next": "end.accepted.clear"
+        }
+      ],
+      "id": "end.accepted"
+    },
+    {
+      "id": "end.accepted.confused",
+      "outcome": "accepted.confused",
+      "steps": []
+    },
+    {
+      "id": "end.accepted.clear",
+      "outcome": "accepted.clear",
+      "steps": []
+    },
+    {
+      "id": "end.accepted.reunion",
+      "outcome": "accepted.reunion",
+      "steps": []
+    },
+    {
+      "id": "end.refused",
+      "outcome": "refused",
+      "steps": []
+    }
+  ],
+  "outcomes": {
+    "accepted.clear": {
+      "aftermath": [
+        "orpheus.end.accepted.clear.1"
+      ],
+      "effects": [
+        "world.orpheus_admitted = true",
+        "world.orpheus_reunion = false",
+        "world.orpheus_lost = true"
+      ],
+      "ledger": {
+        "note": "orpheus.ledger.accepted.clear.1",
+        "result": "已入境",
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ]
+      },
+      "payout": 60.0,
+      "result": "release"
+    },
+    "accepted.confused": {
+      "aftermath": [
+        "orpheus.end.accepted.confused.1"
+      ],
+      "effects": [
+        "world.orpheus_admitted = true",
+        "world.orpheus_reunion = false",
+        "world.orpheus_lost = true"
+      ],
+      "ledger": {
+        "note": "orpheus.ledger.accepted.confused.1",
+        "result": "已入境",
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ]
+      },
+      "payout": 60.0,
+      "result": "release"
+    },
+    "accepted.reunion": {
+      "aftermath": [
+        "orpheus.end.accepted.reunion.1"
+      ],
+      "effects": [
+        "world.orpheus_admitted = true",
+        "world.orpheus_reunion = true",
+        "world.orpheus_lost = false"
+      ],
+      "ledger": {
+        "note": "orpheus.ledger.accepted.reunion.1",
+        "result": "已入境",
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ]
+      },
+      "payout": 60.0,
+      "result": "release"
+    },
+    "refused": {
+      "aftermath": [
+        "orpheus.end.refused.1"
+      ],
+      "effects": [
+        "world.orpheus_admitted = false",
+        "world.orpheus_reunion = false",
+        "world.orpheus_lost = true"
+      ],
+      "ledger": {
+        "note": "orpheus.ledger.refused.1",
+        "result": "未入境",
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ]
+      },
+      "payout": 0.0,
+      "result": "reject"
+    }
+  },
+  "portrait": {
+    "default": "orpheus_front"
+  },
+  "potion": {
+    "node": "potion.react",
+    "score": {
+      "emotion": 1.0,
+      "will": -1.0,
+      "wisdom": -1.0
+    },
+    "score_name": "迷茫"
+  },
+  "queue_name": "亚历克斯",
+  "requires_stats": false,
+  "speakers": {
+    "俄": {
+      "name": "亚历克斯",
+      "name_if": [
+        {
+          "if": "named",
+          "name": "俄耳普斯"
+        }
+      ]
+    },
+    "圣": {
+      "name": "圣地亚哥"
+    }
+  },
+  "state": {
+    "flags": {
+      "callout.done": {
+        "default": false,
+        "type": "bool"
+      },
+      "clue.eurydice": {
+        "default": false,
+        "type": "bool"
+      },
+      "clue.lyre": {
+        "default": false,
+        "type": "bool"
+      },
+      "clue.registry": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "confused": {
+        "default": true,
+        "type": "bool"
+      },
+      "dose.fed": {
+        "default": false,
+        "type": "bool"
+      },
+      "dose.label": {
+        "default": "",
+        "type": "string"
+      },
+      "dose.score": {
+        "default": 1.0,
+        "type": "int"
+      },
+      "named": {
+        "default": false,
+        "type": "bool"
+      }
+    }
+  },
+  "title": "俄耳普斯"
+}

@@ -20,6 +20,7 @@ func _run() -> void:
 	var runtime = _runtime(state, text)
 	runtime.case_closed.connect(func(id: String) -> void: _closed_id = id)
 	_check(runtime.start(), "case starts")
+	_check(runtime.get_score_name() == "火气", "score name comes from the case")
 	_settle(runtime)
 	_check(runtime.current_step().get("text", "") == "hub", "arrives at hub")
 	var choices := _ids(runtime.visible_choices())
@@ -41,6 +42,9 @@ func _run() -> void:
 	_check(runtime.choose("name"), "choosing name succeeds")
 	_settle(runtime)
 	_check(bool(runtime.flags["named"]), "name sets named")
+	_check(runtime.current_step().get("text", "") == "hub!", "inline text follows the named flag")
+	var named_choices: Array = runtime.visible_choices()
+	_check(_choice_text(named_choices, "end") == "end!", "choice text renders inline conditions")
 	_check(runtime.can_feed_potion(), "potion can be offered once")
 	_check(runtime.feed_potion(Vector3i(10, 0, -4), "极识药"), "calming potion feeds")
 	_settle(runtime)
@@ -93,6 +97,13 @@ func _ids(choices: Array) -> Array:
 	return result
 
 
+func _choice_text(choices: Array, id: String) -> String:
+	for choice in choices:
+		if str(choice.get("id", "")) == id:
+			return str(choice.get("text", ""))
+	return ""
+
+
 func _state():
 	var state = State.new()
 	state.init_defaults({"world.flag": {"type": "bool", "default": false}})
@@ -103,10 +114,10 @@ func _text():
 	var text = TextDB.new()
 	text.entries = {
 		"f.start.1": "start",
-		"f.hub.1": "hub",
+		"f.hub.1": "hub{{if named}}!{{/if}}",
 		"f.choice.look": "look",
 		"f.choice.name": "name",
-		"f.choice.end": "end",
+		"f.choice.end": "end{{if named}}!{{/if}}",
 		"f.look.1": "look result",
 		"f.name.1": "name result",
 		"f.potion.1": "potion result",
@@ -128,7 +139,7 @@ func _runtime(state, text):
 			"dose.fed": {"type": "bool", "default": false},
 			"dose.score": {"type": "int", "default": 0},
 		}},
-		"potion": {"score": {"wisdom": -1, "emotion": 1, "will": 1}, "node": "potion"},
+		"potion": {"score": {"wisdom": -1, "emotion": 1, "will": 1}, "score_name": "火气", "node": "potion"},
 		"nodes": [
 			{"id": "start", "steps": [{"speaker": "A", "text": "f.start.1"}], "next": "hub"},
 			{"id": "hub", "steps": [{"text": "f.hub.1"}], "choices": [

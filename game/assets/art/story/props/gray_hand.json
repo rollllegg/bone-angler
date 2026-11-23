@@ -1,0 +1,40 @@
+{
+  "id": "gray_hand",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一只腐败灰暗的亡灵之手，从画面下方伸出，手指张开，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/gray_hand_raw.png",
+  "source_sha256": "aa30b25ed4db27c645987302253a00ff6c3b86c2e2876cfe2e4aabba448befe3",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/gray_hand.png",
+  "output_sha256": "cb3764f09f5ad5dcc2d32ddd6a9dfd5080d4a5aaf758a98daa8b9a7f9e274164",
+  "output_size": [
+    56,
+    56
+  ],
+  "pixel_grid": [
+    79,
+    85
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    11,
+    4,
+    63,
+    82
+  ],
+  "processed_at_utc": "2026-11-23T18:08:50.492086+00:00"
+}

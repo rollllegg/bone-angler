@@ -3,6 +3,11 @@
     {
       "case": "wukong",
       "day": 5.0,
+      "slot": 4.0
+    },
+    {
+      "case": "orpheus",
+      "day": 5.0,
       "slot": 5.0
     }
   ]

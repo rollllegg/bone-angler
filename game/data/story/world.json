@@ -4,6 +4,22 @@
       "default": false,
       "type": "bool"
     },
+    "world.orpheus_admitted": {
+      "default": false,
+      "type": "bool"
+    },
+    "world.orpheus_case_seen": {
+      "default": false,
+      "type": "bool"
+    },
+    "world.orpheus_lost": {
+      "default": false,
+      "type": "bool"
+    },
+    "world.orpheus_reunion": {
+      "default": false,
+      "type": "bool"
+    },
     "world.wukong_admitted": {
       "default": false,
       "type": "bool"

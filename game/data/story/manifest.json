@@ -1,5 +1,6 @@
 {
   "cases": [
+    "orpheus",
     "wukong"
   ],
   "endings": "res://data/story/endings.json",

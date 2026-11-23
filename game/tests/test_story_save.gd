@@ -76,7 +76,7 @@ func _run() -> void:
 	_check(int(restored.flags["clue.photo"]) == 1, "load restores clues")
 	_check(int(restored.flags["dose.score"]) == 4, "load restores the potion result")
 	_check(restored.has_fed_potion(), "load restores the fed potion")
-	_check(str(restored.current_step().get("key", "")).begins_with("wukong."), "load restores the dialogue position")
+	_check(restored.get_node_id() == "inspect" and not restored.visible_choices().is_empty(), "load restores the choice hub")
 
 	demo.persist_save = false
 	demo.free()

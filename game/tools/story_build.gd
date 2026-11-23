@@ -3,11 +3,14 @@ extends SceneTree
 ## Run: godot --headless --path game --script res://tools/story_build.gd
 
 const Expr := preload("res://scripts/story/story_expr.gd")
+const StoryText := preload("res://scripts/story/story_text.gd")
+const CueCatalog := preload("res://scripts/story/story_cue_catalog.gd")
 
 var errors: Array = []
 var warnings: Array = []
 var text_map: Dictionary = {}
 var used_keys: Dictionary = {}
+var cue_totals: Dictionary = {}
 var project_dir := ""
 var repo_dir := ""
 var narrative_dir := ""
@@ -47,11 +50,13 @@ func _run() -> void:
 		var prose_path := narrative_dir.path_join("prose").path_join("%s.md" % case_id)
 		var parsed := _parse_prose(prose_path, graph.get("speakers", {}))
 		var case_text := _build_text(parsed, case_id + ".")
+		_check_inline_text(case_text, graph.get("state", {}).get("flags", {}), world_decl, case_id)
 		for key in case_text.keys():
 			if text_map.has(key):
 				_error("duplicate text key: %s" % key)
 			text_map[key] = case_text[key]
 		_validate_case(graph, world_decl)
+		_attach_cues(graph, case_id, case_text, world_decl)
 		compiled[case_id] = graph
 		case_ids.append(case_id)
 
@@ -60,6 +65,7 @@ func _run() -> void:
 	if FileAccess.file_exists(common_path):
 		var parsed_common := _parse_prose(common_path, {})
 		var common_text := _build_text(parsed_common, "")
+		_check_inline_text(common_text, {}, world_decl, "endings")
 		for key in common_text.keys():
 			if text_map.has(key):
 				_error("duplicate text key: %s" % key)
@@ -146,6 +152,16 @@ func _build_text(parsed: Dictionary, prefix: String) -> Dictionary:
 	return result
 
 
+func _check_inline_text(text_map: Dictionary, case_flags: Dictionary, world_decl: Dictionary, context: String) -> void:
+	for key in text_map.keys():
+		var raw := str(text_map[key])
+		var problem := StoryText.structure_error(raw)
+		if problem != "":
+			_error("%s %s: %s" % [context, str(key), problem])
+		for condition in StoryText.extract_conditions(raw):
+			_check_condition(condition, case_flags, world_decl, "%s %s inline" % [context, str(key)])
+
+
 func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 	var case_id := str(graph_data.get("id", "?"))
 	var case_flags: Dictionary = graph_data.get("state", {}).get("flags", {})
@@ -181,12 +197,163 @@ func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 				_check_condition(str(rule.get("if", "true")), case_flags, world_decl, "%s ledger who_if" % outcome_id)
 			_check_text_key(str(ledger.get("note", "")), "%s ledger note" % outcome_id)
 		_check_effects(outcome.get("effects", []), case_flags, world_decl, "%s outcome %s" % [case_id, outcome_id])
+		var aftermath = outcome.get("aftermath", [])
+		if typeof(aftermath) != TYPE_ARRAY:
+			_error("%s: outcome '%s' aftermath must be an array" % [case_id, outcome_id])
+		else:
+			for key in aftermath:
+				_check_text_key(str(key), "%s outcome %s aftermath" % [case_id, outcome_id])
 
 	_check_effects(graph_data.get("canon", []), case_flags, world_decl, "%s canon" % case_id)
 	_validate_potion(graph_data, node_ids, case_id)
 	_validate_callout(graph_data, node_ids, case_id)
+	_validate_speakers(graph_data, case_flags, world_decl, case_id)
+	_validate_portrait(graph_data, case_flags, world_decl, case_id)
 	_validate_nodes(graph_data, node_ids, outcomes, case_flags, world_decl, case_id)
 	_validate_reachability(graph_data, node_ids, case_id)
+
+
+func _validate_portrait(graph_data: Dictionary, case_flags: Dictionary, world_decl: Dictionary, case_id: String) -> void:
+	if not graph_data.has("portrait"):
+		return
+	var portrait = graph_data.portrait
+	if typeof(portrait) != TYPE_DICTIONARY:
+		_error("%s: portrait must be an object" % case_id)
+		return
+	var default_id := str(portrait.get("default", ""))
+	if not CueCatalog.has_sprite(default_id):
+		_error("%s: portrait default '%s' has no asset" % [case_id, default_id])
+	for rule in portrait.get("rules", []):
+		if typeof(rule) != TYPE_DICTIONARY:
+			_error("%s: portrait rule must be an object" % case_id)
+			continue
+		var rule_id := str(rule.get("id", ""))
+		if not CueCatalog.has_sprite(rule_id):
+			_error("%s: portrait rule '%s' has no asset" % [case_id, rule_id])
+		_check_condition(str(rule.get("if", "true")), case_flags, world_decl, "%s portrait" % case_id)
+
+
+func _attach_cues(graph_data: Dictionary, case_id: String, case_text: Dictionary, world_decl: Dictionary) -> void:
+	var path := narrative_dir.path_join("derived/cues").path_join("%s.cues.json" % case_id)
+	if not FileAccess.file_exists(path):
+		return
+	var raw := _read_json(path)
+	if raw.is_empty():
+		_error("%s: cannot parse %s" % [case_id, path])
+		return
+	var case_flags: Dictionary = graph_data.get("state", {}).get("flags", {})
+	var step_keys: Dictionary = {}
+	for node in graph_data.get("nodes", []):
+		for step in node.get("steps", []):
+			step_keys[str(step.get("text", ""))] = true
+	var attached_steps := 0
+	var attached_cues := 0
+	for key in raw.keys():
+		var cue_key := str(key)
+		if not case_text.has(cue_key):
+			_error("%s: cue key '%s' has no prose" % [case_id, cue_key])
+			continue
+		var cues = raw[key]
+		if typeof(cues) != TYPE_ARRAY:
+			_error("%s: cue key '%s' must hold an array" % [case_id, cue_key])
+			continue
+		if cues.is_empty():
+			_warn("%s: cue key '%s' has an empty array" % [case_id, cue_key])
+			continue
+		_validate_cues(cues, case_flags, world_decl, "%s cue %s" % [case_id, cue_key])
+		if not step_keys.has(cue_key):
+			_warn("%s: cue key '%s' is not used by a step" % [case_id, cue_key])
+			continue
+		for node in graph_data.get("nodes", []):
+			for step in node.get("steps", []):
+				if str(step.get("text", "")) != cue_key:
+					continue
+				step["cues"] = cues.duplicate(true)
+		attached_steps += 1
+		attached_cues += cues.size()
+	cue_totals[case_id] = {"steps": attached_steps, "cues": attached_cues}
+
+
+func _validate_cues(cues: Array, case_flags: Dictionary, world_decl: Dictionary, context: String) -> void:
+	for index in cues.size():
+		var raw = cues[index]
+		var at := "%s[%d]" % [context, index]
+		if typeof(raw) != TYPE_DICTIONARY:
+			_error("%s: cue must be an object" % at)
+			continue
+		var cue: Dictionary = raw
+		var cue_type := str(cue.get("type", ""))
+		if not CueCatalog.has_type(cue_type):
+			_error("%s: unknown type '%s'" % [at, cue_type])
+			continue
+		if cue.has("if"):
+			if typeof(cue.if) != TYPE_STRING:
+				_error("%s: if must be a string" % at)
+			else:
+				_check_condition(str(cue.if), case_flags, world_decl, at)
+		if cue.has("wait") and typeof(cue.wait) != TYPE_BOOL:
+			_error("%s: wait must be a bool" % at)
+		if cue.has("target") and str(cue.target) not in ["shop", "screen", "stage"]:
+			_error("%s: unknown target '%s'" % [at, str(cue.target)])
+		_check_cue_number(cue, "delay", at, 0.0, CueCatalog.MAX_DELAY)
+		_check_cue_number(cue, "duration", at, 0.0, CueCatalog.MAX_DURATION)
+		match cue_type:
+			"shake":
+				_check_cue_number(cue, "strength", at, 0.0, 24.0)
+			"flash":
+				_check_cue_color(cue, at)
+				_check_cue_number(cue, "alpha", at, 0.0, 1.0)
+			"fade":
+				_check_cue_color(cue, at)
+				_check_cue_number(cue, "from", at, 0.0, 1.0)
+				_check_cue_number(cue, "to", at, 0.0, 1.0)
+			"zoom":
+				_check_cue_number(cue, "scale", at, 0.5, 3.0)
+			"prop":
+				var prop_id := str(cue.get("id", ""))
+				if not CueCatalog.has_prop(prop_id):
+					_error("%s: undeclared prop '%s'" % [at, prop_id])
+				var action := str(cue.get("action", "show"))
+				if not CueCatalog.has_prop_action(action):
+					_error("%s: unknown prop action '%s'" % [at, action])
+				if cue.has("position"):
+					var point = cue.position
+					if typeof(point) != TYPE_ARRAY or point.size() != 2:
+						_error("%s: position must be [x, y]" % at)
+					elif typeof(point[0]) not in [TYPE_INT, TYPE_FLOAT] or typeof(point[1]) not in [TYPE_INT, TYPE_FLOAT]:
+						_error("%s: position must be numeric" % at)
+				_check_cue_number(cue, "scale", at, 0.1, 4.0)
+			"sprite":
+				var sprite_id := str(cue.get("id", ""))
+				if not CueCatalog.has_sprite(sprite_id):
+					_error("%s: sprite '%s' has no asset yet" % [at, sprite_id])
+				if cue.has("pose") and typeof(cue.pose) != TYPE_STRING:
+					_error("%s: pose must be a string" % at)
+			"sound":
+				var sound_id := str(cue.get("id", ""))
+				if not CueCatalog.has_sound(sound_id):
+					_error("%s: sound '%s' has no asset" % [at, sound_id])
+			"wait":
+				pass
+
+
+func _check_cue_number(cue: Dictionary, field: String, context: String, low: float, high: float) -> void:
+	if not cue.has(field):
+		return
+	var value = cue[field]
+	if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
+		_error("%s: %s must be a number" % [context, field])
+		return
+	var number := float(value)
+	if number < low or number > high:
+		_error("%s: %s must be between %.2f and %.2f" % [context, field, low, high])
+
+
+func _check_cue_color(cue: Dictionary, context: String) -> void:
+	if not cue.has("color"):
+		return
+	if typeof(cue.color) != TYPE_STRING or not Color.html_is_valid(str(cue.color)):
+		_error("%s: color must be #rrggbb or #rrggbbaa" % context)
 
 
 func _validate_nodes(graph_data: Dictionary, node_ids: Dictionary, outcomes: Dictionary, case_flags: Dictionary, world_decl: Dictionary, case_id: String) -> void:
@@ -235,6 +402,8 @@ func _validate_choices(node: Dictionary, node_ids: Dictionary, case_flags: Dicti
 		if choice_ids.has(choice_id):
 			_error("%s node '%s': duplicate choice '%s'" % [case_id, node_id, choice_id])
 		choice_ids[choice_id] = true
+		if choice.has("kind") and str(choice.kind) not in ["accept", "refuse"]:
+			_error("%s node '%s': choice '%s' has invalid kind '%s'" % [case_id, node_id, choice_id, str(choice.kind)])
 		_check_text_key(str(choice.get("text", "")), "%s choice %s" % [case_id, choice_id])
 		_check_node_ref(choice.get("next", ""), node_ids, "%s choice %s next" % [case_id, choice_id])
 		_check_effects(choice.get("set", []), case_flags, world_decl, "%s choice %s set" % [case_id, choice_id])
@@ -280,6 +449,20 @@ func _validate_potion(graph_data: Dictionary, node_ids: Dictionary, case_id: Str
 	for key in ["wisdom", "emotion", "will"]:
 		if not score.has(key) or typeof(score[key]) not in [TYPE_INT, TYPE_FLOAT]:
 			_error("%s: potion score misses numeric %s" % [case_id, key])
+	if potion.has("score_name"):
+		if typeof(potion.score_name) != TYPE_STRING or str(potion.score_name).strip_edges() == "":
+			_error("%s: potion score_name must be a non-empty string" % case_id)
+
+
+func _validate_speakers(graph_data: Dictionary, case_flags: Dictionary, world_decl: Dictionary, case_id: String) -> void:
+	for key in graph_data.get("speakers", {}).keys():
+		var speaker: Dictionary = graph_data.speakers[key]
+		if str(speaker.get("name", "")).strip_edges() == "":
+			_error("%s: speaker '%s' has no name" % [case_id, str(key)])
+		for rule in speaker.get("name_if", []):
+			if str(rule.get("name", "")).strip_edges() == "":
+				_error("%s: speaker '%s' name_if has no name" % [case_id, str(key)])
+			_check_condition(str(rule.get("if", "true")), case_flags, world_decl, "%s speaker %s" % [case_id, str(key)])
 
 
 func _validate_callout(graph_data: Dictionary, node_ids: Dictionary, case_id: String) -> void:
@@ -486,8 +669,12 @@ func _speaker_key(name: String, speakers: Dictionary) -> String:
 	if speakers.has(name):
 		return name
 	for key in speakers.keys():
-		if str(speakers[key].get("name", "")) == name:
+		var speaker: Dictionary = speakers[key]
+		if str(speaker.get("name", "")) == name:
 			return str(key)
+		for rule in speaker.get("name_if", []):
+			if str(rule.get("name", "")) == name:
+				return str(key)
 	return ""
 
 
@@ -527,6 +714,8 @@ func _write_report(compiled: Dictionary, case_ids: Array, world_decl: Dictionary
 			if str(key).begins_with(str(case_id) + "."):
 				case_chars += str(text_map[key]).length()
 		lines.append("  - %s：%d 字" % [case_id, case_chars])
+		var cues: Dictionary = cue_totals.get(str(case_id), {})
+		lines.append("    演出 cue：%d 个 step，%d 条" % [int(cues.get("steps", 0)), int(cues.get("cues", 0))])
 	lines.append("- 世界 flag：%d" % world_decl.size())
 	lines.append("- 整局结局：%d" % endings_data.get("endings", []).size())
 	lines.append("")

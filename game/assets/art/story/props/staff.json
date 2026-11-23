@@ -1,0 +1,40 @@
+{
+  "id": "staff",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一根金色金箍棒，两端红色，斜放，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/staff_raw.png",
+  "source_sha256": "1ce490f5a2b0eef08b30ed57f0ea328441fff02f0720bc3b64b06d76cf6dd1f3",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/staff.png",
+  "output_sha256": "50b218aa9b2213de2415f0af8791a8f70a325bce9b555f0eaf0ee73889d73f6e",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": [
+    56,
+    58
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    12,
+    12,
+    44,
+    45
+  ],
+  "processed_at_utc": "2026-11-23T18:08:48.602389+00:00"
+}

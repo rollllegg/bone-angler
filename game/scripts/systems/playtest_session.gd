@@ -47,6 +47,9 @@ var story_runtimes: Dictionary = {}
 var story_open := false
 var rejected_count := 0
 var last_story_outcome := ""
+var day_story_entries: Array[Dictionary] = []
+var pending_day_report: Dictionary = {}
+var awaiting_day_report := false
 
 
 func _ready() -> void:
@@ -67,7 +70,7 @@ func _process(delta: float) -> void:
 
 
 func is_time_suspended() -> bool:
-	return paused or story_open
+	return paused or story_open or awaiting_day_report
 
 
 func set_story_open(value: bool) -> void:
@@ -156,6 +159,7 @@ static func roll_requirements(number: int, rng: RandomNumberGenerator) -> Array[
 
 func _open_day(number: int) -> void:
 	day = number
+	day_story_entries.clear()
 	requirements = roll_requirements(day, _rng)
 	_day_guests.clear()
 	_day_arrived = 0
@@ -313,9 +317,7 @@ func release_soul(id: int) -> bool:
 	released_count += 1
 	if story_state != null:
 		story_state.run["run.released"] = released_count
-	if souls.is_empty() and not has_more_arrivals() and not is_complete():
-		_open_day(day + 1)
-		spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	_advance_day_if_ready()
 	state_changed.emit()
 	return true
 
@@ -505,24 +507,70 @@ func finish_story(id: int) -> bool:
 	else:
 		rejected_count += 1
 	var ledger: Dictionary = outcome.get("ledger", {})
+	var ledger_entry: Dictionary = {}
 	if not ledger.is_empty() and story_db != null and story_state != null:
-		var entry: Dictionary = ledger.duplicate(true)
-		entry["case"] = str(soul.story_case)
-		entry["day"] = day
-		var note_key := str(entry.get("note", ""))
-		entry["note"] = story_db.text.get_text(note_key) if note_key != "" else ""
-		story_state.ledger.append(entry)
+		ledger_entry = ledger.duplicate(true)
+		ledger_entry["case"] = str(soul.story_case)
+		ledger_entry["day"] = day
+		var note_key := str(ledger_entry.get("note", ""))
+		if note_key != "":
+			var note_text: String = story_db.text.get_text(note_key)
+			ledger_entry["note"] = story_db.text.render(note_text, story_state.context({}))
+		else:
+			ledger_entry["note"] = ""
+		story_state.ledger.append(ledger_entry)
 	if story_state != null:
 		story_state.run["run.released"] = released_count
 		story_state.run["run.rejected"] = rejected_count
+	var report_entry := {
+		"case": str(soul.story_case),
+		"who": str(ledger.get("who", soul.name)),
+		"result": str(ledger.get("result", "")),
+		"note": str(ledger_entry.get("note", "")),
+		"aftermath": runtime.get_aftermath_lines(),
+	}
+	day_story_entries.append(report_entry)
 	_first_services[soul.case_id] = true
 	souls.erase(soul)
 	story_runtimes.erase(id)
-	if souls.is_empty() and not has_more_arrivals() and not is_complete():
-		_open_day(day + 1)
-		spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	_advance_day_if_ready()
 	state_changed.emit()
 	return true
+
+
+func _advance_day_if_ready() -> void:
+	if not souls.is_empty() or has_more_arrivals():
+		return
+	if not day_story_entries.is_empty():
+		pending_day_report = {
+			"day": day,
+			"final": is_complete(),
+			"entries": day_story_entries.duplicate(true),
+		}
+		awaiting_day_report = true
+		return
+	if is_complete():
+		return
+	_open_day(day + 1)
+	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+
+
+func get_day_report() -> Dictionary:
+	return pending_day_report if awaiting_day_report else {}
+
+
+func close_day_report() -> void:
+	if not awaiting_day_report:
+		return
+	var final := bool(pending_day_report.get("final", false))
+	awaiting_day_report = false
+	pending_day_report = {}
+	if final:
+		state_changed.emit()
+		return
+	_open_day(day + 1)
+	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	state_changed.emit()
 
 
 func get_ending_lines() -> PackedStringArray:

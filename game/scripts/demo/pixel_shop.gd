@@ -7,6 +7,24 @@ const BACKGROUND := preload("res://assets/art/demo/shop.png")
 const FRONT := preload("res://assets/art/demo/guest_front.png")
 const TURN := preload("res://assets/art/demo/guest_turn.png")
 const BACK := [preload("res://assets/art/demo/guest_back_01.png"), preload("res://assets/art/demo/guest_back_02.png")]
+const STORY_SPRITES := {
+	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise.png"),
+	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey.png"),
+	"wukong_turn": preload("res://assets/art/story/sprites/wukong_turn.png"),
+	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front.png"),
+	"orpheus_turn": preload("res://assets/art/story/sprites/orpheus_turn.png"),
+}
+const STORY_SHADOWS := {
+	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise_shadow.png"),
+	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey_shadow.png"),
+	"wukong_turn": preload("res://assets/art/story/sprites/wukong_turn_shadow.png"),
+	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front_shadow.png"),
+	"orpheus_turn": preload("res://assets/art/story/sprites/orpheus_turn_shadow.png"),
+}
+const STORY_TURNS := {
+	"wukong_monkey": "wukong_turn",
+	"orpheus_front": "orpheus_turn",
+}
 const COUNTER := Vector2(201, 194)
 const PATH_CORNER := Vector2(276, 177)
 const GATE := Vector2(310, 134)
@@ -16,6 +34,8 @@ const FADE_DURATION := 0.45
 const COUNTER_CLEAR_TIME := 1.2
 const PATH_CORNER_RATIO := 0.40
 const START_SCALE := 1.45
+const STORY_SCALE := 1.0
+const STORY_OFFSET := Vector2(-32, -94)
 
 const Session := preload("res://scripts/systems/playtest_session.gd")
 
@@ -23,6 +43,11 @@ var session: Session
 var active: bool = false
 var selected_id: int = -1
 var departure_times: Array[float] = []
+var departure_sprites: Array[String] = []
+var departure_ids: Array[int] = []
+var story_sprite := ""
+var story_sprite_flip := false
+var story_props = null
 var fed_flash: float = 0.0
 var clock: float = 0.0
 
@@ -37,6 +62,7 @@ func bind(value: Session) -> void:
 
 func _sync_selection() -> void:
 	if session.get_soul(selected_id).is_empty():
+		clear_story_sprite()
 		selected_id = -1 if session.souls.is_empty() else int(session.souls[0]["id"])
 		fed_flash = 0.0
 	presentation_changed.emit()
@@ -46,9 +72,48 @@ func _sync_selection() -> void:
 func select_guest(id: int) -> void:
 	if session.paused or session.get_soul(id).is_empty():
 		return
+	var current_story = session.get_story_runtime(selected_id)
+	if current_story != null and not current_story.is_closed():
+		return
+	if id != selected_id:
+		clear_story_sprite()
 	selected_id = id
 	fed_flash = 0.0
 	presentation_changed.emit()
+	queue_redraw()
+
+
+func bind_story_props(value) -> void:
+	story_props = value
+	queue_redraw()
+
+
+func set_story_sprite(id: String, flip: bool = false) -> void:
+	if not STORY_SPRITES.has(id):
+		return
+	story_sprite = id
+	story_sprite_flip = flip
+	queue_redraw()
+
+
+func clear_story_sprite() -> void:
+	if story_sprite == "" and not story_sprite_flip:
+		return
+	story_sprite = ""
+	story_sprite_flip = false
+	queue_redraw()
+
+
+func has_story_sprite() -> bool:
+	return story_sprite != ""
+
+
+func clear_departures() -> void:
+	if departure_times.is_empty():
+		return
+	departure_times.clear()
+	departure_sprites.clear()
+	departure_ids.clear()
 	queue_redraw()
 
 
@@ -63,8 +128,12 @@ func begin_departure() -> bool:
 		return false
 	var start := 0.0 if departure_times.is_empty() else minf(0.0, departure_times.back() - COUNTER_CLEAR_TIME)
 	departure_times.append(start)
+	departure_sprites.append("")
+	departure_ids.append(selected_id)
 	if not session.release_soul(selected_id):
 		departure_times.pop_back()
+		departure_sprites.pop_back()
+		departure_ids.pop_back()
 		return false
 	return true
 
@@ -74,14 +143,18 @@ func begin_story_departure() -> bool:
 		return false
 	var start := 0.0 if departure_times.is_empty() else minf(0.0, departure_times.back() - COUNTER_CLEAR_TIME)
 	departure_times.append(start)
+	departure_sprites.append(story_sprite)
+	departure_ids.append(selected_id)
 	if not session.finish_story(selected_id):
 		departure_times.pop_back()
+		departure_sprites.pop_back()
+		departure_ids.pop_back()
 		return false
 	return true
 
 
 func advance_presentation(delta: float) -> void:
-	if not active or session == null or session.is_time_suspended() or delta <= 0.0:
+	if not active or session == null or session.paused or delta <= 0.0:
 		return
 	clock += delta
 	fed_flash = maxf(fed_flash - delta, 0.0)
@@ -90,6 +163,10 @@ func advance_presentation(delta: float) -> void:
 		departure_times[i] += delta
 		if departure_times[i] >= TURN_DURATION + WALK_DURATION + FADE_DURATION:
 			departure_times.remove_at(i)
+			if i < departure_sprites.size():
+				departure_sprites.remove_at(i)
+			if i < departure_ids.size():
+				departure_ids.remove_at(i)
 	if had_departures and departure_times.is_empty():
 		presentation_changed.emit()
 	queue_redraw()
@@ -99,7 +176,7 @@ func _process(delta: float) -> void:
 	advance_presentation(delta)
 
 
-func _draw_departure(elapsed: float) -> void:
+func _draw_departure(elapsed: float, sprite_id: String) -> void:
 	var walk_time := elapsed - TURN_DURATION
 	var t := clampf(walk_time / WALK_DURATION, 0.0, 1.0)
 	var point := COUNTER.lerp(PATH_CORNER, t / PATH_CORNER_RATIO)
@@ -108,9 +185,23 @@ func _draw_departure(elapsed: float) -> void:
 	var opacity := 1.0 - clampf((walk_time - WALK_DURATION) / FADE_DURATION, 0.0, 1.0)
 	var step := int(maxf(walk_time, 0.0) / 0.18) % 2
 	var texture: Texture2D = TURN if walk_time < 0.0 else BACK[step]
+	var scale_start := START_SCALE
+	var scale_end := 0.36
+	var offset := Vector2(-24, -62)
+	if sprite_id != "":
+		var turn_id := str(STORY_TURNS.get(sprite_id, sprite_id))
+		if STORY_SPRITES.has(turn_id):
+			texture = STORY_SPRITES[turn_id]
+			scale_start = STORY_SCALE
+			scale_end = 0.25
+			offset = STORY_OFFSET
 	point.y -= step * (1.0 - t)
-	draw_set_transform(point.round(), 0.0, Vector2.ONE * lerpf(START_SCALE, 0.36, t))
-	draw_texture(texture, Vector2(-24, -62), Color(1, 1, 1, opacity))
+	draw_set_transform(point.round(), 0.0, Vector2.ONE * lerpf(scale_start, scale_end, t))
+	if sprite_id != "":
+		var shadow: Texture2D = STORY_SHADOWS.get(str(STORY_TURNS.get(sprite_id, sprite_id)))
+		if shadow != null:
+			draw_texture(shadow, offset, Color(1, 1, 1, 0.35 * opacity))
+	draw_texture(texture, offset, Color(1, 1, 1, opacity))
 	draw_set_transform(Vector2.ZERO)
 
 
@@ -118,15 +209,52 @@ func _draw() -> void:
 	draw_texture(BACKGROUND, Vector2.ZERO)
 	if session == null:
 		return
-	for elapsed in departure_times:
-		if elapsed >= 0.0:
-			_draw_departure(elapsed)
-	if not session.get_soul(selected_id).is_empty():
-		var opacity := 1.0 if departure_times.is_empty() else smoothstep(TURN_DURATION, COUNTER_CLEAR_TIME, departure_times.back())
-		draw_set_transform(COUNTER + Vector2(0, roundf(sin(clock * 2.0))), 0.0, Vector2.ONE * START_SCALE)
-		draw_texture(FRONT, Vector2(-24, -62), Color(1, 1, 1, opacity))
+	for index in departure_times.size():
+		if departure_times[index] >= 0.0:
+			var sprite_id := departure_sprites[index] if index < departure_sprites.size() else ""
+			_draw_departure(departure_times[index], sprite_id)
+	_draw_story_props("behind")
+	var selected := session.get_soul(selected_id)
+	if not selected.is_empty():
+		var departure_elapsed := -1.0
+		for index in departure_ids.size():
+			if departure_ids[index] == selected_id:
+				departure_elapsed = departure_times[index]
+				break
+		var opacity := 1.0 if departure_elapsed < 0.0 else smoothstep(TURN_DURATION, COUNTER_CLEAR_TIME, departure_elapsed)
+		var texture: Texture2D = FRONT
+		var sprite_scale := START_SCALE
+		var offset := Vector2(-24, -62)
+		if story_sprite != "" and selected.has("story_case"):
+			texture = STORY_SPRITES.get(story_sprite, FRONT)
+			sprite_scale = STORY_SCALE
+			offset = STORY_OFFSET
+		var flip := -sprite_scale if story_sprite_flip else sprite_scale
+		draw_set_transform(COUNTER + Vector2(0, roundf(sin(clock * 2.0))), 0.0, Vector2(flip, sprite_scale))
+		if story_sprite != "":
+			var shadow: Texture2D = STORY_SHADOWS.get(story_sprite)
+			if shadow != null:
+				draw_texture(shadow, offset, Color(1, 1, 1, 0.35 * opacity))
+		draw_texture(texture, offset, Color(1, 1, 1, opacity))
 		if fed_flash > 0.0:
-			draw_texture(FRONT, Vector2(-24, -62), Color(1, 0.94, 0.7, fed_flash * 0.4 * opacity))
+			draw_texture(texture, offset, Color(1, 0.94, 0.7, fed_flash * 0.4 * opacity))
 		draw_set_transform(Vector2.ZERO)
+	_draw_story_props("front")
 	# Repaint the original foreground counter so the guest stands behind it.
 	draw_texture_rect_region(BACKGROUND, Rect2(0, 194, 405, 49), Rect2(0, 194, 405, 49))
+
+
+func _draw_story_props(layer: String) -> void:
+	if story_props == null:
+		return
+	for id in story_props.get_prop_ids():
+		if story_props.layer_for(str(id)) != layer:
+			continue
+		var texture: Texture2D = story_props.get_texture(str(id))
+		if texture == null:
+			continue
+		var state: Dictionary = story_props.get_state(str(id))
+		var point: Vector2 = state.position
+		draw_set_transform(point.round(), 0.0, Vector2.ONE * float(state.scale))
+		draw_texture(texture, -texture.get_size() * 0.5)
+	draw_set_transform(Vector2.ZERO)

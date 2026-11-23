@@ -1,8 +1,8 @@
 extends HBoxContainer
 ## Reusable circular letter bubbles for a sequential typing challenge.
+## Untyped letters stay hidden; only letters the player has typed are shown.
 
 const MINT := Color("8fdbbd")
-const CREAM := Color("f3e6c6")
 const HIDDEN := Color("496167")
 const DONE_BG := Color("123c39")
 const TODO_BG := Color("14292f")
@@ -10,7 +10,6 @@ const TODO_BORDER := Color("2c454a")
 
 var target: String = ""
 var typed_count: int = 0
-var revealed_count: int = 0
 var bubble_size: float = 56.0
 var font_size: int = 24
 
@@ -27,12 +26,11 @@ func setup(size_value: float, font_value: int) -> void:
 	_rebuild()
 
 
-func render(value: String, typed: int, revealed: int) -> void:
+func render(value: String, typed: int) -> void:
 	if value != target:
 		target = value
 		_rebuild()
 	typed_count = typed
-	revealed_count = revealed
 	_update()
 
 
@@ -65,12 +63,11 @@ func _update() -> void:
 		if letter == null:
 			continue
 		var done := index < typed_count
-		var visible_letter := index < revealed_count
 		var style := StyleBoxFlat.new()
 		style.set_corner_radius_all(int(bubble_size * 0.5))
 		style.set_border_width_all(2)
 		style.bg_color = DONE_BG if done else TODO_BG
-		style.border_color = MINT if done else (CREAM if visible_letter else TODO_BORDER)
+		style.border_color = MINT if done else TODO_BORDER
 		bubble.add_theme_stylebox_override("panel", style)
-		letter.text = target.substr(index, 1) if visible_letter else "·"
-		letter.add_theme_color_override("font_color", MINT if done else (CREAM if visible_letter else HIDDEN))
+		letter.text = target.substr(index, 1) if done else "·"
+		letter.add_theme_color_override("font_color", MINT if done else HIDDEN)

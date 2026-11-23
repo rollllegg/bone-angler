@@ -1,0 +1,42 @@
+{
+  "id": "orpheus_turn",
+  "kind": "sprite",
+  "prompt": "保持同一个角色、同一套深蓝斗篷和金色里拉琴；让他转身背对镜头，展示斗篷背面和兜帽，正面全身构图；纯白背景，无阴影，无文字，16-bit 像素风",
+  "source": "game/art/source/story/orpheus_turn_raw.png",
+  "source_sha256": "3e80fc698916a1d9bb721b15ee33a67081bb484ef763173f6e569e7d38392b6b",
+  "input_size": [
+    1056,
+    1056
+  ],
+  "output": "game/assets/art/story/sprites/orpheus_turn.png",
+  "output_sha256": "200d8e378369a6a3840d5d552d93bc6858ade284be0153cce20531c53ca82f02",
+  "output_size": [
+    64,
+    96
+  ],
+  "pixel_grid": [
+    185,
+    176
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 1,
+  "outline": 1,
+  "white_specks": 24,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    61,
+    14,
+    126,
+    164
+  ],
+  "processed_at_utc": "2026-11-23T18:33:06.927195+00:00"
+}

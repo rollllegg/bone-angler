@@ -96,17 +96,17 @@ func ending_lines_for(ending: Dictionary, state) -> PackedStringArray:
 	var lines := PackedStringArray()
 	if ending.is_empty():
 		return lines
+	var values: Dictionary = state.context({})
 	var text_value: Variant = ending.get("text", "")
 	if text_value is Array:
 		for key in text_value:
-			lines.append(text.get_text(str(key)))
+			lines.append(text.render(text.get_text(str(key)), values))
 	elif str(text_value) != "":
-		lines.append(text.get_text(str(text_value)))
-	var values: Dictionary = state.context({})
+		lines.append(text.render(text.get_text(str(text_value)), values))
 	for extra in ending.get("epilogue", []):
 		var result: Variant = Expr.eval(str(extra.get("if", "true")), values)
 		if Expr.last_error == "" and bool(result):
-			lines.append(text.get_text(str(extra.get("text", ""))))
+			lines.append(text.render(text.get_text(str(extra.get("text", ""))), values))
 	return lines
 
 

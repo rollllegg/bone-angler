@@ -1,0 +1,40 @@
+{
+  "id": "cloud",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一朵小型白色云朵，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/cloud_raw.png",
+  "source_sha256": "9626c5dcff698203ff9237e9d5f26adc7eefd6e9013c55d0ab85b18e95d8689b",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/cloud.png",
+  "output_sha256": "10d83c9eff7699a8da5e849d0d4325b3ea3cb11f2e3a299817c1c9c1ddd4d4d6",
+  "output_size": [
+    64,
+    32
+  ],
+  "pixel_grid": [
+    73,
+    76
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    25,
+    28,
+    48,
+    44
+  ],
+  "processed_at_utc": "2026-11-23T18:08:51.493262+00:00"
+}
