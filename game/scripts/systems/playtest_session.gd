@@ -497,7 +497,7 @@ func finish_story(id: int) -> bool:
 	if result == "stay":
 		return false
 	last_payout = 0
-	last_story_outcome = "release" if result == "release" else "reject"
+	last_story_outcome = result
 	if result == "release":
 		last_payout = int(outcome.get("payout", soul.fee))
 		coins += last_payout

@@ -1,5 +1,5 @@
 extends SceneTree
-## Opens the real demo scene, selects Wukong, and drives the story panel.
+## Opens the real demo scene, selects Wukong, types SUNWUKONG and resolves the case.
 
 var _checks := 0
 var _failures := 0
@@ -47,60 +47,62 @@ func _run() -> void:
 	_advance_until_choices(runtime)
 	_demo._refresh_shared()
 	_check(_demo.story_panel._buttons.size() > 0, "choice buttons render")
-	if "--capture" in OS.get_cmdline_user_args():
-		await process_frame
-		await process_frame
-		var image := root.get_texture().get_image()
-		var directory := ProjectSettings.globalize_path("res://").path_join("../game/build/validation")
-		DirAccess.make_dir_recursive_absolute(directory)
-		image.save_png(directory.path_join("story-panel.png"))
+	_check(_demo.story_panel._callout_button.visible, "callout button renders")
+	_check(_demo.story_panel._callout_button.text.contains("叫破"), "callout button has the right label")
+	await _capture("story-panel.png")
 
-	_demo._story_choice("photo")
-	_demo._refresh_shared()
-	_check(int(runtime.flags["clue.photo"]) == 1, "UI choice reaches the runtime")
+	# Typed callout: enter the mode and type the real name.
+	_demo.story_panel._callout_button.pressed.emit()
+	_check(_demo.story_panel.is_typing(), "callout enters typing mode")
+	_check(_demo.story_panel._bubbles.visible, "letter bubbles appear")
+	_check(_demo.story_panel._bubbles.get_child_count() == 9, "SUNWUKONG renders nine bubbles")
+	_check(not _demo.story_panel._callout_button.visible, "callout button hides while typing")
+	_check(_demo.story_panel._cancel_button.visible, "cancel button appears while typing")
+	await _capture("story-panel-callout.png")
+	var q_event := InputEventKey.new()
+	q_event.physical_keycode = KEY_Q
+	q_event.pressed = true
+	_demo._unhandled_key_input(q_event)
+	_check(_demo.current_location == "Shop", "Q is captured by the callout, not the river shortcut")
+	_check(_demo.story_panel._typing.mistakes == 1, "wrong typed letter counts as a miss")
+	for index in "SUNWUKONG".length():
+		_demo.story_panel.submit_letter("SUNWUKONG".substr(index, 1))
+	_check(bool(runtime.flags["named"]), "typing the name sets named")
+	_check(bool(runtime.flags["callout.done"]), "typed callout marks itself done")
 	_advance_until_choices(runtime)
+	_demo._refresh_shared()
+	_check(not _demo.story_panel._callout_button.visible, "callout button stays hidden after success")
 
-	# Give a calming potion through the shared dose controls.
-	_demo.session._add_potion("test", "极识药", Vector3i(10, 0, -4), -1, 0)
+	# Feed a hot potion through the shared dose controls.
+	_demo.session._add_potion("test", "暖心药", Vector3i(0, 4, 0), -1, 0)
 	_demo._selected_dose = [false, int(_demo.session.potions[0]["id"])]
 	_demo._refresh_dose()
 	_check(not _demo._serve_button.disabled, "serve button enables with a dose")
 	_demo._serve_dose()
 	_check(runtime.has_fed_potion(), "UI feeds the potion")
 	_advance_until_choices(runtime)
-	_check(not bool(runtime.flags["rage"]), "UI potion calms the guest")
+	_check(bool(runtime.flags["rage"]), "hot potion keeps rage")
 
+	# Refuse and finish.
+	_demo._story_choice("refuse")
+	_demo._refresh_shared()
 	while not runtime.is_closed():
-		var choices: Array = runtime.visible_choices()
-		if choices.is_empty():
-			if not runtime.advance():
-				break
-		else:
-			var picked := false
-			for choice in choices:
-				if not bool(choice.get("locked", false)):
-					_demo._story_choice(str(choice.get("id", "")))
-					picked = true
-					break
-			if not picked:
-				break
+		if not runtime.advance():
+			break
 	_demo._refresh_shared()
 	_check(runtime.is_closed(), "story reaches an outcome")
+	_check(runtime.get_outcome_id() == "refused", "refused outcome")
 	_check(_demo.story_panel._finish.visible, "finish button appears")
 	_check(_demo.story_panel._hint.text.contains("审查结束"), "finish hint appears")
-	if "--capture" in OS.get_cmdline_user_args():
-		await process_frame
-		await process_frame
-		var image := root.get_texture().get_image()
-		var directory := ProjectSettings.globalize_path("res://").path_join("../game/build/validation")
-		DirAccess.make_dir_recursive_absolute(directory)
-		image.save_png(directory.path_join("story-panel-finished.png"))
+	await _capture("story-panel-finished.png")
 
 	_demo._story_finish()
 	await process_frame
 	_check(_demo.session.get_soul(soul_id).is_empty(), "finish removes the story guest")
 	_check(not _demo.story_panel.visible, "panel hides after finish")
 	_check(not _demo.session.is_time_suspended(), "finish resumes the shift")
+	_check(_demo.session.story_state.ledger.size() == 1, "finish writes the ledger")
+	_check(str(_demo.session.story_state.ledger[0].get("who", "")) == "孙悟空", "ledger keeps the real name")
 
 	if _failures == 0:
 		print("StoryUI: %d checks, 0 failures" % _checks)
@@ -115,6 +117,17 @@ func _advance_until_choices(runtime) -> void:
 		if not runtime.advance():
 			break
 		guard += 1
+
+
+func _capture(file_name: String) -> void:
+	if "--capture" not in OS.get_cmdline_user_args():
+		return
+	await process_frame
+	await process_frame
+	var image := root.get_texture().get_image()
+	var directory := ProjectSettings.globalize_path("res://").path_join("../game/build/validation")
+	DirAccess.make_dir_recursive_absolute(directory)
+	image.save_png(directory.path_join(file_name))
 
 
 func _check(condition: bool, label: String) -> void:

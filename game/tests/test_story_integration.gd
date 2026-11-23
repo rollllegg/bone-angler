@@ -40,12 +40,12 @@ func _run() -> void:
 	_check(runtime.choose("photo"), "inspection choice works")
 	_settle(runtime)
 
-	session._add_potion("test", "极识药", Vector3i(10, 0, -4), -1, 0)
+	session._add_potion("test", "暖心药", Vector3i(0, 4, 0), -1, 0)
 	var potion_id := int(session.potions[0]["id"])
 	_check(session.feed_story_potion(soul_id, false, potion_id), "story potion is consumed")
 	_check(session.potions.is_empty(), "potion leaves the inventory")
 	_settle(runtime)
-	_check(not bool(runtime.flags["rage"]), "calming potion lowers rage")
+	_check(bool(runtime.flags["rage"]), "hot potion keeps rage")
 	_check(not session.feed_story_potion(soul_id, false, -1), "missing potion is refused")
 
 	# Runtime is rebuilt from the soul snapshot after being dropped.
@@ -53,16 +53,18 @@ func _run() -> void:
 	var restored = session.get_story_runtime(soul_id)
 	_check(restored != null, "runtime rebuilds from snapshot")
 	_check(int(restored.flags["clue.photo"]) == 1, "restored clue survives")
-	_check(int(restored.flags["dose.score"]) == -14, "restored dose score survives")
+	_check(int(restored.flags["dose.score"]) == 4, "restored dose score survives")
 
-	_check(restored.choose("tail"), "second clue works")
+	_check(restored.can_callout(), "callout is available")
+	var callout: Dictionary = restored.start_callout()
+	_check(str(callout.get("answer", "")) == "SUNWUKONG", "callout target is SUNWUKONG")
+	_check(restored.resolve_callout(true), "callout succeeds")
 	_settle(restored)
-	_check(restored.choose("name"), "callout works")
-	_settle(restored)
+	_check(bool(restored.flags["named"]), "callout sets named")
 	_check(restored.choose("refuse"), "refusal works")
 	_settle(restored)
 	_check(restored.is_closed(), "story closes on refusal")
-	_check(restored.get_outcome_id() == "refused.calm", "calm refusal outcome")
+	_check(restored.get_outcome_id() == "refused", "named refusal outcome")
 	_check(session.finish_story(soul_id), "session finishes the story")
 	_check(session.get_soul(soul_id).is_empty(), "story soul leaves the queue")
 	_check(session.released_count == 0 and session.rejected_count == 1, "refusal counts as processed")
@@ -70,7 +72,7 @@ func _run() -> void:
 	_check(session.story_state.ledger.size() == 1, "ledger gets one entry")
 	_check(str(session.story_state.ledger[0].get("result", "")) == "未入境", "ledger records refusal")
 	_check(str(session.story_state.ledger[0].get("who", "")) == "孙悟空", "ledger records the called-out name")
-	_check(not bool(session.story_state.world["world.hades_rampage"]), "calm refusal avoids rampage")
+	_check(bool(session.story_state.world["world.hades_rampage"]), "named refusal still rampages")
 	_check(session.get_ending_lines().size() > 0, "ending lines resolve")
 
 	# Story panel suspends the shift clock.

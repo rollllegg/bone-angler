@@ -104,6 +104,6 @@ python .\game\tools\serve_web.py
 
 ## 剧情系统
 
-特殊 NPC 的故事种子、分支图和正文在 `narrative/`，编译后进入 `game/data/story/`。当前试点是孙悟空，固定在第 5 天第 6 位（slot 5）出现。剧情来客走审查和剧情分支，不套用普通灵魂的属性门槛。
+特殊 NPC 的故事种子、分支图和正文在 `narrative/`，编译后进入 `game/data/story/`。当前试点是孙悟空，固定在第 5 天第 6 位（slot 5）出现，可以输入真名 `SUNWUKONG` 叫破。剧情来客走审查和剧情分支，不套用普通灵魂的属性门槛。
 
 编译、模拟和测试命令见 `docs/剧情系统使用说明.md`，结构设计见 `docs/剧情系统设计.md`。

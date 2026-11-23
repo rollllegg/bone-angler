@@ -23,6 +23,7 @@ var dose_score := 0
 var dose_label := ""
 var last_step: Dictionary = {}
 var last_error := ""
+var callout_active := false
 
 var _nodes: Dictionary = {}
 var _enter_guard := 0
@@ -70,7 +71,7 @@ func current_step() -> Dictionary:
 
 
 func advance() -> bool:
-	if closed:
+	if closed or callout_active:
 		return false
 	if steps.is_empty():
 		var node := _node(node_id)
@@ -107,7 +108,7 @@ func visible_choices() -> Array:
 
 
 func choose(choice_id: String) -> bool:
-	if closed:
+	if closed or callout_active:
 		return false
 	var node := _node(node_id)
 	for choice in node.get("choices", []):
@@ -125,7 +126,7 @@ func choose(choice_id: String) -> bool:
 
 
 func can_feed_potion() -> bool:
-	return not closed and not dose_fed and case_data.has("potion")
+	return not closed and not callout_active and not dose_fed and case_data.has("potion")
 
 
 func feed_potion(effect: Vector3i, label: String) -> bool:
@@ -196,6 +197,60 @@ func get_node_id() -> String:
 	return node_id
 
 
+func can_callout() -> bool:
+	if closed or callout_active or not case_data.has("callout"):
+		return false
+	if bool(flags.get("callout.done", false)):
+		return false
+	return _node(node_id).has("choices")
+
+
+func get_callout_button_text() -> String:
+	var config: Dictionary = case_data.get("callout", {})
+	var key := str(config.get("button", ""))
+	return _text(key) if key != "" else "叫破（输入真名）"
+
+
+func start_callout() -> Dictionary:
+	if not can_callout():
+		return {}
+	callout_active = true
+	var config: Dictionary = case_data.get("callout", {}).duplicate(true)
+	var answer := str(config.get("answer", ""))
+	if answer == "":
+		var answers: Array = config.get("answers", [])
+		if not answers.is_empty():
+			answer = str(answers[0])
+	config["answer"] = answer
+	config["prompt_text"] = _text(str(config.get("prompt", ""))) if str(config.get("prompt", "")) != "" else ""
+	config["button_text"] = _text(str(config.get("button", ""))) if str(config.get("button", "")) != "" else ""
+	changed.emit()
+	return config
+
+
+func resolve_callout(success: bool) -> bool:
+	if not callout_active:
+		return false
+	callout_active = false
+	var config: Dictionary = case_data.get("callout", {})
+	if success:
+		flags["callout.done"] = true
+		_enter(str(config.get("success", "")))
+	else:
+		if bool(config.get("once", false)):
+			flags["callout.done"] = true
+		_enter(str(config.get("failure", "")))
+	changed.emit()
+	return true
+
+
+func cancel_callout() -> void:
+	if not callout_active:
+		return
+	callout_active = false
+	changed.emit()
+
+
 func get_dose_score() -> int:
 	return dose_score
 
@@ -238,6 +293,7 @@ func restore(data: Dictionary) -> bool:
 	dose_score = int(data.get("dose_score", 0))
 	dose_label = str(data.get("dose_label", ""))
 	started = true
+	callout_active = false
 	var node := _node(node_id)
 	if node.is_empty():
 		_fail("restore: missing node '%s'" % node_id)

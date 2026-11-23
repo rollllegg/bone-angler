@@ -1,4 +1,14 @@
 {
+  "callout": {
+    "answer": "SUNWUKONG",
+    "button": "wukong.callout.button.1",
+    "case_sensitive": false,
+    "failure": "callout.fail",
+    "once": false,
+    "prompt": "wukong.callout.prompt.1",
+    "success": "identify",
+    "time_limit": 20.0
+  },
   "canon": [
     "world.wukong_case_seen = true"
   ],
@@ -66,19 +76,13 @@
           "text": "wukong.choice.coin"
         },
         {
-          "id": "name",
-          "if": "named == false && clue.photo + clue.tail + clue.staff + clue.coin >= 2",
-          "next": "identify",
-          "text": "wukong.choice.name"
-        },
-        {
           "id": "admit",
-          "next": "end.admit",
+          "next": "end.admitted",
           "text": "wukong.choice.admit"
         },
         {
           "id": "refuse",
-          "next": "end.refuse",
+          "next": "end.refused",
           "text": "wukong.choice.refuse"
         }
       ],
@@ -184,29 +188,31 @@
         {
           "speaker": "孙",
           "text": "wukong.identify.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "wukong.identify.3"
-        },
+        }
+      ]
+    },
+    {
+      "id": "callout.fail",
+      "next": "inspect",
+      "steps": [
         {
           "speaker": "孙",
-          "text": "wukong.identify.4"
+          "text": "wukong.callout.fail.1"
         }
       ]
     },
     {
       "branch": [
         {
-          "if": "dose.score >= 0",
+          "if": "dose.score > 0",
           "next": "potion.rage",
           "set": [
             "rage = true"
           ]
         },
         {
-          "if": "dose.score < 0",
-          "next": "potion.calm",
+          "if": "dose.score <= 0",
+          "next": "end.calm",
           "set": [
             "rage = false"
           ]
@@ -216,8 +222,12 @@
       "next": "inspect",
       "steps": [
         {
-          "speaker": "孙",
+          "speaker": "圣",
           "text": "wukong.potion.react.1"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.potion.react.2"
         }
       ]
     },
@@ -232,57 +242,20 @@
       ]
     },
     {
-      "id": "potion.calm",
-      "next": "inspect",
+      "id": "end.admitted",
+      "outcome": "admitted",
       "steps": [
         {
-          "speaker": "孙",
-          "text": "wukong.potion.calm.1"
-        }
-      ]
-    },
-    {
-      "branch": [
-        {
-          "if": "rage",
-          "next": "end.admitted.rage"
+          "text": "wukong.end.admitted.1"
         },
         {
-          "next": "end.admitted.calm"
-        }
-      ],
-      "id": "end.admit"
-    },
-    {
-      "branch": [
-        {
-          "if": "rage",
-          "next": "end.refused.rage"
+          "text": "wukong.end.admitted.2"
         },
         {
-          "next": "end.refused.calm"
-        }
-      ],
-      "id": "end.refuse"
-    },
-    {
-      "id": "end.admitted.rage",
-      "outcome": "admitted.rage",
-      "steps": [
-        {
-          "text": "wukong.end.admitted.rage.1"
+          "text": "wukong.end.admitted.3"
         },
         {
-          "text": "wukong.end.admitted.rage.2"
-        },
-        {
-          "text": "wukong.end.admitted.rage.3"
-        },
-        {
-          "text": "wukong.end.admitted.rage.4"
-        },
-        {
-          "text": "wukong.end.admitted.rage.5"
+          "text": "wukong.end.admitted.4"
         },
         {
           "if": "named",
@@ -295,17 +268,17 @@
       ]
     },
     {
-      "id": "end.admitted.calm",
-      "outcome": "admitted.calm",
+      "id": "end.refused",
+      "outcome": "refused",
       "steps": [
         {
-          "text": "wukong.end.admitted.calm.1"
+          "text": "wukong.end.refused.1"
         },
         {
-          "text": "wukong.end.admitted.calm.2"
+          "text": "wukong.end.refused.2"
         },
         {
-          "text": "wukong.end.admitted.calm.3"
+          "text": "wukong.end.refused.3"
         },
         {
           "if": "named",
@@ -318,34 +291,17 @@
       ]
     },
     {
-      "id": "end.refused.rage",
-      "outcome": "refused.rage",
+      "id": "end.calm",
+      "outcome": "calm",
       "steps": [
         {
-          "text": "wukong.end.refused.rage.1"
+          "text": "wukong.end.calm.1"
         },
         {
-          "text": "wukong.end.refused.rage.2"
+          "text": "wukong.end.calm.2"
         },
         {
-          "if": "named",
-          "text": "wukong.end.ledger.named.1"
-        },
-        {
-          "if": "!named",
-          "text": "wukong.end.ledger.unnamed.1"
-        }
-      ]
-    },
-    {
-      "id": "end.refused.calm",
-      "outcome": "refused.calm",
-      "steps": [
-        {
-          "text": "wukong.end.refused.calm.1"
-        },
-        {
-          "text": "wukong.end.refused.calm.2"
+          "text": "wukong.end.calm.3"
         },
         {
           "if": "named",
@@ -359,32 +315,13 @@
     }
   ],
   "outcomes": {
-    "admitted.calm": {
-      "effects": [
-        "world.hades_rampage = false",
-        "world.wukong_admitted = true"
-      ],
-      "ledger": {
-        "note": "wukong.ledger.admitted.calm.1",
-        "result": "已入境",
-        "who": "史密斯",
-        "who_if": [
-          {
-            "if": "named",
-            "who": "孙悟空"
-          }
-        ]
-      },
-      "payout": 60.0,
-      "result": "release"
-    },
-    "admitted.rage": {
+    "admitted": {
       "effects": [
         "world.hades_rampage = true",
         "world.wukong_admitted = true"
       ],
       "ledger": {
-        "note": "wukong.ledger.admitted.rage.1",
+        "note": "wukong.ledger.admitted.1",
         "result": "已入境",
         "who": "史密斯",
         "who_if": [
@@ -397,14 +334,14 @@
       "payout": 60.0,
       "result": "release"
     },
-    "refused.calm": {
+    "calm": {
       "effects": [
         "world.hades_rampage = false",
         "world.wukong_admitted = false"
       ],
       "ledger": {
-        "note": "wukong.ledger.refused.calm.1",
-        "result": "未入境",
+        "note": "wukong.ledger.calm.1",
+        "result": "自行离开",
         "who": "史密斯",
         "who_if": [
           {
@@ -414,15 +351,15 @@
         ]
       },
       "payout": 0.0,
-      "result": "reject"
+      "result": "leave"
     },
-    "refused.rage": {
+    "refused": {
       "effects": [
         "world.hades_rampage = true",
         "world.wukong_admitted = false"
       ],
       "ledger": {
-        "note": "wukong.ledger.refused.rage.1",
+        "note": "wukong.ledger.refused.1",
         "result": "未入境",
         "who": "史密斯",
         "who_if": [
@@ -456,6 +393,10 @@
   },
   "state": {
     "flags": {
+      "callout.done": {
+        "default": false,
+        "type": "bool"
+      },
       "clue.coin": {
         "default": 0.0,
         "type": "int"
@@ -481,7 +422,7 @@
         "type": "string"
       },
       "dose.score": {
-        "default": 0.0,
+        "default": 1.0,
         "type": "int"
       },
       "named": {

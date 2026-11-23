@@ -1044,6 +1044,15 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key.echo or key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
 		return
+	if started and current_location == "Shop" and story_panel != null and story_panel.is_typing():
+		if code >= KEY_A and code <= KEY_Z:
+			story_panel.submit_letter(OS.get_keycode_string(code))
+			get_viewport().set_input_as_handled()
+			return
+		if code == KEY_ESCAPE:
+			story_panel.cancel_callout()
+			get_viewport().set_input_as_handled()
+			return
 	var handled := true
 	if not started:
 		handled = _title_key(code)
@@ -1280,7 +1289,7 @@ func _refresh_shared() -> void:
 				_service_fee.text += "\n特殊委托：意志达到 9　+%d 枚" % int(selected.fee * 0.20)
 
 	if not shop.departure_times.is_empty():
-		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome == "reject" else "放行成功　渡魂币 +%d" % session.last_payout
+		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome != "release" else "放行成功　渡魂币 +%d" % session.last_payout
 	else:
 		_payout_notice.text = ""
 	if session.is_complete():
@@ -1385,6 +1394,11 @@ func _refresh_dose() -> void:
 	var selected := session.get_soul(shop.selected_id)
 	var story = _selected_story_runtime()
 	if story != null:
+		if story_panel != null and story_panel.is_typing():
+			_serve_button.disabled = true
+			_dose_preview.text = "正在输入真名……"
+			_dose_preview.add_theme_color_override("font_color", UI.MUTED)
+			return
 		if story.can_feed_potion():
 			_serve_button.disabled = session.paused or _selected_dose == null
 			if _selected_dose == null:

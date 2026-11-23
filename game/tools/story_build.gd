@@ -166,7 +166,7 @@ func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 	for outcome_id in outcomes.keys():
 		var outcome: Dictionary = outcomes[outcome_id]
 		var result := str(outcome.get("result", ""))
-		if result not in ["release", "reject", "stay"]:
+		if result not in ["release", "reject", "stay", "leave"]:
 			_error("%s: outcome '%s' has invalid result '%s'" % [case_id, outcome_id, result])
 		var ledger: Dictionary = outcome.get("ledger", {})
 		if ledger.is_empty():
@@ -184,6 +184,7 @@ func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 
 	_check_effects(graph_data.get("canon", []), case_flags, world_decl, "%s canon" % case_id)
 	_validate_potion(graph_data, node_ids, case_id)
+	_validate_callout(graph_data, node_ids, case_id)
 	_validate_nodes(graph_data, node_ids, outcomes, case_flags, world_decl, case_id)
 	_validate_reachability(graph_data, node_ids, case_id)
 
@@ -281,12 +282,40 @@ func _validate_potion(graph_data: Dictionary, node_ids: Dictionary, case_id: Str
 			_error("%s: potion score misses numeric %s" % [case_id, key])
 
 
+func _validate_callout(graph_data: Dictionary, node_ids: Dictionary, case_id: String) -> void:
+	if not graph_data.has("callout"):
+		return
+	var callout: Dictionary = graph_data.get("callout", {})
+	var answer := str(callout.get("answer", ""))
+	var answers: Array = callout.get("answers", [])
+	if answer == "" and answers.is_empty():
+		_error("%s: callout has no answer" % case_id)
+	for item in answers:
+		if str(item) == "":
+			_error("%s: callout has an empty answer" % case_id)
+	if callout.has("prompt"):
+		_check_text_key(str(callout.prompt), "%s callout prompt" % case_id)
+	if callout.has("button"):
+		_check_text_key(str(callout.button), "%s callout button" % case_id)
+	_check_node_ref(callout.get("success", ""), node_ids, "%s callout success" % case_id)
+	_check_node_ref(callout.get("failure", ""), node_ids, "%s callout failure" % case_id)
+	if callout.has("time_limit") and typeof(callout.time_limit) not in [TYPE_INT, TYPE_FLOAT]:
+		_error("%s: callout time_limit must be numeric" % case_id)
+	if callout.has("case_sensitive") and typeof(callout.case_sensitive) != TYPE_BOOL:
+		_error("%s: callout case_sensitive must be bool" % case_id)
+	if callout.has("once") and typeof(callout.once) != TYPE_BOOL:
+		_error("%s: callout once must be bool" % case_id)
+
+
 func _validate_reachability(graph_data: Dictionary, node_ids: Dictionary, case_id: String) -> void:
 	var entry := str(graph_data.get("entry", ""))
 	var seen: Dictionary = {}
 	var queue: Array = [entry]
 	if graph_data.has("potion"):
 		queue.append(str(graph_data.get("potion", {}).get("node", "")))
+	if graph_data.has("callout"):
+		queue.append(str(graph_data.get("callout", {}).get("success", "")))
+		queue.append(str(graph_data.get("callout", {}).get("failure", "")))
 	while not queue.is_empty():
 		var id := str(queue.pop_front())
 		if seen.has(id) or not node_ids.has(id):

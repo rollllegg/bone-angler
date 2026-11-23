@@ -29,7 +29,7 @@ func _run() -> void:
 		var runtime = Runtime.new()
 		runtime.setup(data, db.text, state)
 		runtime.start()
-		_walk(runtime, [], true)
+		_walk(runtime, [], true, true)
 		_write_report(str(case_id), data)
 		var expected: Array = data.get("outcomes", {}).keys()
 		var missing: Array = []
@@ -44,7 +44,7 @@ func _run() -> void:
 	quit(0)
 
 
-func _walk(runtime, path: Array, allow_potion: bool) -> void:
+func _walk(runtime, path: Array, allow_potion: bool, allow_callout: bool) -> void:
 	_settle(runtime)
 	if runtime.is_closed():
 		_results.append({
@@ -61,10 +61,23 @@ func _walk(runtime, path: Array, allow_potion: bool) -> void:
 	if allow_potion and runtime.can_feed_potion():
 		var calm = _clone(runtime)
 		calm.feed_potion(Vector3i(10, 0, -4), "极识药")
-		_walk(calm, path + ["药:极识"], false)
+		_walk(calm, path + ["药:极识"], false, false)
 		var hot = _clone(runtime)
 		hot.feed_potion(Vector3i(0, 4, 0), "暖心药")
-		_walk(hot, path + ["药:暖心"], false)
+		_walk(hot, path + ["药:暖心"], false, false)
+		var zero = _clone(runtime)
+		zero.feed_potion(Vector3i(1, 0, 1), "灰鳞原液")
+		_walk(zero, path + ["药:灰鳞"], false, false)
+	if allow_callout and runtime.can_callout():
+		var named = _clone(runtime)
+		named.start_callout()
+		named.resolve_callout(true)
+		_walk(named, path + ["叫破:成功"], false, false)
+		var missed = _clone(runtime)
+		missed.start_callout()
+		missed.resolve_callout(false)
+		_walk(missed, path + ["叫破:失败"], false, false)
+		allow_callout = false
 	var choices: Array = runtime.visible_choices()
 	for choice in choices:
 		if bool(choice.get("locked", false)):
@@ -73,7 +86,7 @@ func _walk(runtime, path: Array, allow_potion: bool) -> void:
 		var choice_id := str(choice.get("id", ""))
 		if not clone.choose(choice_id):
 			continue
-		_walk(clone, path + [choice_id], false)
+		_walk(clone, path + [choice_id], false, false)
 
 
 func _clone(runtime):
@@ -102,13 +115,14 @@ func _write_report(case_id: String, data: Dictionary) -> void:
 		named += int(result.named)
 		raged += int(result.rage)
 		for step in result.path:
-			if str(step).begins_with("药:"):
+			if str(step).begins_with("药:") or str(step).begins_with("叫破:"):
 				continue
 			choice_counts[step] = int(choice_counts.get(step, 0)) + 1
 	var lines: Array = []
 	lines.append("# 剧情模拟报告 · %s" % case_id)
 	lines.append("")
 	lines.append("- 终端路径：%d" % _results.size())
+	lines.append("- 抽样说明：药和叫破只在第一次接待时各抽样一次，用于验证可达性，不是完整组合数。")
 	lines.append("- 叫破身份：%d / %d" % [named, _results.size()])
 	lines.append("- 大闹冥府：%d / %d" % [raged, _results.size()])
 	lines.append("")

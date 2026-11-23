@@ -41,11 +41,11 @@ func _run() -> void:
 	_advance_until_choices(runtime)
 	runtime.choose("photo")
 	_advance_until_choices(runtime)
-	demo.session._add_potion("test", "极识药", Vector3i(10, 0, -4), -1, 0)
+	demo.session._add_potion("test", "暖心药", Vector3i(0, 4, 0), -1, 0)
 	demo.session.feed_story_potion(soul_id, false, int(demo.session.potions[0]["id"]))
 	_advance_until_choices(runtime)
 	_check(int(runtime.flags["clue.photo"]) == 1, "clue set before save")
-	_check(int(runtime.flags["dose.score"]) == -14, "dose score set before save")
+	_check(int(runtime.flags["dose.score"]) == 4, "dose score set before save")
 
 	demo.persist_save = true
 	demo.save_progress()
@@ -74,7 +74,7 @@ func _run() -> void:
 	var restored = demo.session.get_story_runtime(restored_id)
 	_check(restored != null, "load rebuilds the story runtime")
 	_check(int(restored.flags["clue.photo"]) == 1, "load restores clues")
-	_check(int(restored.flags["dose.score"]) == -14, "load restores the potion result")
+	_check(int(restored.flags["dose.score"]) == 4, "load restores the potion result")
 	_check(restored.has_fed_potion(), "load restores the fed potion")
 	_check(str(restored.current_step().get("key", "")).begins_with("wukong."), "load restores the dialogue position")
 
