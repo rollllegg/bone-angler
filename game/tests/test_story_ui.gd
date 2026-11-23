@@ -59,6 +59,15 @@ func _run() -> void:
 	_check(not _demo.story_panel._callout_button.visible, "callout button hides while typing")
 	_check(_demo.story_panel._cancel_button.visible, "cancel button appears while typing")
 	await _capture("story-panel-callout.png")
+	var esc_event := InputEventKey.new()
+	esc_event.physical_keycode = KEY_ESCAPE
+	esc_event.pressed = true
+	_demo._unhandled_key_input(esc_event)
+	_check(not _demo.story_panel.is_typing(), "Escape cancels the callout")
+	_check(_demo.current_location == "Shop", "cancel stays in the shop")
+	_check(_demo.story_panel._callout_button.visible, "callout button returns after cancel")
+	_demo.story_panel._callout_button.pressed.emit()
+	_check(_demo.story_panel.is_typing(), "callout can restart after cancel")
 	var q_event := InputEventKey.new()
 	q_event.physical_keycode = KEY_Q
 	q_event.pressed = true

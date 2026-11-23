@@ -199,6 +199,7 @@ func cancel_callout() -> void:
 	set_process(false)
 	_typing.stop()
 	_hide_callout_ui()
+	_signature = ""
 	if _runtime != null:
 		_runtime.cancel_callout()
 
@@ -286,6 +287,7 @@ func _finish_callout(success: bool) -> void:
 	set_process(false)
 	_typing.stop()
 	_hide_callout_ui()
+	_signature = ""
 	if _runtime != null:
 		_runtime.resolve_callout(success)
 
