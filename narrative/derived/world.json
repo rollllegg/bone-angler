@@ -1,0 +1,7 @@
+{
+  "flags": {
+    "world.hades_rampage": {"type": "bool", "default": false},
+    "world.wukong_admitted": {"type": "bool", "default": false},
+    "world.wukong_case_seen": {"type": "bool", "default": false}
+  }
+}

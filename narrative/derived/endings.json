@@ -1,0 +1,20 @@
+{
+  "endings": [
+    {
+      "id": "hades_rampage",
+      "priority": 10,
+      "if": "world.hades_rampage",
+      "text": "ending.rampage.1",
+      "epilogue": [
+        {"if": "case.wukong.named", "text": "ending.rampage.named.1"}
+      ]
+    },
+    {
+      "id": "quiet_shift",
+      "priority": 0,
+      "if": "true",
+      "text": "ending.quiet.1",
+      "epilogue": []
+    }
+  ]
+}

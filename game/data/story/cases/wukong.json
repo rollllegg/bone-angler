@@ -1,0 +1,474 @@
+{
+  "canon": [
+    "world.wukong_case_seen = true"
+  ],
+  "entry": "arrival",
+  "fee": 60.0,
+  "id": "wukong",
+  "nodes": [
+    {
+      "id": "arrival",
+      "next": "inspect",
+      "steps": [
+        {
+          "text": "wukong.arrival.1"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.arrival.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "wukong.arrival.3"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.arrival.4"
+        }
+      ]
+    },
+    {
+      "choices": [
+        {
+          "id": "photo",
+          "if": "clue.photo == 0",
+          "next": "inspect.photo",
+          "set": [
+            "clue.photo = 1"
+          ],
+          "text": "wukong.choice.photo"
+        },
+        {
+          "id": "tail",
+          "if": "clue.tail == 0",
+          "next": "inspect.tail",
+          "set": [
+            "clue.tail = 1"
+          ],
+          "text": "wukong.choice.tail"
+        },
+        {
+          "id": "staff",
+          "if": "clue.staff == 0",
+          "next": "inspect.staff",
+          "set": [
+            "clue.staff = 1"
+          ],
+          "text": "wukong.choice.staff"
+        },
+        {
+          "id": "coin",
+          "if": "clue.coin == 0",
+          "next": "inspect.coin",
+          "set": [
+            "clue.coin = 1"
+          ],
+          "text": "wukong.choice.coin"
+        },
+        {
+          "id": "name",
+          "if": "named == false && clue.photo + clue.tail + clue.staff + clue.coin >= 2",
+          "next": "identify",
+          "text": "wukong.choice.name"
+        },
+        {
+          "id": "admit",
+          "next": "end.admit",
+          "text": "wukong.choice.admit"
+        },
+        {
+          "id": "refuse",
+          "next": "end.refuse",
+          "text": "wukong.choice.refuse"
+        }
+      ],
+      "id": "inspect",
+      "steps": [
+        {
+          "if": "!named",
+          "speaker": "圣",
+          "text": "wukong.inspect.1"
+        },
+        {
+          "if": "!named",
+          "speaker": "孙",
+          "text": "wukong.inspect.2"
+        },
+        {
+          "if": "named",
+          "speaker": "圣",
+          "text": "wukong.inspect.named.1"
+        },
+        {
+          "if": "named",
+          "speaker": "孙",
+          "text": "wukong.inspect.named.2"
+        }
+      ]
+    },
+    {
+      "id": "inspect.photo",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "wukong.inspect.photo.1"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.inspect.photo.2"
+        }
+      ]
+    },
+    {
+      "id": "inspect.tail",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "wukong.inspect.tail.1"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.inspect.tail.2"
+        }
+      ]
+    },
+    {
+      "id": "inspect.staff",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "wukong.inspect.staff.1"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.inspect.staff.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "wukong.inspect.staff.3"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.inspect.staff.4"
+        }
+      ]
+    },
+    {
+      "id": "inspect.coin",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "孙",
+          "text": "wukong.inspect.coin.1"
+        },
+        {
+          "speaker": "圣",
+          "text": "wukong.inspect.coin.2"
+        }
+      ]
+    },
+    {
+      "id": "identify",
+      "next": "inspect",
+      "set": [
+        "named = true"
+      ],
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "wukong.identify.1"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.identify.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "wukong.identify.3"
+        },
+        {
+          "speaker": "孙",
+          "text": "wukong.identify.4"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "dose.score >= 0",
+          "next": "potion.rage",
+          "set": [
+            "rage = true"
+          ]
+        },
+        {
+          "if": "dose.score < 0",
+          "next": "potion.calm",
+          "set": [
+            "rage = false"
+          ]
+        }
+      ],
+      "id": "potion.react",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "孙",
+          "text": "wukong.potion.react.1"
+        }
+      ]
+    },
+    {
+      "id": "potion.rage",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "孙",
+          "text": "wukong.potion.rage.1"
+        }
+      ]
+    },
+    {
+      "id": "potion.calm",
+      "next": "inspect",
+      "steps": [
+        {
+          "speaker": "孙",
+          "text": "wukong.potion.calm.1"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "rage",
+          "next": "end.admitted.rage"
+        },
+        {
+          "next": "end.admitted.calm"
+        }
+      ],
+      "id": "end.admit"
+    },
+    {
+      "branch": [
+        {
+          "if": "rage",
+          "next": "end.refused.rage"
+        },
+        {
+          "next": "end.refused.calm"
+        }
+      ],
+      "id": "end.refuse"
+    },
+    {
+      "id": "end.admitted.rage",
+      "outcome": "admitted.rage",
+      "steps": [
+        {
+          "text": "wukong.end.admitted.rage.1"
+        },
+        {
+          "text": "wukong.end.admitted.rage.2"
+        },
+        {
+          "text": "wukong.end.admitted.rage.3"
+        },
+        {
+          "text": "wukong.end.admitted.rage.4"
+        },
+        {
+          "text": "wukong.end.admitted.rage.5"
+        },
+        {
+          "if": "named",
+          "text": "wukong.end.ledger.named.1"
+        },
+        {
+          "if": "!named",
+          "text": "wukong.end.ledger.unnamed.1"
+        }
+      ]
+    },
+    {
+      "id": "end.admitted.calm",
+      "outcome": "admitted.calm",
+      "steps": [
+        {
+          "text": "wukong.end.admitted.calm.1"
+        },
+        {
+          "text": "wukong.end.admitted.calm.2"
+        },
+        {
+          "text": "wukong.end.admitted.calm.3"
+        },
+        {
+          "if": "named",
+          "text": "wukong.end.ledger.named.1"
+        },
+        {
+          "if": "!named",
+          "text": "wukong.end.ledger.unnamed.1"
+        }
+      ]
+    },
+    {
+      "id": "end.refused.rage",
+      "outcome": "refused.rage",
+      "steps": [
+        {
+          "text": "wukong.end.refused.rage.1"
+        },
+        {
+          "text": "wukong.end.refused.rage.2"
+        },
+        {
+          "if": "named",
+          "text": "wukong.end.ledger.named.1"
+        },
+        {
+          "if": "!named",
+          "text": "wukong.end.ledger.unnamed.1"
+        }
+      ]
+    },
+    {
+      "id": "end.refused.calm",
+      "outcome": "refused.calm",
+      "steps": [
+        {
+          "text": "wukong.end.refused.calm.1"
+        },
+        {
+          "text": "wukong.end.refused.calm.2"
+        },
+        {
+          "if": "named",
+          "text": "wukong.end.ledger.named.1"
+        },
+        {
+          "if": "!named",
+          "text": "wukong.end.ledger.unnamed.1"
+        }
+      ]
+    }
+  ],
+  "outcomes": {
+    "admitted.calm": {
+      "effects": [
+        "world.hades_rampage = false",
+        "world.wukong_admitted = true"
+      ],
+      "ledger": {
+        "note": "wukong.ledger.admitted.calm.1",
+        "result": "已入境",
+        "who": "史密斯"
+      },
+      "payout": 60.0,
+      "result": "release"
+    },
+    "admitted.rage": {
+      "effects": [
+        "world.hades_rampage = true",
+        "world.wukong_admitted = true"
+      ],
+      "ledger": {
+        "note": "wukong.ledger.admitted.rage.1",
+        "result": "已入境",
+        "who": "史密斯"
+      },
+      "payout": 60.0,
+      "result": "release"
+    },
+    "refused.calm": {
+      "effects": [
+        "world.hades_rampage = false",
+        "world.wukong_admitted = false"
+      ],
+      "ledger": {
+        "note": "wukong.ledger.refused.calm.1",
+        "result": "未入境",
+        "who": "史密斯"
+      },
+      "payout": 0.0,
+      "result": "reject"
+    },
+    "refused.rage": {
+      "effects": [
+        "world.hades_rampage = true",
+        "world.wukong_admitted = false"
+      ],
+      "ledger": {
+        "note": "wukong.ledger.refused.rage.1",
+        "result": "未入境",
+        "who": "史密斯"
+      },
+      "payout": 0.0,
+      "result": "reject"
+    }
+  },
+  "potion": {
+    "node": "potion.react",
+    "score": {
+      "emotion": 1.0,
+      "will": 1.0,
+      "wisdom": -1.0
+    }
+  },
+  "queue_name": "史密斯",
+  "requires_stats": false,
+  "speakers": {
+    "圣": {
+      "name": "圣地亚哥"
+    },
+    "孙": {
+      "name": "孙悟空"
+    }
+  },
+  "state": {
+    "flags": {
+      "clue.coin": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "clue.photo": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "clue.staff": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "clue.tail": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "dose.fed": {
+        "default": false,
+        "type": "bool"
+      },
+      "dose.label": {
+        "default": "",
+        "type": "string"
+      },
+      "dose.score": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "named": {
+        "default": false,
+        "type": "bool"
+      },
+      "rage": {
+        "default": true,
+        "type": "bool"
+      }
+    }
+  },
+  "title": "孙悟空"
+}

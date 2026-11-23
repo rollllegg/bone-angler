@@ -437,6 +437,9 @@ func _check_daily_rotation(session: Session) -> void:
 			_check(demo.soul_hud._legend_label.text.count("～") == 3, "Reception displays all three day-four target ranges")
 			await _capture("09-day-four-requirements")
 		for soul in session.souls.duplicate():
+			if soul.has("story_case"):
+				_check(_resolve_story(session, soul.id), "A scheduled story guest can be resolved")
+				continue
 			soul.stats = session.requirements[0]
 			_check(session.release_soul(soul.id), "A guest meeting the inclusive current bounds can be released")
 	_check(session.is_complete() and session.day == 5 and session.released_count == 30 and session._first_services.size() == 30, "All thirty guests complete the five-day shift without duplicate cases")
@@ -463,6 +466,32 @@ func _check_smaller_roster_save() -> void:
 	model.free()
 
 
+func _resolve_story(session, id: int) -> bool:
+	var runtime = session.get_story_runtime(id)
+	if runtime == null:
+		return false
+	var guard := 0
+	while not runtime.is_closed() and guard < 50:
+		var choices: Array = runtime.visible_choices()
+		if choices.is_empty():
+			if not runtime.advance():
+				break
+		else:
+			var picked := false
+			for choice in choices:
+				if bool(choice.get("locked", false)):
+					continue
+				runtime.choose(str(choice.get("id", "")))
+				picked = true
+				break
+			if not picked:
+				break
+		guard += 1
+	if not runtime.is_closed():
+		return false
+	return session.finish_story(id)
+
+
 func _check_starter_cases() -> void:
 	var single_dose_for_all := true
 	var new_dose_solves_will := true
@@ -476,6 +505,8 @@ func _check_starter_cases() -> void:
 			model.advance(160.0)
 			single_dose_for_all = single_dose_for_all and model.souls.size() == 6
 			for soul in model.souls.duplicate():
+				if soul.has("story_case"):
+					continue
 				var stats: Vector3i = soul.stats
 				var violations := 0
 				for axis in 3:

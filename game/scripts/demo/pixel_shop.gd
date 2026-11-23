@@ -69,6 +69,17 @@ func begin_departure() -> bool:
 	return true
 
 
+func begin_story_departure() -> bool:
+	if session.paused or session.get_soul(selected_id).is_empty():
+		return false
+	var start := 0.0 if departure_times.is_empty() else minf(0.0, departure_times.back() - COUNTER_CLEAR_TIME)
+	departure_times.append(start)
+	if not session.finish_story(selected_id):
+		departure_times.pop_back()
+		return false
+	return true
+
+
 func advance_presentation(delta: float) -> void:
 	if not active or session == null or session.is_time_suspended() or delta <= 0.0:
 		return

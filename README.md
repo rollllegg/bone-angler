@@ -101,3 +101,9 @@ python .\game\tools\serve_web.py
 导出文件分别位于 `game/build/windows/` 和 `game/build/web/`；本地预览地址为 <http://127.0.0.1:8060>。
 
 试玩界面使用缝合像素字体 12 px 简体比例版，Noto Sans SC 用于缺字回退和旧练习场景。两款字体的来源和 SIL Open Font License 1.1 许可位于 `game/assets/fonts/`。工具安装目录、Godot 缓存和导出文件不纳入版本管理。
+
+## 剧情系统
+
+特殊 NPC 的故事种子、分支图和正文在 `narrative/`，编译后进入 `game/data/story/`。当前试点是孙悟空，固定在第 5 天第 6 位（slot 5）出现。剧情来客走审查和剧情分支，不套用普通灵魂的属性门槛。
+
+编译、模拟和测试命令见 `docs/剧情系统使用说明.md`，结构设计见 `docs/剧情系统设计.md`。

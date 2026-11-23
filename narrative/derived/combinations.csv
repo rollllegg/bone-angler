@@ -1,0 +1,1183 @@
+path,outcome,named,rage,dose_score
+药:极识 > photo > tail > staff > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > staff > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > staff > coin > admit,admitted.calm,false,false,-14
+药:极识 > photo > tail > staff > coin > refuse,refused.calm,false,false,-14
+药:极识 > photo > tail > staff > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > staff > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > staff > admit,admitted.calm,false,false,-14
+药:极识 > photo > tail > staff > refuse,refused.calm,false,false,-14
+药:极识 > photo > tail > coin > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > coin > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > coin > staff > admit,admitted.calm,false,false,-14
+药:极识 > photo > tail > coin > staff > refuse,refused.calm,false,false,-14
+药:极识 > photo > tail > coin > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > coin > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > coin > admit,admitted.calm,false,false,-14
+药:极识 > photo > tail > coin > refuse,refused.calm,false,false,-14
+药:极识 > photo > tail > name > staff > coin > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > name > staff > coin > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > name > coin > staff > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > name > coin > staff > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > tail > admit,admitted.calm,false,false,-14
+药:极识 > photo > tail > refuse,refused.calm,false,false,-14
+药:极识 > photo > staff > tail > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > tail > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > tail > coin > admit,admitted.calm,false,false,-14
+药:极识 > photo > staff > tail > coin > refuse,refused.calm,false,false,-14
+药:极识 > photo > staff > tail > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > tail > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > tail > admit,admitted.calm,false,false,-14
+药:极识 > photo > staff > tail > refuse,refused.calm,false,false,-14
+药:极识 > photo > staff > coin > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > coin > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > coin > tail > admit,admitted.calm,false,false,-14
+药:极识 > photo > staff > coin > tail > refuse,refused.calm,false,false,-14
+药:极识 > photo > staff > coin > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > coin > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > coin > admit,admitted.calm,false,false,-14
+药:极识 > photo > staff > coin > refuse,refused.calm,false,false,-14
+药:极识 > photo > staff > name > tail > coin > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > name > tail > coin > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > name > coin > tail > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > name > coin > tail > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > staff > admit,admitted.calm,false,false,-14
+药:极识 > photo > staff > refuse,refused.calm,false,false,-14
+药:极识 > photo > coin > tail > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > tail > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > tail > staff > admit,admitted.calm,false,false,-14
+药:极识 > photo > coin > tail > staff > refuse,refused.calm,false,false,-14
+药:极识 > photo > coin > tail > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > tail > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > tail > admit,admitted.calm,false,false,-14
+药:极识 > photo > coin > tail > refuse,refused.calm,false,false,-14
+药:极识 > photo > coin > staff > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > staff > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > staff > tail > admit,admitted.calm,false,false,-14
+药:极识 > photo > coin > staff > tail > refuse,refused.calm,false,false,-14
+药:极识 > photo > coin > staff > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > staff > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > staff > admit,admitted.calm,false,false,-14
+药:极识 > photo > coin > staff > refuse,refused.calm,false,false,-14
+药:极识 > photo > coin > name > tail > staff > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > name > tail > staff > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > name > staff > tail > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > name > staff > tail > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > photo > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > photo > coin > admit,admitted.calm,false,false,-14
+药:极识 > photo > coin > refuse,refused.calm,false,false,-14
+药:极识 > photo > admit,admitted.calm,false,false,-14
+药:极识 > photo > refuse,refused.calm,false,false,-14
+药:极识 > tail > photo > staff > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > staff > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > staff > coin > admit,admitted.calm,false,false,-14
+药:极识 > tail > photo > staff > coin > refuse,refused.calm,false,false,-14
+药:极识 > tail > photo > staff > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > staff > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > staff > admit,admitted.calm,false,false,-14
+药:极识 > tail > photo > staff > refuse,refused.calm,false,false,-14
+药:极识 > tail > photo > coin > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > coin > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > coin > staff > admit,admitted.calm,false,false,-14
+药:极识 > tail > photo > coin > staff > refuse,refused.calm,false,false,-14
+药:极识 > tail > photo > coin > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > coin > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > coin > admit,admitted.calm,false,false,-14
+药:极识 > tail > photo > coin > refuse,refused.calm,false,false,-14
+药:极识 > tail > photo > name > staff > coin > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > name > staff > coin > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > name > coin > staff > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > name > coin > staff > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > photo > admit,admitted.calm,false,false,-14
+药:极识 > tail > photo > refuse,refused.calm,false,false,-14
+药:极识 > tail > staff > photo > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > photo > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > photo > coin > admit,admitted.calm,false,false,-14
+药:极识 > tail > staff > photo > coin > refuse,refused.calm,false,false,-14
+药:极识 > tail > staff > photo > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > photo > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > photo > admit,admitted.calm,false,false,-14
+药:极识 > tail > staff > photo > refuse,refused.calm,false,false,-14
+药:极识 > tail > staff > coin > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > coin > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > coin > photo > admit,admitted.calm,false,false,-14
+药:极识 > tail > staff > coin > photo > refuse,refused.calm,false,false,-14
+药:极识 > tail > staff > coin > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > coin > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > coin > admit,admitted.calm,false,false,-14
+药:极识 > tail > staff > coin > refuse,refused.calm,false,false,-14
+药:极识 > tail > staff > name > photo > coin > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > name > photo > coin > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > name > coin > photo > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > name > coin > photo > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > staff > admit,admitted.calm,false,false,-14
+药:极识 > tail > staff > refuse,refused.calm,false,false,-14
+药:极识 > tail > coin > photo > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > photo > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > photo > staff > admit,admitted.calm,false,false,-14
+药:极识 > tail > coin > photo > staff > refuse,refused.calm,false,false,-14
+药:极识 > tail > coin > photo > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > photo > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > photo > admit,admitted.calm,false,false,-14
+药:极识 > tail > coin > photo > refuse,refused.calm,false,false,-14
+药:极识 > tail > coin > staff > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > staff > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > staff > photo > admit,admitted.calm,false,false,-14
+药:极识 > tail > coin > staff > photo > refuse,refused.calm,false,false,-14
+药:极识 > tail > coin > staff > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > staff > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > staff > admit,admitted.calm,false,false,-14
+药:极识 > tail > coin > staff > refuse,refused.calm,false,false,-14
+药:极识 > tail > coin > name > photo > staff > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > name > photo > staff > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > name > staff > photo > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > name > staff > photo > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > tail > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > tail > coin > admit,admitted.calm,false,false,-14
+药:极识 > tail > coin > refuse,refused.calm,false,false,-14
+药:极识 > tail > admit,admitted.calm,false,false,-14
+药:极识 > tail > refuse,refused.calm,false,false,-14
+药:极识 > staff > photo > tail > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > tail > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > tail > coin > admit,admitted.calm,false,false,-14
+药:极识 > staff > photo > tail > coin > refuse,refused.calm,false,false,-14
+药:极识 > staff > photo > tail > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > tail > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > tail > admit,admitted.calm,false,false,-14
+药:极识 > staff > photo > tail > refuse,refused.calm,false,false,-14
+药:极识 > staff > photo > coin > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > coin > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > coin > tail > admit,admitted.calm,false,false,-14
+药:极识 > staff > photo > coin > tail > refuse,refused.calm,false,false,-14
+药:极识 > staff > photo > coin > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > coin > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > coin > admit,admitted.calm,false,false,-14
+药:极识 > staff > photo > coin > refuse,refused.calm,false,false,-14
+药:极识 > staff > photo > name > tail > coin > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > name > tail > coin > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > name > coin > tail > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > name > coin > tail > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > photo > admit,admitted.calm,false,false,-14
+药:极识 > staff > photo > refuse,refused.calm,false,false,-14
+药:极识 > staff > tail > photo > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > photo > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > photo > coin > admit,admitted.calm,false,false,-14
+药:极识 > staff > tail > photo > coin > refuse,refused.calm,false,false,-14
+药:极识 > staff > tail > photo > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > photo > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > photo > admit,admitted.calm,false,false,-14
+药:极识 > staff > tail > photo > refuse,refused.calm,false,false,-14
+药:极识 > staff > tail > coin > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > coin > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > coin > photo > admit,admitted.calm,false,false,-14
+药:极识 > staff > tail > coin > photo > refuse,refused.calm,false,false,-14
+药:极识 > staff > tail > coin > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > coin > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > coin > admit,admitted.calm,false,false,-14
+药:极识 > staff > tail > coin > refuse,refused.calm,false,false,-14
+药:极识 > staff > tail > name > photo > coin > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > name > photo > coin > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > name > coin > photo > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > name > coin > photo > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > name > coin > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > name > coin > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > tail > admit,admitted.calm,false,false,-14
+药:极识 > staff > tail > refuse,refused.calm,false,false,-14
+药:极识 > staff > coin > photo > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > photo > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > photo > tail > admit,admitted.calm,false,false,-14
+药:极识 > staff > coin > photo > tail > refuse,refused.calm,false,false,-14
+药:极识 > staff > coin > photo > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > photo > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > photo > admit,admitted.calm,false,false,-14
+药:极识 > staff > coin > photo > refuse,refused.calm,false,false,-14
+药:极识 > staff > coin > tail > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > tail > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > tail > photo > admit,admitted.calm,false,false,-14
+药:极识 > staff > coin > tail > photo > refuse,refused.calm,false,false,-14
+药:极识 > staff > coin > tail > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > tail > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > tail > admit,admitted.calm,false,false,-14
+药:极识 > staff > coin > tail > refuse,refused.calm,false,false,-14
+药:极识 > staff > coin > name > photo > tail > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > name > photo > tail > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > name > tail > photo > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > name > tail > photo > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > name > admit,admitted.calm,true,false,-14
+药:极识 > staff > coin > name > refuse,refused.calm,true,false,-14
+药:极识 > staff > coin > admit,admitted.calm,false,false,-14
+药:极识 > staff > coin > refuse,refused.calm,false,false,-14
+药:极识 > staff > admit,admitted.calm,false,false,-14
+药:极识 > staff > refuse,refused.calm,false,false,-14
+药:极识 > coin > photo > tail > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > tail > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > tail > staff > admit,admitted.calm,false,false,-14
+药:极识 > coin > photo > tail > staff > refuse,refused.calm,false,false,-14
+药:极识 > coin > photo > tail > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > tail > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > tail > admit,admitted.calm,false,false,-14
+药:极识 > coin > photo > tail > refuse,refused.calm,false,false,-14
+药:极识 > coin > photo > staff > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > staff > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > staff > tail > admit,admitted.calm,false,false,-14
+药:极识 > coin > photo > staff > tail > refuse,refused.calm,false,false,-14
+药:极识 > coin > photo > staff > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > staff > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > staff > admit,admitted.calm,false,false,-14
+药:极识 > coin > photo > staff > refuse,refused.calm,false,false,-14
+药:极识 > coin > photo > name > tail > staff > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > name > tail > staff > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > name > staff > tail > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > name > staff > tail > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > photo > admit,admitted.calm,false,false,-14
+药:极识 > coin > photo > refuse,refused.calm,false,false,-14
+药:极识 > coin > tail > photo > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > photo > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > photo > staff > admit,admitted.calm,false,false,-14
+药:极识 > coin > tail > photo > staff > refuse,refused.calm,false,false,-14
+药:极识 > coin > tail > photo > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > photo > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > photo > admit,admitted.calm,false,false,-14
+药:极识 > coin > tail > photo > refuse,refused.calm,false,false,-14
+药:极识 > coin > tail > staff > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > staff > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > staff > photo > admit,admitted.calm,false,false,-14
+药:极识 > coin > tail > staff > photo > refuse,refused.calm,false,false,-14
+药:极识 > coin > tail > staff > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > staff > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > staff > admit,admitted.calm,false,false,-14
+药:极识 > coin > tail > staff > refuse,refused.calm,false,false,-14
+药:极识 > coin > tail > name > photo > staff > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > name > photo > staff > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > name > staff > photo > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > name > staff > photo > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > name > staff > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > name > staff > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > tail > admit,admitted.calm,false,false,-14
+药:极识 > coin > tail > refuse,refused.calm,false,false,-14
+药:极识 > coin > staff > photo > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > photo > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > photo > tail > admit,admitted.calm,false,false,-14
+药:极识 > coin > staff > photo > tail > refuse,refused.calm,false,false,-14
+药:极识 > coin > staff > photo > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > photo > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > photo > admit,admitted.calm,false,false,-14
+药:极识 > coin > staff > photo > refuse,refused.calm,false,false,-14
+药:极识 > coin > staff > tail > photo > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > tail > photo > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > tail > photo > admit,admitted.calm,false,false,-14
+药:极识 > coin > staff > tail > photo > refuse,refused.calm,false,false,-14
+药:极识 > coin > staff > tail > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > tail > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > tail > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > tail > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > tail > admit,admitted.calm,false,false,-14
+药:极识 > coin > staff > tail > refuse,refused.calm,false,false,-14
+药:极识 > coin > staff > name > photo > tail > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > name > photo > tail > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > name > photo > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > name > photo > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > name > tail > photo > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > name > tail > photo > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > name > tail > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > name > tail > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > name > admit,admitted.calm,true,false,-14
+药:极识 > coin > staff > name > refuse,refused.calm,true,false,-14
+药:极识 > coin > staff > admit,admitted.calm,false,false,-14
+药:极识 > coin > staff > refuse,refused.calm,false,false,-14
+药:极识 > coin > admit,admitted.calm,false,false,-14
+药:极识 > coin > refuse,refused.calm,false,false,-14
+药:极识 > admit,admitted.calm,false,false,-14
+药:极识 > refuse,refused.calm,false,false,-14
+药:暖心 > photo > tail > staff > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > staff > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > staff > coin > admit,admitted.rage,false,true,4
+药:暖心 > photo > tail > staff > coin > refuse,refused.rage,false,true,4
+药:暖心 > photo > tail > staff > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > staff > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > staff > admit,admitted.rage,false,true,4
+药:暖心 > photo > tail > staff > refuse,refused.rage,false,true,4
+药:暖心 > photo > tail > coin > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > coin > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > coin > staff > admit,admitted.rage,false,true,4
+药:暖心 > photo > tail > coin > staff > refuse,refused.rage,false,true,4
+药:暖心 > photo > tail > coin > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > coin > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > coin > admit,admitted.rage,false,true,4
+药:暖心 > photo > tail > coin > refuse,refused.rage,false,true,4
+药:暖心 > photo > tail > name > staff > coin > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > name > staff > coin > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > name > coin > staff > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > name > coin > staff > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > tail > admit,admitted.rage,false,true,4
+药:暖心 > photo > tail > refuse,refused.rage,false,true,4
+药:暖心 > photo > staff > tail > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > tail > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > tail > coin > admit,admitted.rage,false,true,4
+药:暖心 > photo > staff > tail > coin > refuse,refused.rage,false,true,4
+药:暖心 > photo > staff > tail > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > tail > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > tail > admit,admitted.rage,false,true,4
+药:暖心 > photo > staff > tail > refuse,refused.rage,false,true,4
+药:暖心 > photo > staff > coin > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > coin > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > coin > tail > admit,admitted.rage,false,true,4
+药:暖心 > photo > staff > coin > tail > refuse,refused.rage,false,true,4
+药:暖心 > photo > staff > coin > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > coin > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > coin > admit,admitted.rage,false,true,4
+药:暖心 > photo > staff > coin > refuse,refused.rage,false,true,4
+药:暖心 > photo > staff > name > tail > coin > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > name > tail > coin > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > name > coin > tail > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > name > coin > tail > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > staff > admit,admitted.rage,false,true,4
+药:暖心 > photo > staff > refuse,refused.rage,false,true,4
+药:暖心 > photo > coin > tail > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > tail > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > tail > staff > admit,admitted.rage,false,true,4
+药:暖心 > photo > coin > tail > staff > refuse,refused.rage,false,true,4
+药:暖心 > photo > coin > tail > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > tail > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > tail > admit,admitted.rage,false,true,4
+药:暖心 > photo > coin > tail > refuse,refused.rage,false,true,4
+药:暖心 > photo > coin > staff > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > staff > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > staff > tail > admit,admitted.rage,false,true,4
+药:暖心 > photo > coin > staff > tail > refuse,refused.rage,false,true,4
+药:暖心 > photo > coin > staff > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > staff > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > staff > admit,admitted.rage,false,true,4
+药:暖心 > photo > coin > staff > refuse,refused.rage,false,true,4
+药:暖心 > photo > coin > name > tail > staff > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > name > tail > staff > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > name > staff > tail > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > name > staff > tail > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > photo > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > photo > coin > admit,admitted.rage,false,true,4
+药:暖心 > photo > coin > refuse,refused.rage,false,true,4
+药:暖心 > photo > admit,admitted.rage,false,true,4
+药:暖心 > photo > refuse,refused.rage,false,true,4
+药:暖心 > tail > photo > staff > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > staff > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > staff > coin > admit,admitted.rage,false,true,4
+药:暖心 > tail > photo > staff > coin > refuse,refused.rage,false,true,4
+药:暖心 > tail > photo > staff > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > staff > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > staff > admit,admitted.rage,false,true,4
+药:暖心 > tail > photo > staff > refuse,refused.rage,false,true,4
+药:暖心 > tail > photo > coin > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > coin > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > coin > staff > admit,admitted.rage,false,true,4
+药:暖心 > tail > photo > coin > staff > refuse,refused.rage,false,true,4
+药:暖心 > tail > photo > coin > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > coin > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > coin > admit,admitted.rage,false,true,4
+药:暖心 > tail > photo > coin > refuse,refused.rage,false,true,4
+药:暖心 > tail > photo > name > staff > coin > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > name > staff > coin > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > name > coin > staff > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > name > coin > staff > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > photo > admit,admitted.rage,false,true,4
+药:暖心 > tail > photo > refuse,refused.rage,false,true,4
+药:暖心 > tail > staff > photo > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > photo > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > photo > coin > admit,admitted.rage,false,true,4
+药:暖心 > tail > staff > photo > coin > refuse,refused.rage,false,true,4
+药:暖心 > tail > staff > photo > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > photo > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > photo > admit,admitted.rage,false,true,4
+药:暖心 > tail > staff > photo > refuse,refused.rage,false,true,4
+药:暖心 > tail > staff > coin > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > coin > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > coin > photo > admit,admitted.rage,false,true,4
+药:暖心 > tail > staff > coin > photo > refuse,refused.rage,false,true,4
+药:暖心 > tail > staff > coin > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > coin > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > coin > admit,admitted.rage,false,true,4
+药:暖心 > tail > staff > coin > refuse,refused.rage,false,true,4
+药:暖心 > tail > staff > name > photo > coin > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > name > photo > coin > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > name > coin > photo > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > name > coin > photo > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > staff > admit,admitted.rage,false,true,4
+药:暖心 > tail > staff > refuse,refused.rage,false,true,4
+药:暖心 > tail > coin > photo > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > photo > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > photo > staff > admit,admitted.rage,false,true,4
+药:暖心 > tail > coin > photo > staff > refuse,refused.rage,false,true,4
+药:暖心 > tail > coin > photo > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > photo > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > photo > admit,admitted.rage,false,true,4
+药:暖心 > tail > coin > photo > refuse,refused.rage,false,true,4
+药:暖心 > tail > coin > staff > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > staff > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > staff > photo > admit,admitted.rage,false,true,4
+药:暖心 > tail > coin > staff > photo > refuse,refused.rage,false,true,4
+药:暖心 > tail > coin > staff > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > staff > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > staff > admit,admitted.rage,false,true,4
+药:暖心 > tail > coin > staff > refuse,refused.rage,false,true,4
+药:暖心 > tail > coin > name > photo > staff > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > name > photo > staff > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > name > staff > photo > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > name > staff > photo > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > tail > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > tail > coin > admit,admitted.rage,false,true,4
+药:暖心 > tail > coin > refuse,refused.rage,false,true,4
+药:暖心 > tail > admit,admitted.rage,false,true,4
+药:暖心 > tail > refuse,refused.rage,false,true,4
+药:暖心 > staff > photo > tail > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > tail > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > tail > coin > admit,admitted.rage,false,true,4
+药:暖心 > staff > photo > tail > coin > refuse,refused.rage,false,true,4
+药:暖心 > staff > photo > tail > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > tail > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > tail > admit,admitted.rage,false,true,4
+药:暖心 > staff > photo > tail > refuse,refused.rage,false,true,4
+药:暖心 > staff > photo > coin > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > coin > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > coin > tail > admit,admitted.rage,false,true,4
+药:暖心 > staff > photo > coin > tail > refuse,refused.rage,false,true,4
+药:暖心 > staff > photo > coin > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > coin > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > coin > admit,admitted.rage,false,true,4
+药:暖心 > staff > photo > coin > refuse,refused.rage,false,true,4
+药:暖心 > staff > photo > name > tail > coin > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > name > tail > coin > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > name > coin > tail > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > name > coin > tail > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > photo > admit,admitted.rage,false,true,4
+药:暖心 > staff > photo > refuse,refused.rage,false,true,4
+药:暖心 > staff > tail > photo > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > photo > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > photo > coin > admit,admitted.rage,false,true,4
+药:暖心 > staff > tail > photo > coin > refuse,refused.rage,false,true,4
+药:暖心 > staff > tail > photo > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > photo > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > photo > admit,admitted.rage,false,true,4
+药:暖心 > staff > tail > photo > refuse,refused.rage,false,true,4
+药:暖心 > staff > tail > coin > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > coin > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > coin > photo > admit,admitted.rage,false,true,4
+药:暖心 > staff > tail > coin > photo > refuse,refused.rage,false,true,4
+药:暖心 > staff > tail > coin > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > coin > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > coin > admit,admitted.rage,false,true,4
+药:暖心 > staff > tail > coin > refuse,refused.rage,false,true,4
+药:暖心 > staff > tail > name > photo > coin > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > name > photo > coin > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > name > coin > photo > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > name > coin > photo > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > name > coin > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > name > coin > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > tail > admit,admitted.rage,false,true,4
+药:暖心 > staff > tail > refuse,refused.rage,false,true,4
+药:暖心 > staff > coin > photo > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > photo > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > photo > tail > admit,admitted.rage,false,true,4
+药:暖心 > staff > coin > photo > tail > refuse,refused.rage,false,true,4
+药:暖心 > staff > coin > photo > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > photo > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > photo > admit,admitted.rage,false,true,4
+药:暖心 > staff > coin > photo > refuse,refused.rage,false,true,4
+药:暖心 > staff > coin > tail > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > tail > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > tail > photo > admit,admitted.rage,false,true,4
+药:暖心 > staff > coin > tail > photo > refuse,refused.rage,false,true,4
+药:暖心 > staff > coin > tail > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > tail > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > tail > admit,admitted.rage,false,true,4
+药:暖心 > staff > coin > tail > refuse,refused.rage,false,true,4
+药:暖心 > staff > coin > name > photo > tail > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > name > photo > tail > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > name > tail > photo > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > name > tail > photo > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > name > admit,admitted.rage,true,true,4
+药:暖心 > staff > coin > name > refuse,refused.rage,true,true,4
+药:暖心 > staff > coin > admit,admitted.rage,false,true,4
+药:暖心 > staff > coin > refuse,refused.rage,false,true,4
+药:暖心 > staff > admit,admitted.rage,false,true,4
+药:暖心 > staff > refuse,refused.rage,false,true,4
+药:暖心 > coin > photo > tail > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > tail > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > tail > staff > admit,admitted.rage,false,true,4
+药:暖心 > coin > photo > tail > staff > refuse,refused.rage,false,true,4
+药:暖心 > coin > photo > tail > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > tail > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > tail > admit,admitted.rage,false,true,4
+药:暖心 > coin > photo > tail > refuse,refused.rage,false,true,4
+药:暖心 > coin > photo > staff > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > staff > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > staff > tail > admit,admitted.rage,false,true,4
+药:暖心 > coin > photo > staff > tail > refuse,refused.rage,false,true,4
+药:暖心 > coin > photo > staff > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > staff > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > staff > admit,admitted.rage,false,true,4
+药:暖心 > coin > photo > staff > refuse,refused.rage,false,true,4
+药:暖心 > coin > photo > name > tail > staff > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > name > tail > staff > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > name > staff > tail > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > name > staff > tail > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > photo > admit,admitted.rage,false,true,4
+药:暖心 > coin > photo > refuse,refused.rage,false,true,4
+药:暖心 > coin > tail > photo > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > photo > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > photo > staff > admit,admitted.rage,false,true,4
+药:暖心 > coin > tail > photo > staff > refuse,refused.rage,false,true,4
+药:暖心 > coin > tail > photo > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > photo > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > photo > admit,admitted.rage,false,true,4
+药:暖心 > coin > tail > photo > refuse,refused.rage,false,true,4
+药:暖心 > coin > tail > staff > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > staff > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > staff > photo > admit,admitted.rage,false,true,4
+药:暖心 > coin > tail > staff > photo > refuse,refused.rage,false,true,4
+药:暖心 > coin > tail > staff > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > staff > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > staff > admit,admitted.rage,false,true,4
+药:暖心 > coin > tail > staff > refuse,refused.rage,false,true,4
+药:暖心 > coin > tail > name > photo > staff > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > name > photo > staff > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > name > staff > photo > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > name > staff > photo > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > name > staff > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > name > staff > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > tail > admit,admitted.rage,false,true,4
+药:暖心 > coin > tail > refuse,refused.rage,false,true,4
+药:暖心 > coin > staff > photo > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > photo > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > photo > tail > admit,admitted.rage,false,true,4
+药:暖心 > coin > staff > photo > tail > refuse,refused.rage,false,true,4
+药:暖心 > coin > staff > photo > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > photo > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > photo > admit,admitted.rage,false,true,4
+药:暖心 > coin > staff > photo > refuse,refused.rage,false,true,4
+药:暖心 > coin > staff > tail > photo > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > tail > photo > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > tail > photo > admit,admitted.rage,false,true,4
+药:暖心 > coin > staff > tail > photo > refuse,refused.rage,false,true,4
+药:暖心 > coin > staff > tail > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > tail > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > tail > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > tail > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > tail > admit,admitted.rage,false,true,4
+药:暖心 > coin > staff > tail > refuse,refused.rage,false,true,4
+药:暖心 > coin > staff > name > photo > tail > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > name > photo > tail > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > name > photo > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > name > photo > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > name > tail > photo > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > name > tail > photo > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > name > tail > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > name > tail > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > name > admit,admitted.rage,true,true,4
+药:暖心 > coin > staff > name > refuse,refused.rage,true,true,4
+药:暖心 > coin > staff > admit,admitted.rage,false,true,4
+药:暖心 > coin > staff > refuse,refused.rage,false,true,4
+药:暖心 > coin > admit,admitted.rage,false,true,4
+药:暖心 > coin > refuse,refused.rage,false,true,4
+药:暖心 > admit,admitted.rage,false,true,4
+药:暖心 > refuse,refused.rage,false,true,4
+photo > tail > staff > coin > name > admit,admitted.rage,true,true,0
+photo > tail > staff > coin > name > refuse,refused.rage,true,true,0
+photo > tail > staff > coin > admit,admitted.rage,false,true,0
+photo > tail > staff > coin > refuse,refused.rage,false,true,0
+photo > tail > staff > name > coin > admit,admitted.rage,true,true,0
+photo > tail > staff > name > coin > refuse,refused.rage,true,true,0
+photo > tail > staff > name > admit,admitted.rage,true,true,0
+photo > tail > staff > name > refuse,refused.rage,true,true,0
+photo > tail > staff > admit,admitted.rage,false,true,0
+photo > tail > staff > refuse,refused.rage,false,true,0
+photo > tail > coin > staff > name > admit,admitted.rage,true,true,0
+photo > tail > coin > staff > name > refuse,refused.rage,true,true,0
+photo > tail > coin > staff > admit,admitted.rage,false,true,0
+photo > tail > coin > staff > refuse,refused.rage,false,true,0
+photo > tail > coin > name > staff > admit,admitted.rage,true,true,0
+photo > tail > coin > name > staff > refuse,refused.rage,true,true,0
+photo > tail > coin > name > admit,admitted.rage,true,true,0
+photo > tail > coin > name > refuse,refused.rage,true,true,0
+photo > tail > coin > admit,admitted.rage,false,true,0
+photo > tail > coin > refuse,refused.rage,false,true,0
+photo > tail > name > staff > coin > admit,admitted.rage,true,true,0
+photo > tail > name > staff > coin > refuse,refused.rage,true,true,0
+photo > tail > name > staff > admit,admitted.rage,true,true,0
+photo > tail > name > staff > refuse,refused.rage,true,true,0
+photo > tail > name > coin > staff > admit,admitted.rage,true,true,0
+photo > tail > name > coin > staff > refuse,refused.rage,true,true,0
+photo > tail > name > coin > admit,admitted.rage,true,true,0
+photo > tail > name > coin > refuse,refused.rage,true,true,0
+photo > tail > name > admit,admitted.rage,true,true,0
+photo > tail > name > refuse,refused.rage,true,true,0
+photo > tail > admit,admitted.rage,false,true,0
+photo > tail > refuse,refused.rage,false,true,0
+photo > staff > tail > coin > name > admit,admitted.rage,true,true,0
+photo > staff > tail > coin > name > refuse,refused.rage,true,true,0
+photo > staff > tail > coin > admit,admitted.rage,false,true,0
+photo > staff > tail > coin > refuse,refused.rage,false,true,0
+photo > staff > tail > name > coin > admit,admitted.rage,true,true,0
+photo > staff > tail > name > coin > refuse,refused.rage,true,true,0
+photo > staff > tail > name > admit,admitted.rage,true,true,0
+photo > staff > tail > name > refuse,refused.rage,true,true,0
+photo > staff > tail > admit,admitted.rage,false,true,0
+photo > staff > tail > refuse,refused.rage,false,true,0
+photo > staff > coin > tail > name > admit,admitted.rage,true,true,0
+photo > staff > coin > tail > name > refuse,refused.rage,true,true,0
+photo > staff > coin > tail > admit,admitted.rage,false,true,0
+photo > staff > coin > tail > refuse,refused.rage,false,true,0
+photo > staff > coin > name > tail > admit,admitted.rage,true,true,0
+photo > staff > coin > name > tail > refuse,refused.rage,true,true,0
+photo > staff > coin > name > admit,admitted.rage,true,true,0
+photo > staff > coin > name > refuse,refused.rage,true,true,0
+photo > staff > coin > admit,admitted.rage,false,true,0
+photo > staff > coin > refuse,refused.rage,false,true,0
+photo > staff > name > tail > coin > admit,admitted.rage,true,true,0
+photo > staff > name > tail > coin > refuse,refused.rage,true,true,0
+photo > staff > name > tail > admit,admitted.rage,true,true,0
+photo > staff > name > tail > refuse,refused.rage,true,true,0
+photo > staff > name > coin > tail > admit,admitted.rage,true,true,0
+photo > staff > name > coin > tail > refuse,refused.rage,true,true,0
+photo > staff > name > coin > admit,admitted.rage,true,true,0
+photo > staff > name > coin > refuse,refused.rage,true,true,0
+photo > staff > name > admit,admitted.rage,true,true,0
+photo > staff > name > refuse,refused.rage,true,true,0
+photo > staff > admit,admitted.rage,false,true,0
+photo > staff > refuse,refused.rage,false,true,0
+photo > coin > tail > staff > name > admit,admitted.rage,true,true,0
+photo > coin > tail > staff > name > refuse,refused.rage,true,true,0
+photo > coin > tail > staff > admit,admitted.rage,false,true,0
+photo > coin > tail > staff > refuse,refused.rage,false,true,0
+photo > coin > tail > name > staff > admit,admitted.rage,true,true,0
+photo > coin > tail > name > staff > refuse,refused.rage,true,true,0
+photo > coin > tail > name > admit,admitted.rage,true,true,0
+photo > coin > tail > name > refuse,refused.rage,true,true,0
+photo > coin > tail > admit,admitted.rage,false,true,0
+photo > coin > tail > refuse,refused.rage,false,true,0
+photo > coin > staff > tail > name > admit,admitted.rage,true,true,0
+photo > coin > staff > tail > name > refuse,refused.rage,true,true,0
+photo > coin > staff > tail > admit,admitted.rage,false,true,0
+photo > coin > staff > tail > refuse,refused.rage,false,true,0
+photo > coin > staff > name > tail > admit,admitted.rage,true,true,0
+photo > coin > staff > name > tail > refuse,refused.rage,true,true,0
+photo > coin > staff > name > admit,admitted.rage,true,true,0
+photo > coin > staff > name > refuse,refused.rage,true,true,0
+photo > coin > staff > admit,admitted.rage,false,true,0
+photo > coin > staff > refuse,refused.rage,false,true,0
+photo > coin > name > tail > staff > admit,admitted.rage,true,true,0
+photo > coin > name > tail > staff > refuse,refused.rage,true,true,0
+photo > coin > name > tail > admit,admitted.rage,true,true,0
+photo > coin > name > tail > refuse,refused.rage,true,true,0
+photo > coin > name > staff > tail > admit,admitted.rage,true,true,0
+photo > coin > name > staff > tail > refuse,refused.rage,true,true,0
+photo > coin > name > staff > admit,admitted.rage,true,true,0
+photo > coin > name > staff > refuse,refused.rage,true,true,0
+photo > coin > name > admit,admitted.rage,true,true,0
+photo > coin > name > refuse,refused.rage,true,true,0
+photo > coin > admit,admitted.rage,false,true,0
+photo > coin > refuse,refused.rage,false,true,0
+photo > admit,admitted.rage,false,true,0
+photo > refuse,refused.rage,false,true,0
+tail > photo > staff > coin > name > admit,admitted.rage,true,true,0
+tail > photo > staff > coin > name > refuse,refused.rage,true,true,0
+tail > photo > staff > coin > admit,admitted.rage,false,true,0
+tail > photo > staff > coin > refuse,refused.rage,false,true,0
+tail > photo > staff > name > coin > admit,admitted.rage,true,true,0
+tail > photo > staff > name > coin > refuse,refused.rage,true,true,0
+tail > photo > staff > name > admit,admitted.rage,true,true,0
+tail > photo > staff > name > refuse,refused.rage,true,true,0
+tail > photo > staff > admit,admitted.rage,false,true,0
+tail > photo > staff > refuse,refused.rage,false,true,0
+tail > photo > coin > staff > name > admit,admitted.rage,true,true,0
+tail > photo > coin > staff > name > refuse,refused.rage,true,true,0
+tail > photo > coin > staff > admit,admitted.rage,false,true,0
+tail > photo > coin > staff > refuse,refused.rage,false,true,0
+tail > photo > coin > name > staff > admit,admitted.rage,true,true,0
+tail > photo > coin > name > staff > refuse,refused.rage,true,true,0
+tail > photo > coin > name > admit,admitted.rage,true,true,0
+tail > photo > coin > name > refuse,refused.rage,true,true,0
+tail > photo > coin > admit,admitted.rage,false,true,0
+tail > photo > coin > refuse,refused.rage,false,true,0
+tail > photo > name > staff > coin > admit,admitted.rage,true,true,0
+tail > photo > name > staff > coin > refuse,refused.rage,true,true,0
+tail > photo > name > staff > admit,admitted.rage,true,true,0
+tail > photo > name > staff > refuse,refused.rage,true,true,0
+tail > photo > name > coin > staff > admit,admitted.rage,true,true,0
+tail > photo > name > coin > staff > refuse,refused.rage,true,true,0
+tail > photo > name > coin > admit,admitted.rage,true,true,0
+tail > photo > name > coin > refuse,refused.rage,true,true,0
+tail > photo > name > admit,admitted.rage,true,true,0
+tail > photo > name > refuse,refused.rage,true,true,0
+tail > photo > admit,admitted.rage,false,true,0
+tail > photo > refuse,refused.rage,false,true,0
+tail > staff > photo > coin > name > admit,admitted.rage,true,true,0
+tail > staff > photo > coin > name > refuse,refused.rage,true,true,0
+tail > staff > photo > coin > admit,admitted.rage,false,true,0
+tail > staff > photo > coin > refuse,refused.rage,false,true,0
+tail > staff > photo > name > coin > admit,admitted.rage,true,true,0
+tail > staff > photo > name > coin > refuse,refused.rage,true,true,0
+tail > staff > photo > name > admit,admitted.rage,true,true,0
+tail > staff > photo > name > refuse,refused.rage,true,true,0
+tail > staff > photo > admit,admitted.rage,false,true,0
+tail > staff > photo > refuse,refused.rage,false,true,0
+tail > staff > coin > photo > name > admit,admitted.rage,true,true,0
+tail > staff > coin > photo > name > refuse,refused.rage,true,true,0
+tail > staff > coin > photo > admit,admitted.rage,false,true,0
+tail > staff > coin > photo > refuse,refused.rage,false,true,0
+tail > staff > coin > name > photo > admit,admitted.rage,true,true,0
+tail > staff > coin > name > photo > refuse,refused.rage,true,true,0
+tail > staff > coin > name > admit,admitted.rage,true,true,0
+tail > staff > coin > name > refuse,refused.rage,true,true,0
+tail > staff > coin > admit,admitted.rage,false,true,0
+tail > staff > coin > refuse,refused.rage,false,true,0
+tail > staff > name > photo > coin > admit,admitted.rage,true,true,0
+tail > staff > name > photo > coin > refuse,refused.rage,true,true,0
+tail > staff > name > photo > admit,admitted.rage,true,true,0
+tail > staff > name > photo > refuse,refused.rage,true,true,0
+tail > staff > name > coin > photo > admit,admitted.rage,true,true,0
+tail > staff > name > coin > photo > refuse,refused.rage,true,true,0
+tail > staff > name > coin > admit,admitted.rage,true,true,0
+tail > staff > name > coin > refuse,refused.rage,true,true,0
+tail > staff > name > admit,admitted.rage,true,true,0
+tail > staff > name > refuse,refused.rage,true,true,0
+tail > staff > admit,admitted.rage,false,true,0
+tail > staff > refuse,refused.rage,false,true,0
+tail > coin > photo > staff > name > admit,admitted.rage,true,true,0
+tail > coin > photo > staff > name > refuse,refused.rage,true,true,0
+tail > coin > photo > staff > admit,admitted.rage,false,true,0
+tail > coin > photo > staff > refuse,refused.rage,false,true,0
+tail > coin > photo > name > staff > admit,admitted.rage,true,true,0
+tail > coin > photo > name > staff > refuse,refused.rage,true,true,0
+tail > coin > photo > name > admit,admitted.rage,true,true,0
+tail > coin > photo > name > refuse,refused.rage,true,true,0
+tail > coin > photo > admit,admitted.rage,false,true,0
+tail > coin > photo > refuse,refused.rage,false,true,0
+tail > coin > staff > photo > name > admit,admitted.rage,true,true,0
+tail > coin > staff > photo > name > refuse,refused.rage,true,true,0
+tail > coin > staff > photo > admit,admitted.rage,false,true,0
+tail > coin > staff > photo > refuse,refused.rage,false,true,0
+tail > coin > staff > name > photo > admit,admitted.rage,true,true,0
+tail > coin > staff > name > photo > refuse,refused.rage,true,true,0
+tail > coin > staff > name > admit,admitted.rage,true,true,0
+tail > coin > staff > name > refuse,refused.rage,true,true,0
+tail > coin > staff > admit,admitted.rage,false,true,0
+tail > coin > staff > refuse,refused.rage,false,true,0
+tail > coin > name > photo > staff > admit,admitted.rage,true,true,0
+tail > coin > name > photo > staff > refuse,refused.rage,true,true,0
+tail > coin > name > photo > admit,admitted.rage,true,true,0
+tail > coin > name > photo > refuse,refused.rage,true,true,0
+tail > coin > name > staff > photo > admit,admitted.rage,true,true,0
+tail > coin > name > staff > photo > refuse,refused.rage,true,true,0
+tail > coin > name > staff > admit,admitted.rage,true,true,0
+tail > coin > name > staff > refuse,refused.rage,true,true,0
+tail > coin > name > admit,admitted.rage,true,true,0
+tail > coin > name > refuse,refused.rage,true,true,0
+tail > coin > admit,admitted.rage,false,true,0
+tail > coin > refuse,refused.rage,false,true,0
+tail > admit,admitted.rage,false,true,0
+tail > refuse,refused.rage,false,true,0
+staff > photo > tail > coin > name > admit,admitted.rage,true,true,0
+staff > photo > tail > coin > name > refuse,refused.rage,true,true,0
+staff > photo > tail > coin > admit,admitted.rage,false,true,0
+staff > photo > tail > coin > refuse,refused.rage,false,true,0
+staff > photo > tail > name > coin > admit,admitted.rage,true,true,0
+staff > photo > tail > name > coin > refuse,refused.rage,true,true,0
+staff > photo > tail > name > admit,admitted.rage,true,true,0
+staff > photo > tail > name > refuse,refused.rage,true,true,0
+staff > photo > tail > admit,admitted.rage,false,true,0
+staff > photo > tail > refuse,refused.rage,false,true,0
+staff > photo > coin > tail > name > admit,admitted.rage,true,true,0
+staff > photo > coin > tail > name > refuse,refused.rage,true,true,0
+staff > photo > coin > tail > admit,admitted.rage,false,true,0
+staff > photo > coin > tail > refuse,refused.rage,false,true,0
+staff > photo > coin > name > tail > admit,admitted.rage,true,true,0
+staff > photo > coin > name > tail > refuse,refused.rage,true,true,0
+staff > photo > coin > name > admit,admitted.rage,true,true,0
+staff > photo > coin > name > refuse,refused.rage,true,true,0
+staff > photo > coin > admit,admitted.rage,false,true,0
+staff > photo > coin > refuse,refused.rage,false,true,0
+staff > photo > name > tail > coin > admit,admitted.rage,true,true,0
+staff > photo > name > tail > coin > refuse,refused.rage,true,true,0
+staff > photo > name > tail > admit,admitted.rage,true,true,0
+staff > photo > name > tail > refuse,refused.rage,true,true,0
+staff > photo > name > coin > tail > admit,admitted.rage,true,true,0
+staff > photo > name > coin > tail > refuse,refused.rage,true,true,0
+staff > photo > name > coin > admit,admitted.rage,true,true,0
+staff > photo > name > coin > refuse,refused.rage,true,true,0
+staff > photo > name > admit,admitted.rage,true,true,0
+staff > photo > name > refuse,refused.rage,true,true,0
+staff > photo > admit,admitted.rage,false,true,0
+staff > photo > refuse,refused.rage,false,true,0
+staff > tail > photo > coin > name > admit,admitted.rage,true,true,0
+staff > tail > photo > coin > name > refuse,refused.rage,true,true,0
+staff > tail > photo > coin > admit,admitted.rage,false,true,0
+staff > tail > photo > coin > refuse,refused.rage,false,true,0
+staff > tail > photo > name > coin > admit,admitted.rage,true,true,0
+staff > tail > photo > name > coin > refuse,refused.rage,true,true,0
+staff > tail > photo > name > admit,admitted.rage,true,true,0
+staff > tail > photo > name > refuse,refused.rage,true,true,0
+staff > tail > photo > admit,admitted.rage,false,true,0
+staff > tail > photo > refuse,refused.rage,false,true,0
+staff > tail > coin > photo > name > admit,admitted.rage,true,true,0
+staff > tail > coin > photo > name > refuse,refused.rage,true,true,0
+staff > tail > coin > photo > admit,admitted.rage,false,true,0
+staff > tail > coin > photo > refuse,refused.rage,false,true,0
+staff > tail > coin > name > photo > admit,admitted.rage,true,true,0
+staff > tail > coin > name > photo > refuse,refused.rage,true,true,0
+staff > tail > coin > name > admit,admitted.rage,true,true,0
+staff > tail > coin > name > refuse,refused.rage,true,true,0
+staff > tail > coin > admit,admitted.rage,false,true,0
+staff > tail > coin > refuse,refused.rage,false,true,0
+staff > tail > name > photo > coin > admit,admitted.rage,true,true,0
+staff > tail > name > photo > coin > refuse,refused.rage,true,true,0
+staff > tail > name > photo > admit,admitted.rage,true,true,0
+staff > tail > name > photo > refuse,refused.rage,true,true,0
+staff > tail > name > coin > photo > admit,admitted.rage,true,true,0
+staff > tail > name > coin > photo > refuse,refused.rage,true,true,0
+staff > tail > name > coin > admit,admitted.rage,true,true,0
+staff > tail > name > coin > refuse,refused.rage,true,true,0
+staff > tail > name > admit,admitted.rage,true,true,0
+staff > tail > name > refuse,refused.rage,true,true,0
+staff > tail > admit,admitted.rage,false,true,0
+staff > tail > refuse,refused.rage,false,true,0
+staff > coin > photo > tail > name > admit,admitted.rage,true,true,0
+staff > coin > photo > tail > name > refuse,refused.rage,true,true,0
+staff > coin > photo > tail > admit,admitted.rage,false,true,0
+staff > coin > photo > tail > refuse,refused.rage,false,true,0
+staff > coin > photo > name > tail > admit,admitted.rage,true,true,0
+staff > coin > photo > name > tail > refuse,refused.rage,true,true,0
+staff > coin > photo > name > admit,admitted.rage,true,true,0
+staff > coin > photo > name > refuse,refused.rage,true,true,0
+staff > coin > photo > admit,admitted.rage,false,true,0
+staff > coin > photo > refuse,refused.rage,false,true,0
+staff > coin > tail > photo > name > admit,admitted.rage,true,true,0
+staff > coin > tail > photo > name > refuse,refused.rage,true,true,0
+staff > coin > tail > photo > admit,admitted.rage,false,true,0
+staff > coin > tail > photo > refuse,refused.rage,false,true,0
+staff > coin > tail > name > photo > admit,admitted.rage,true,true,0
+staff > coin > tail > name > photo > refuse,refused.rage,true,true,0
+staff > coin > tail > name > admit,admitted.rage,true,true,0
+staff > coin > tail > name > refuse,refused.rage,true,true,0
+staff > coin > tail > admit,admitted.rage,false,true,0
+staff > coin > tail > refuse,refused.rage,false,true,0
+staff > coin > name > photo > tail > admit,admitted.rage,true,true,0
+staff > coin > name > photo > tail > refuse,refused.rage,true,true,0
+staff > coin > name > photo > admit,admitted.rage,true,true,0
+staff > coin > name > photo > refuse,refused.rage,true,true,0
+staff > coin > name > tail > photo > admit,admitted.rage,true,true,0
+staff > coin > name > tail > photo > refuse,refused.rage,true,true,0
+staff > coin > name > tail > admit,admitted.rage,true,true,0
+staff > coin > name > tail > refuse,refused.rage,true,true,0
+staff > coin > name > admit,admitted.rage,true,true,0
+staff > coin > name > refuse,refused.rage,true,true,0
+staff > coin > admit,admitted.rage,false,true,0
+staff > coin > refuse,refused.rage,false,true,0
+staff > admit,admitted.rage,false,true,0
+staff > refuse,refused.rage,false,true,0
+coin > photo > tail > staff > name > admit,admitted.rage,true,true,0
+coin > photo > tail > staff > name > refuse,refused.rage,true,true,0
+coin > photo > tail > staff > admit,admitted.rage,false,true,0
+coin > photo > tail > staff > refuse,refused.rage,false,true,0
+coin > photo > tail > name > staff > admit,admitted.rage,true,true,0
+coin > photo > tail > name > staff > refuse,refused.rage,true,true,0
+coin > photo > tail > name > admit,admitted.rage,true,true,0
+coin > photo > tail > name > refuse,refused.rage,true,true,0
+coin > photo > tail > admit,admitted.rage,false,true,0
+coin > photo > tail > refuse,refused.rage,false,true,0
+coin > photo > staff > tail > name > admit,admitted.rage,true,true,0
+coin > photo > staff > tail > name > refuse,refused.rage,true,true,0
+coin > photo > staff > tail > admit,admitted.rage,false,true,0
+coin > photo > staff > tail > refuse,refused.rage,false,true,0
+coin > photo > staff > name > tail > admit,admitted.rage,true,true,0
+coin > photo > staff > name > tail > refuse,refused.rage,true,true,0
+coin > photo > staff > name > admit,admitted.rage,true,true,0
+coin > photo > staff > name > refuse,refused.rage,true,true,0
+coin > photo > staff > admit,admitted.rage,false,true,0
+coin > photo > staff > refuse,refused.rage,false,true,0
+coin > photo > name > tail > staff > admit,admitted.rage,true,true,0
+coin > photo > name > tail > staff > refuse,refused.rage,true,true,0
+coin > photo > name > tail > admit,admitted.rage,true,true,0
+coin > photo > name > tail > refuse,refused.rage,true,true,0
+coin > photo > name > staff > tail > admit,admitted.rage,true,true,0
+coin > photo > name > staff > tail > refuse,refused.rage,true,true,0
+coin > photo > name > staff > admit,admitted.rage,true,true,0
+coin > photo > name > staff > refuse,refused.rage,true,true,0
+coin > photo > name > admit,admitted.rage,true,true,0
+coin > photo > name > refuse,refused.rage,true,true,0
+coin > photo > admit,admitted.rage,false,true,0
+coin > photo > refuse,refused.rage,false,true,0
+coin > tail > photo > staff > name > admit,admitted.rage,true,true,0
+coin > tail > photo > staff > name > refuse,refused.rage,true,true,0
+coin > tail > photo > staff > admit,admitted.rage,false,true,0
+coin > tail > photo > staff > refuse,refused.rage,false,true,0
+coin > tail > photo > name > staff > admit,admitted.rage,true,true,0
+coin > tail > photo > name > staff > refuse,refused.rage,true,true,0
+coin > tail > photo > name > admit,admitted.rage,true,true,0
+coin > tail > photo > name > refuse,refused.rage,true,true,0
+coin > tail > photo > admit,admitted.rage,false,true,0
+coin > tail > photo > refuse,refused.rage,false,true,0
+coin > tail > staff > photo > name > admit,admitted.rage,true,true,0
+coin > tail > staff > photo > name > refuse,refused.rage,true,true,0
+coin > tail > staff > photo > admit,admitted.rage,false,true,0
+coin > tail > staff > photo > refuse,refused.rage,false,true,0
+coin > tail > staff > name > photo > admit,admitted.rage,true,true,0
+coin > tail > staff > name > photo > refuse,refused.rage,true,true,0
+coin > tail > staff > name > admit,admitted.rage,true,true,0
+coin > tail > staff > name > refuse,refused.rage,true,true,0
+coin > tail > staff > admit,admitted.rage,false,true,0
+coin > tail > staff > refuse,refused.rage,false,true,0
+coin > tail > name > photo > staff > admit,admitted.rage,true,true,0
+coin > tail > name > photo > staff > refuse,refused.rage,true,true,0
+coin > tail > name > photo > admit,admitted.rage,true,true,0
+coin > tail > name > photo > refuse,refused.rage,true,true,0
+coin > tail > name > staff > photo > admit,admitted.rage,true,true,0
+coin > tail > name > staff > photo > refuse,refused.rage,true,true,0
+coin > tail > name > staff > admit,admitted.rage,true,true,0
+coin > tail > name > staff > refuse,refused.rage,true,true,0
+coin > tail > name > admit,admitted.rage,true,true,0
+coin > tail > name > refuse,refused.rage,true,true,0
+coin > tail > admit,admitted.rage,false,true,0
+coin > tail > refuse,refused.rage,false,true,0
+coin > staff > photo > tail > name > admit,admitted.rage,true,true,0
+coin > staff > photo > tail > name > refuse,refused.rage,true,true,0
+coin > staff > photo > tail > admit,admitted.rage,false,true,0
+coin > staff > photo > tail > refuse,refused.rage,false,true,0
+coin > staff > photo > name > tail > admit,admitted.rage,true,true,0
+coin > staff > photo > name > tail > refuse,refused.rage,true,true,0
+coin > staff > photo > name > admit,admitted.rage,true,true,0
+coin > staff > photo > name > refuse,refused.rage,true,true,0
+coin > staff > photo > admit,admitted.rage,false,true,0
+coin > staff > photo > refuse,refused.rage,false,true,0
+coin > staff > tail > photo > name > admit,admitted.rage,true,true,0
+coin > staff > tail > photo > name > refuse,refused.rage,true,true,0
+coin > staff > tail > photo > admit,admitted.rage,false,true,0
+coin > staff > tail > photo > refuse,refused.rage,false,true,0
+coin > staff > tail > name > photo > admit,admitted.rage,true,true,0
+coin > staff > tail > name > photo > refuse,refused.rage,true,true,0
+coin > staff > tail > name > admit,admitted.rage,true,true,0
+coin > staff > tail > name > refuse,refused.rage,true,true,0
+coin > staff > tail > admit,admitted.rage,false,true,0
+coin > staff > tail > refuse,refused.rage,false,true,0
+coin > staff > name > photo > tail > admit,admitted.rage,true,true,0
+coin > staff > name > photo > tail > refuse,refused.rage,true,true,0
+coin > staff > name > photo > admit,admitted.rage,true,true,0
+coin > staff > name > photo > refuse,refused.rage,true,true,0
+coin > staff > name > tail > photo > admit,admitted.rage,true,true,0
+coin > staff > name > tail > photo > refuse,refused.rage,true,true,0
+coin > staff > name > tail > admit,admitted.rage,true,true,0
+coin > staff > name > tail > refuse,refused.rage,true,true,0
+coin > staff > name > admit,admitted.rage,true,true,0
+coin > staff > name > refuse,refused.rage,true,true,0
+coin > staff > admit,admitted.rage,false,true,0
+coin > staff > refuse,refused.rage,false,true,0
+coin > admit,admitted.rage,false,true,0
+coin > refuse,refused.rage,false,true,0
+admit,admitted.rage,false,true,0
+refuse,refused.rage,false,true,0
