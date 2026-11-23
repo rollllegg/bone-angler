@@ -178,6 +178,13 @@ func is_closed() -> bool:
 func get_outcome() -> Dictionary:
 	var result: Dictionary = case_data.get("outcomes", {}).get(outcome_id, {}).duplicate(true)
 	result["id"] = outcome_id
+	var ledger: Dictionary = result.get("ledger", {})
+	if not ledger.is_empty():
+		for rule in ledger.get("who_if", []):
+			if _test(str(rule.get("if", "true"))):
+				ledger["who"] = str(rule.get("who", ""))
+				break
+		ledger.erase("who_if")
 	return result
 
 

@@ -41,6 +41,7 @@ func _run() -> void:
 	_check(bool(path1["state"].world["world.wukong_admitted"]), "default admit records admission")
 	_check(bool(path1["state"].world["world.wukong_case_seen"]), "canon records the case")
 	_check(bool(path1["state"].history["case.wukong.named"]) == false, "default admit is unnamed")
+	_check(str(path1["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "史密斯", "unnamed ledger keeps the disguise")
 	_check(_ending_id(path1["state"]) == "hades_rampage", "default ending is rampage")
 
 	# 2. Two clues, name, calming potion, refuse: calm + named.
@@ -74,6 +75,7 @@ func _run() -> void:
 	_choose(path2b["runtime"], "refuse")
 	_settle(path2b["runtime"])
 	_check(path2b["runtime"].get_outcome_id() == "refused.rage", "named refusal defaults to rage")
+	_check(str(path2b["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "孙悟空", "named ledger records the real name")
 	var lines := _ending_lines(path2b["state"])
 	_check(_contains(lines, "孙悟空"), "named epilogue mentions the real name")
 

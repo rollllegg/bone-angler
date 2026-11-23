@@ -55,6 +55,10 @@ func _run() -> void:
 	_check(int(restored.flags["clue.photo"]) == 1, "restored clue survives")
 	_check(int(restored.flags["dose.score"]) == -14, "restored dose score survives")
 
+	_check(restored.choose("tail"), "second clue works")
+	_settle(restored)
+	_check(restored.choose("name"), "callout works")
+	_settle(restored)
 	_check(restored.choose("refuse"), "refusal works")
 	_settle(restored)
 	_check(restored.is_closed(), "story closes on refusal")
@@ -65,6 +69,7 @@ func _run() -> void:
 	_check(session.coins == 40, "refusal pays nothing")
 	_check(session.story_state.ledger.size() == 1, "ledger gets one entry")
 	_check(str(session.story_state.ledger[0].get("result", "")) == "未入境", "ledger records refusal")
+	_check(str(session.story_state.ledger[0].get("who", "")) == "孙悟空", "ledger records the called-out name")
 	_check(not bool(session.story_state.world["world.hades_rampage"]), "calm refusal avoids rampage")
 	_check(session.get_ending_lines().size() > 0, "ending lines resolve")
 

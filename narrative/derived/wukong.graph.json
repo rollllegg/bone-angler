@@ -226,25 +226,25 @@
     "admitted.rage": {
       "result": "release",
       "payout": 60,
-      "ledger": {"who": "史密斯", "result": "已入境", "note": "wukong.ledger.admitted.rage.1"},
+      "ledger": {"who": "史密斯", "who_if": [{"if": "named", "who": "孙悟空"}], "result": "已入境", "note": "wukong.ledger.admitted.rage.1"},
       "effects": ["world.hades_rampage = true", "world.wukong_admitted = true"]
     },
     "admitted.calm": {
       "result": "release",
       "payout": 60,
-      "ledger": {"who": "史密斯", "result": "已入境", "note": "wukong.ledger.admitted.calm.1"},
+      "ledger": {"who": "史密斯", "who_if": [{"if": "named", "who": "孙悟空"}], "result": "已入境", "note": "wukong.ledger.admitted.calm.1"},
       "effects": ["world.hades_rampage = false", "world.wukong_admitted = true"]
     },
     "refused.rage": {
       "result": "reject",
       "payout": 0,
-      "ledger": {"who": "史密斯", "result": "未入境", "note": "wukong.ledger.refused.rage.1"},
+      "ledger": {"who": "史密斯", "who_if": [{"if": "named", "who": "孙悟空"}], "result": "未入境", "note": "wukong.ledger.refused.rage.1"},
       "effects": ["world.hades_rampage = true", "world.wukong_admitted = false"]
     },
     "refused.calm": {
       "result": "reject",
       "payout": 0,
-      "ledger": {"who": "史密斯", "result": "未入境", "note": "wukong.ledger.refused.calm.1"},
+      "ledger": {"who": "史密斯", "who_if": [{"if": "named", "who": "孙悟空"}], "result": "未入境", "note": "wukong.ledger.refused.calm.1"},
       "effects": ["world.hades_rampage = false", "world.wukong_admitted = false"]
     }
   }

@@ -175,6 +175,10 @@ func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 			for field in ["who", "result", "note"]:
 				if str(ledger.get(field, "")) == "":
 					_error("%s: outcome '%s' ledger misses %s" % [case_id, outcome_id, field])
+			for rule in ledger.get("who_if", []):
+				if str(rule.get("who", "")) == "":
+					_error("%s: outcome '%s' ledger who_if misses who" % [case_id, outcome_id])
+				_check_condition(str(rule.get("if", "true")), case_flags, world_decl, "%s ledger who_if" % outcome_id)
 			_check_text_key(str(ledger.get("note", "")), "%s ledger note" % outcome_id)
 		_check_effects(outcome.get("effects", []), case_flags, world_decl, "%s outcome %s" % [case_id, outcome_id])
 

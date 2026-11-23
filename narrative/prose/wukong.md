@@ -95,10 +95,10 @@
 （你在账本上写的是“史密斯”。）
 
 ## ledger.admitted.rage
-以“史密斯”之名入境；当夜冥府大乱。
+入境；当夜冥府大乱。
 
 ## ledger.admitted.calm
-以“史密斯”之名入境；当夜无事。
+入境；当夜无事。
 
 ## ledger.refused.rage
 未入境；当夜冥府仍然大乱。

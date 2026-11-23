@@ -367,7 +367,13 @@
       "ledger": {
         "note": "wukong.ledger.admitted.calm.1",
         "result": "已入境",
-        "who": "史密斯"
+        "who": "史密斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "孙悟空"
+          }
+        ]
       },
       "payout": 60.0,
       "result": "release"
@@ -380,7 +386,13 @@
       "ledger": {
         "note": "wukong.ledger.admitted.rage.1",
         "result": "已入境",
-        "who": "史密斯"
+        "who": "史密斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "孙悟空"
+          }
+        ]
       },
       "payout": 60.0,
       "result": "release"
@@ -393,7 +405,13 @@
       "ledger": {
         "note": "wukong.ledger.refused.calm.1",
         "result": "未入境",
-        "who": "史密斯"
+        "who": "史密斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "孙悟空"
+          }
+        ]
       },
       "payout": 0.0,
       "result": "reject"
@@ -406,7 +424,13 @@
       "ledger": {
         "note": "wukong.ledger.refused.rage.1",
         "result": "未入境",
-        "who": "史密斯"
+        "who": "史密斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "孙悟空"
+          }
+        ]
       },
       "payout": 0.0,
       "result": "reject"
