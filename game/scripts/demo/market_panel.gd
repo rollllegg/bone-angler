@@ -7,13 +7,13 @@ const Data := preload("res://scripts/systems/playtest_data.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const UI := preload("res://scripts/demo/demo_ui.gd")
 
-enum Filter { ALL, ROD, HOOK, CHARM, BAIT, REPAIR }
+enum Filter { ALL, ROD, HOOK, GRIP, BAIT, REPAIR }
 
 const FILTER_META := [
 	{"id": Filter.ALL, "label": "全部", "watermark": "ALL", "title": "全部商品", "icon": null},
 	{"id": Filter.ROD, "label": "竿体", "watermark": "RODS", "title": "竿体", "icon": UI.ICON_ROD},
 	{"id": Filter.HOOK, "label": "鱼钩", "watermark": "HOOKS", "title": "鱼钩", "icon": UI.ICON_HOOK},
-	{"id": Filter.CHARM, "label": "挂件", "watermark": "CHARMS", "title": "钓具挂件", "icon": UI.ICON_CONCENTRATE},
+	{"id": Filter.GRIP, "label": "握柄", "watermark": "GRIPS", "title": "握柄与挂件", "icon": UI.ICON_GRIP},
 	{"id": Filter.BAIT, "label": "鱼饵", "watermark": "BAITS", "title": "鱼饵补给", "icon": UI.ICON_BAIT},
 	{"id": Filter.REPAIR, "label": "维修", "watermark": "REPAIR", "title": "钓组维修", "icon": UI.ICON_WRENCH},
 ]
@@ -23,7 +23,10 @@ const DEVICE_DESCS := [
 	"偏向钓起小型鱼获",
 	"偏向钓起正常体型鱼获",
 	"偏向钓起大型鱼获",
-	"每件扩大拉鱼判定窗口 10%，按竿体槽位自动装配。",
+	"平衡握柄，共享耐久上限12，换装不清除磨损",
+	"自动挂在竿体上，扩大拉鱼判定窗口 +10%",
+	"耐久握柄，共享耐久上限15，换装不清除磨损",
+	"速率握柄，共享耐久上限10，换装不清除磨损",
 ]
 const QUANTITIES := [1, 5, 10]
 
@@ -36,6 +39,7 @@ var browsing_wares := false
 var filter_buttons: Array[Button] = []
 var ware_buttons: Array[Button] = []
 var action_button: Button
+var next_day_button: Button
 
 var _filter_pointer: Label
 var _list_title: Label
@@ -73,6 +77,7 @@ func setup(value: Fishing) -> void:
 	_build_left_rail()
 	_build_center_list()
 	_build_right_column()
+	next_day_button = UI.button(self, "", Rect2(680, 124, 360, 44), func() -> void: fishing.session.start_next_day(), true)
 
 	# Bottom Octopath-style slim hint bar
 	var bot_bar := Panel.new()
@@ -100,6 +105,8 @@ func reset_to_all() -> void:
 
 func handle_key(code: Key) -> bool:
 	match code:
+		KEY_F:
+			return fishing.session.start_next_day()
 		KEY_W, KEY_S:
 			var step := 1 if code == KEY_S else -1
 			if browsing_wares:
@@ -154,8 +161,8 @@ func select_bait(index: int) -> void:
 	refresh()
 
 
-func select_repair(full: bool = true) -> void:
-	selected_key = "repair:full" if full else "repair:quick"
+func select_repair(_full: bool = true) -> void:
+	selected_key = "repair:full"
 	if active_filter != Filter.ALL and active_filter != Filter.REPAIR:
 		active_filter = Filter.REPAIR
 	refresh()
@@ -328,7 +335,7 @@ func _device_filter(index: int) -> int:
 		2, 3, 4:
 			return Filter.HOOK
 		_:
-			return Filter.CHARM
+			return Filter.GRIP
 
 
 func _device_icon(index: int) -> Texture2D:
@@ -337,14 +344,15 @@ func _device_icon(index: int) -> Texture2D:
 			return UI.ICON_ROD
 		2, 3, 4:
 			return UI.ICON_HOOK
+		5, 7, 8:
+			return UI.ICON_GRIP
 		_:
 			return UI.ICON_CONCENTRATE
 
 
 func _bait_icon(index: int) -> Texture2D:
 	if Data.ATTRIBUTE_BAITS.has(index):
-		var rule: Vector2i = Data.ATTRIBUTE_BAITS[index]
-		return UI.STAT_ICONS[rule.x]
+		return UI.STAT_ICONS[index - 1]
 	return UI.ICON_BAIT
 
 
@@ -352,84 +360,70 @@ func _rebuild_catalog() -> void:
 	_catalog.clear()
 	if fishing == null:
 		return
+	# Sorted cleanly by category: Rods -> Hooks -> Grips/Charms -> Baits -> Repairs
 	for i in Data.DEVICES.size():
 		var cat := _device_filter(i)
 		var available := fishing.can_buy_device(i)
-		var stock_text := "未拥有" if available else "已拥有"
-		if i == Data.STEADY_CHARM:
-			stock_text = "已拥有 %d / %d" % [fishing.charms_owned, Data.CHARM_LIMIT]
+		var cat_label := "竿体" if cat == Filter.ROD else ("鱼钩" if cat == Filter.HOOK else "握柄 / 挂件")
 		_catalog.append({
 			"key": "device:%d" % i,
 			"kind": "device",
 			"index": i,
 			"filter": cat,
-			"category_name": FILTER_META[cat]["label"],
+			"category_name": cat_label,
 			"icon": _device_icon(i),
 			"preview_icon": _device_icon(i),
 			"name": str(Data.DEVICES[i][0]),
 			"desc": DEVICE_DESCS[i],
-			"stock_text": stock_text,
+			"stock_text": "未拥有" if available else "已拥有",
 			"unit_price": int(Data.DEVICES[i][1]),
 			"available": available,
 		})
 	for i in Data.BAITS.size():
 		var icon := _bait_icon(i)
+		var needs_unlock := not fishing.bait_unlocked[i]
+		var available := fishing.can_unlock_bait(i) if needs_unlock else fishing.is_bait_available(i)
+		var desc := Data.bait_hint(i, true)
+		if i == Data.VARIANT_BAIT and needs_unlock:
+			desc = "需先解锁全部钓具与普通饵，购买后次日生效"
 		_catalog.append({
-			"key": "bait:%d" % i,
-			"kind": "bait",
-			"index": i,
-			"filter": Filter.BAIT,
-			"category_name": "鱼饵",
+			"key": "bait:%d" % i, "kind": "bait", "index": i,
+			"filter": Filter.BAIT, "category_name": "鱼饵工艺" if needs_unlock else "鱼饵补给",
 			"icon": icon,
 			"preview_icon": Data.fish_texture(Data.VARIANT, 3) if i == Data.VARIANT_BAIT else icon,
-			"name": Data.BAITS[i],
-			"desc": Data.bait_hint(i, true),
-			"stock_text": "×%d" % fishing.bait_stock[i],
-			"unit_price": int(Data.BAIT_PRICES[i]),
-			"available": true,
+			"name": Data.BAITS[i], "desc": desc, "needs_unlock": needs_unlock,
+			"stock_text": "未解锁" if needs_unlock else ("×%d" % fishing.bait_stock[i] if available else "次日开放"),
+			"unit_price": int(Data.BAIT_UNLOCK_PRICES[i]) if needs_unlock else int(Data.BAIT_PRICES[i]),
+			"available": available,
 		})
-	var durability_text := "%d / %d" % [fishing.durability(), Data.GRIP_CAPACITY]
-	_catalog.append({
-		"key": "repair:quick",
-		"kind": "repair",
-		"full": false,
-		"filter": Filter.REPAIR,
-		"category_name": "钓组维修",
-		"icon": UI.ICON_WRENCH,
-		"preview_icon": UI.ICON_WRENCH,
-		"name": "临修",
-		"desc": "耐久归零时可修至 %d / %d，消耗一次临修机会。" % [Data.GRIP_QUICK_REPAIR_DURABILITY, Data.GRIP_CAPACITY],
-		"stock_text": durability_text,
-		"unit_price": Data.GRIP_QUICK_REPAIR_COST,
-		"available": fishing.can_repair(false),
-	})
+	var wear := fishing.shared_wear
 	_catalog.append({
 		"key": "repair:full",
 		"kind": "repair",
-		"full": true,
+		"points": fishing.grip_capacity(),
 		"filter": Filter.REPAIR,
 		"category_name": "钓组维修",
 		"icon": UI.ICON_WRENCH,
 		"preview_icon": UI.ICON_WRENCH,
-		"name": "整修",
-		"desc": "耐久归零时可修至 %d / %d，并恢复一次临修机会。" % [Data.GRIP_CAPACITY, Data.GRIP_CAPACITY],
-		"stock_text": durability_text,
-		"unit_price": Data.GRIP_FULL_REPAIR_COST,
-		"available": fishing.can_repair(true),
+		"name": "彻底维修（恢复至满耐久）",
+		"desc": "5枚修复整套共享磨损；换装不会免费回满。",
+		"stock_text": "%d / %d" % [fishing.durability(), fishing.grip_capacity()],
+		"unit_price": Data.REPAIR_PRICE if wear > 0 else 0,
+		"available": wear > 0 and not fishing.is_busy(),
 	})
 
 
 func _filtered_catalog() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var sold_out: Array[Dictionary] = []
+	var owned: Array[Dictionary] = []
 	for item in _catalog:
 		if active_filter != Filter.ALL and int(item["filter"]) != active_filter:
 			continue
-		if item["kind"] == "device" and not item["available"]:
-			sold_out.append(item)
+		if item.kind == "device" and not item.available:
+			owned.append(item)
 		else:
 			result.append(item)
-	result.append_array(sold_out)
+	result.append_array(owned)
 	return result
 
 
@@ -447,6 +441,9 @@ func refresh() -> void:
 	if fishing == null:
 		return
 	_rebuild_catalog()
+	next_day_button.visible = fishing.session.awaiting_next_day
+	next_day_button.disabled = fishing.session.paused
+	next_day_button.text = "F  开始第%d天" % (fishing.session.day + 1)
 	var money := fishing.session.coins
 	var paused := fishing.session.paused
 
@@ -517,7 +514,7 @@ func refresh() -> void:
 		var coin_ic := UI.icon_rect(row, UI.ICON_COIN, Rect2(724, 11, 26, 26))
 		if not affordable:
 			coin_ic.modulate = Color(1, 1, 1, 0.45)
-		var price_txt := str(price) if available or item["kind"] == "repair" else "—"
+		var price_txt := "—" if not available else str(price)
 		var price_lbl := UI.label(row, price_txt, Rect2(756, 6, 86, 36), 20, price_col)
 		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
@@ -531,33 +528,28 @@ func refresh() -> void:
 		_detail_cat.text = str(selected["category_name"])
 		_detail_name.text = str(selected["name"])
 		_detail_desc.text = str(selected["desc"])
-		_qty_row.visible = kind == "bait"
+		_qty_row.visible = kind == "bait" and not selected.get("needs_unlock", false)
 		_durability_box.visible = kind == "repair"
 
-		var total_cost: int = int(selected["unit_price"]) * (selected_quantity if kind == "bait" else 1)
+		var total_cost: int = int(selected["unit_price"]) * (selected_quantity if kind == "bait" and not selected.get("needs_unlock", false) else 1)
 		var can_act: bool = not paused and bool(selected["available"]) and money >= total_cost
-		_cost_value.text = str(total_cost) if bool(selected["available"]) or kind == "repair" else "—"
+		_cost_value.text = str(total_cost) if bool(selected["available"]) else "—"
 		_cost_value.add_theme_color_override("font_color", UI.GOLD if can_act else UI.WARN)
 
 		if kind == "bait":
-			_detail_meta.text = "当前库存 %s　｜　单价 %d" % [selected["stock_text"], int(selected["unit_price"])]
-			action_button.text = "确认购买 ×%d" % selected_quantity
+			_detail_meta.text = "状态：%s　｜　%s %d" % [selected["stock_text"], "解锁费" if selected.needs_unlock else "单价", int(selected["unit_price"])]
+			action_button.text = "解锁鱼饵工艺" if selected.needs_unlock else ("免费领取 ×%d" % selected_quantity if int(selected["index"]) == Data.Bait.DEFAULT else "补充鱼饵 ×%d" % selected_quantity)
+			if not selected.available:
+				action_button.text = "前置工艺未解锁" if selected.needs_unlock else "次日开放"
 		elif kind == "device":
 			_detail_meta.text = "状态：%s" % selected["stock_text"]
 			action_button.text = "确认购买钓具" if bool(selected["available"]) else "已拥有该钓具"
-			if int(selected["index"]) == Data.STEADY_CHARM:
-				action_button.text = "购买 1 件稳魂指骨" if bool(selected["available"]) else "稳魂指骨已购满"
 		else:
-			var quick_repairs := int(fishing.quick_repair_available)
-			_detail_meta.text = "基础握柄 · 临修剩余 %d 次" % quick_repairs
+			_detail_meta.text = "%s · 耐久 %s" % [Data.GRIP_NAMES[fishing.grip], selected["stock_text"]]
 			if fishing.is_busy():
 				action_button.text = "请先回河岸收竿"
-			elif fishing.durability() > 0:
-				action_button.text = "耐久归零后可维修"
 			elif not bool(selected["available"]):
-				action_button.text = "临修机会耗尽，请选择整修"
-			elif money < total_cost:
-				action_button.text = "渡魂币不足"
+				action_button.text = "耐久已满，无需维修"
 			else:
 				action_button.text = "确认维修"
 		action_button.disabled = not can_act
@@ -568,11 +560,13 @@ func refresh() -> void:
 		_controls_hint.text = "W / S 选商品　空格 购买／维修　C 返回类别"
 		if _qty_row.visible:
 			_controls_hint.text += "　A / D 数量"
+	if fishing.session.awaiting_next_day:
+		_controls_hint.text = "夜市补给与解锁　F 开始次日　W / S 选择"
 
 	# Update Right-Bottom Current Rig Summary
 	_rig_lines[0].text = "竿体：%s" % Data.RODS[fishing.rod]
 	_rig_lines[1].text = "鱼钩：%s" % Data.HOOKS[fishing.hook]
-	_rig_lines[2].text = "基础握柄：%d/%d" % [fishing.durability(), Data.GRIP_CAPACITY]
+	_rig_lines[2].text = "%s：%d/%d" % [Data.GRIP_NAMES[fishing.grip], fishing.durability(), fishing.grip_capacity()]
 	_rig_lines[2].add_theme_color_override("font_color", UI.WARN if fishing.durability() == 0 else UI.CREAM)
 	_rig_lines[3].text = "鱼饵：%s ×%d" % [Data.BAITS[fishing.bait], fishing.bait_stock[fishing.bait]]
 	_rig_lines[3].add_theme_color_override("font_color", UI.WARN if fishing.bait_stock[fishing.bait] == 0 else UI.MINT)
@@ -587,15 +581,15 @@ func _draw_durability_bar(target: Control) -> void:
 	var rect := Rect2(Vector2.ZERO, target.size)
 	target.draw_rect(rect.grow(2.0), UI.INK)
 	target.draw_rect(rect, Color("29202e"))
-	var ratio := clampf(float(fishing.durability()) / float(Data.GRIP_CAPACITY), 0.0, 1.0)
+	var ratio := clampf(float(fishing.durability()) / float(fishing.grip_capacity()), 0.0, 1.0)
 	var fill_col := UI.GOOD if ratio > 0.4 else UI.WARN
 	var fill_w := rect.size.x * ratio
 	if fill_w > 0.5:
 		target.draw_rect(Rect2(0, 0, fill_w, rect.size.y), fill_col)
 		target.draw_rect(Rect2(0, 2, fill_w, 4), fill_col.lightened(0.32))
 		target.draw_rect(Rect2(0, rect.size.y - 4, fill_w, 4), fill_col.darkened(0.28))
-	for i in range(1, Data.GRIP_CAPACITY):
-		var tx := rect.size.x * (float(i) / float(Data.GRIP_CAPACITY))
+	for i in range(1, fishing.grip_capacity()):
+		var tx := rect.size.x * (float(i) / float(fishing.grip_capacity()))
 		target.draw_line(Vector2(tx, 0), Vector2(tx, rect.size.y), Color(UI.INK, 0.5), 1.5)
 
 
@@ -608,18 +602,19 @@ func _execute_selected() -> void:
 	if kind == "device":
 		var idx: int = int(selected["index"])
 		if fishing.buy_device(idx):
-			if idx == Data.STEADY_CHARM:
-				_status.text = "已购入稳魂指骨，按竿体槽位自动装配。"
-			else:
-				_status.text = "已购入「%s」，按 Q 返回河岸即可在钓组中装备。" % Data.DEVICES[idx][0]
+			_status.text = "已购入「%s」，按 Q 返回河岸即可在钓组中装备。" % Data.DEVICES[idx][0]
 	elif kind == "bait":
 		var idx: int = int(selected["index"])
 		var was_empty := fishing.bait_stock[fishing.bait] == 0 and not fishing.is_busy()
-		if fishing.buy_bait(idx, selected_quantity):
+		if selected.needs_unlock:
+			if fishing.unlock_bait(idx):
+				_status.text = "工艺已解锁；异刺次日开放。" if idx == Data.VARIANT_BAIT else "工艺已解锁，可按单价补充鱼饵。"
+		elif fishing.buy_bait(idx, selected_quantity):
 			if was_empty and fishing.bait == idx:
 				_status.text = "购入 %s ×%d，已自动装配到当前钓组。" % [Data.BAITS[idx], selected_quantity]
 			else:
 				_status.text = "购入 %s ×%d（可在河岸右侧「鱼饵」槽切换）。" % [Data.BAITS[idx], selected_quantity]
 	elif kind == "repair":
-		if fishing.repair(bool(selected["full"])):
-			_status.text = "%s完成，基础握柄当前耐久 %d / %d。" % [selected["name"], fishing.durability(), Data.GRIP_CAPACITY]
+		var pts: int = int(selected["points"])
+		if fishing.repair(pts):
+			_status.text = "共享磨损已修复，%s耐久 %d / %d。" % [Data.GRIP_NAMES[fishing.grip], fishing.durability(), fishing.grip_capacity()]

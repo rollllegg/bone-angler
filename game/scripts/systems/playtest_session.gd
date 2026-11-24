@@ -2,6 +2,7 @@ extends Node
 
 signal state_changed
 signal soul_served(id: int)
+signal day_finished
 
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const StoryDB := preload("res://scripts/story/story_db.gd")
@@ -9,29 +10,22 @@ const StoryState := preload("res://scripts/story/story_state.gd")
 const StoryRuntime := preload("res://scripts/story/story_runtime.gd")
 const DAY_COUNT := 5
 const GUESTS_PER_DAY := 6
-const OLD_SHIFT_TOTAL := 12
 const STAT_MAX := 10
 const STAT_CEILING := Vector3i.ONE * STAT_MAX
-const STAT_ORDERS := [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
-const DAY_FOUR_BANDS := [Vector2i(4, 7), Vector2i(5, 8), Vector2i(6, 9)]
-const DAY_FIVE_BANDS := [Vector2i(4, 7), Vector2i(6, 8), Vector2i(7, 9)]
-const LEGACY_REQUIREMENTS: Array[Vector3i] = [Vector3i(7, 7, 7), Vector3i(9, 9, 9)]
-const STARTER_RAISE_FISH := [0, 1, Data.LANTERN]
-const STARTER_LOWER_FISH := [5, 6, Data.STILLFIN]
-const HIGH_STAT_GUESTS := [4, 3, 7]
-const BOATMAN_CASE := 2
-const BOATMAN_COMMISSION_WILL := 9
+const RELEASE_BOUNDS: Array[Vector3i] = [Vector3i(7, 7, 7), Vector3i(9, 9, 9)]
 
 var catches: Array[Dictionary] = []
 var essences: Array[int] = []
 var potions: Array[Dictionary] = []
 var souls: Array[Dictionary] = []
 var concentrate := 0
-var recovered_bones := 0
 var finger_bones := 0
 var released_count := 0
+var failed_count := 0
+var awaiting_next_day := false
+var available_species: Callable
 var day := 1
-var requirements: Array[Vector3i] = [Vector3i.ZERO, STAT_CEILING]
+var requirements: Array[Vector3i] = RELEASE_BOUNDS.duplicate()
 var coins := Data.STARTING_COINS
 var last_payout := 0
 var _first_services: Dictionary = {}
@@ -39,7 +33,7 @@ var spawn_remaining := 0.0
 var paused := false
 var active := false
 var _arrived := 0
-var _day_guests: Array[Vector2i] = []
+var _day_guests: Array[Dictionary] = []
 var _day_arrived := 0
 var _next_item_id := 1
 var _rng := RandomNumberGenerator.new()
@@ -58,6 +52,8 @@ func _ready() -> void:
 	_rng.randomize()
 	essences.resize(Data.FISH.size())
 	essences.fill(0)
+	essences[0] = 1
+	essences[1] = 1
 	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
 	story_db = StoryDB.new()
 	story_db.load_all()
@@ -103,7 +99,7 @@ func is_complete() -> bool:
 
 func total_guests() -> int:
 	var remaining := souls.size() + _day_guests.size() - _day_arrived + (DAY_COUNT - day) * GUESTS_PER_DAY
-	return mini(Data.SOULS.size(), released_count + rejected_count + remaining)
+	return mini(Data.SOULS.size(), released_count + rejected_count + failed_count + remaining)
 
 
 func advance(delta: float) -> void:
@@ -113,15 +109,8 @@ func advance(delta: float) -> void:
 	var arrived := false
 	while spawn_remaining <= 0.0 and has_more_arrivals():
 		var slot := _day_arrived
-		var guest := _day_guests[slot]
-		var entry: Array = Data.SOULS[guest.x]
-		var stats: Vector3i = entry[1]
-		if guest.y >= 0:
-			stats = _starter_stats(stats, guest.y)
-		var soul := {
-			"id": _arrived + 1, "case_id": guest.x, "name": entry[0], "stats": stats,
-			"before": stats, "served": false, "doses_used": 0, "fee": service_fee(stats),
-		}
+		var soul := _day_guests[slot].duplicate(true)
+		soul.id = _arrived + 1
 		var story_case := ""
 		if story_db != null:
 			story_case = story_db.get_scheduled_case(day, slot)
@@ -132,7 +121,8 @@ func advance(delta: float) -> void:
 			soul["name"] = story_db.get_queue_name(story_case)
 			soul["stats"] = Vector3i(8, 8, 8)
 			soul["before"] = soul["stats"]
-			soul["fee"] = story_db.get_fee(story_case)
+			soul["fee"] = Data.RELEASE_REWARD
+			soul["perfect_target"] = null
 		_day_arrived += 1
 		_arrived += 1
 		souls.append(soul)
@@ -142,33 +132,15 @@ func advance(delta: float) -> void:
 		state_changed.emit()
 
 
-static func roll_requirements(number: int, rng: RandomNumberGenerator) -> Array[Vector3i]:
-	var order: Array = STAT_ORDERS[rng.randi_range(0, STAT_ORDERS.size() - 1)]
-	var lower := Vector3i.ZERO
-	var upper := STAT_CEILING
-	match number:
-		1:
-			lower[order[0]] = 7
-			lower[order[1]] = 7
-		2:
-			lower[order[0]] = rng.randi_range(6, 7)
-			upper[order[1]] = rng.randi_range(8, 9)
-		3:
-			lower[order[0]] = rng.randi_range(6, 8)
-			lower[order[1]] = rng.randi_range(6, 8)
-			upper[order[2]] = rng.randi_range(7, 9)
-		_:
-			var bands: Array = DAY_FOUR_BANDS if number == 4 else DAY_FIVE_BANDS
-			for index in 3:
-				lower[order[index]] = bands[index].x
-				upper[order[index]] = bands[index].y
-	return [lower, upper]
+static func roll_requirements(_number: int, _rng: RandomNumberGenerator) -> Array[Vector3i]:
+	return RELEASE_BOUNDS.duplicate()
 
 
 func _open_day(number: int) -> void:
 	day = number
+	awaiting_next_day = false
 	day_story_entries.clear()
-	requirements = roll_requirements(day, _rng)
+	requirements = RELEASE_BOUNDS.duplicate()
 	_day_guests.clear()
 	_day_arrived = 0
 	_fill_day_roster()
@@ -177,97 +149,57 @@ func _open_day(number: int) -> void:
 
 
 func _fill_day_roster() -> void:
-	var scheduled := _day_guests.map(func(guest: Vector2i) -> int: return guest.x)
-	var available := Data.SOUL_ORDER.filter(func(case_id: int) -> bool:
-		return not _first_services.has(case_id) and not scheduled.has(case_id)
-	)
-	var raise_axes: Array[int] = []
-	if day <= 2:
-		for axis in [Data.Attribute.EMOTION, Data.Attribute.WILL, Data.Attribute.WISDOM]:
-			if requirements[0][axis] > 0:
-				raise_axes.append(axis)
-		if scheduled.is_empty():
-			for axis in raise_axes:
-				_schedule_starter(available, axis, axis)
-			if day == 2:
-				for axis in 3:
-					if requirements[1][axis] < STAT_MAX:
-						_schedule_starter(available, HIGH_STAT_GUESTS[axis], axis)
-	var seats := maxi(0, GUESTS_PER_DAY - _day_guests.size())
-	for index in mini(seats, available.size()):
-		# Extra guests on the first two days can still be served with one shallow-water dose.
-		var focus := -1 if raise_axes.is_empty() else raise_axes[index % raise_axes.size()]
-		_day_guests.append(Vector2i(available[index], focus))
-
-
-func _schedule_starter(available: Array, preferred: int, axis: int) -> void:
-	if available.is_empty():
-		return
-	var index := available.find(preferred)
-	var case_id: int = available.pop_at(maxi(0, index))
-	_day_guests.append(Vector2i(case_id, axis))
-
-
-func _starter_stats(stats: Vector3i, axis: int) -> Vector3i:
-	var lower := requirements[0]
-	var upper := requirements[1]
-	var raises := lower[axis] > 0
-	var fish: int = STARTER_RAISE_FISH[axis] if raises else STARTER_LOWER_FISH[axis]
-	var effect: Vector3i = Data.FISH[fish].effect
-	# Keep the other required attributes in bounds both before and after one dose.
-	var safe_low := lower.max(lower - effect)
-	var safe_high := upper.min(upper - effect)
-	for index in 3:
-		if lower[index] == 0:
-			safe_low[index] = 0
-		if upper[index] == STAT_MAX:
-			safe_high[index] = STAT_MAX
-	var starter := stats.clamp(safe_low, safe_high)
-	starter[axis] = maxi(0, lower[axis] - effect[axis]) if raises else mini(STAT_MAX, upper[axis] - effect[axis])
-	return starter
+	var species: Array = available_species.call() if available_species.is_valid() else Data.BASIC_FISH.duplicate()
+	# Daily ordinary service never requires the rare giant ingredient.
+	species.erase(Data.VARIANT)
+	var pool := build_candidate_pool(species)
+	var precise := pool.filter(func(entry: Dictionary) -> bool: return entry.targets.size() >= 2)
+	assert(not pool.is_empty() and not precise.is_empty(), "Available fish must support ordinary and exact-target visitors")
+	var slots: Array = [1, 2, 3, 4, 5] if day == 1 else [0, 1, 2, 3, 4, 5]
+	if story_db != null:
+		for slot in slots.duplicate():
+			if story_db.get_scheduled_case(day, slot) != "":
+				slots.erase(slot)
+	var selected: Array[int] = []
+	for index in _rng.randi_range(1, 3):
+		selected.append(slots.pop_at(_rng.randi_range(0, slots.size() - 1)))
+	var used := {}
+	for index in GUESTS_PER_DAY:
+		var source: Array = precise if selected.has(index) else pool
+		var candidate: Dictionary = source[_rng.randi_range(0, source.size() - 1)]
+		while used.has(candidate.stats):
+			candidate = source[_rng.randi_range(0, source.size() - 1)]
+		if day == 1 and index == 0:
+			candidate = {"stats": Vector3i(5, 5, 8), "targets": [Vector3i(7, 7, 8)]}
+		used[candidate.stats] = true
+		var case_id: int = Data.SOUL_ORDER[(day - 1) * GUESTS_PER_DAY + index]
+		var target: Variant = null
+		if selected.has(index):
+			target = candidate.targets[_rng.randi_range(0, candidate.targets.size() - 1)]
+		_day_guests.append({
+			"id": 0, "case_id": case_id, "name": Data.SOULS[case_id][0],
+			"stats": candidate.stats, "before": candidate.stats,
+			"served": false, "doses_used": 0, "fee": Data.RELEASE_REWARD,
+			"perfect_target": target, "used_variant_compound": false, "medicine_kind": "",
+		})
 
 
 func save_day() -> Dictionary:
-	var bounds: Array = []
-	for limit in requirements:
-		bounds.append([limit.x, limit.y, limit.z])
 	var guests: Array = []
 	for guest in _day_guests:
-		guests.append([guest.x, guest.y])
-	return {"number": day, "bounds": bounds, "guests": guests, "arrivals": _day_arrived, "daily_quota": GUESTS_PER_DAY}
+		guests.append(save_soul(guest))
+	return {"number": day, "guests": guests, "arrivals": _day_arrived, "daily_quota": GUESTS_PER_DAY, "awaiting_next_day": awaiting_next_day}
 
 
 func restore_day(saved: Dictionary) -> void:
-	if saved.is_empty():
-		day = mini(DAY_COUNT, 1 + floori(float(released_count) / GUESTS_PER_DAY))
-		if souls.is_empty() and released_count < OLD_SHIFT_TOTAL:
-			_open_day(day)
-			return
-		# Unscheduled legacy queues keep their original admission terms.
-		day = DAY_COUNT if souls.is_empty() else ceili(float(released_count + souls.size()) / GUESTS_PER_DAY)
-		requirements = LEGACY_REQUIREMENTS.duplicate()
-		_day_guests.clear()
-		for soul in souls:
-			_day_guests.append(Vector2i(soul.case_id, -1))
-		_day_arrived = _day_guests.size()
-		return
-	day = int(saved.number)
-	if saved.has("bounds"):
-		var low: Array = saved.bounds[0]
-		var high: Array = saved.bounds[1]
-		requirements = [Vector3i(int(low[0]), int(low[1]), int(low[2])), Vector3i(int(high[0]), int(high[1]), int(high[2]))]
-	else:
-		# Slots written during the v1.5 trial omitted bounds and stored guest records.
-		requirements = LEGACY_REQUIREMENTS.duplicate()
+	day = clampi(int(saved.get("number", 1)), 1, DAY_COUNT)
+	awaiting_next_day = bool(saved.get("awaiting_next_day", false))
+	requirements = RELEASE_BOUNDS.duplicate()
 	_day_guests.clear()
-	for guest in saved.guests:
-		if guest is Dictionary:
-			var case_id := clampi(int(guest.get("case_id", 0)), 0, Data.SOULS.size() - 1)
-			_day_guests.append(Vector2i(case_id, -1))
-		else:
-			_day_guests.append(Vector2i(int(guest[0]), int(guest[1])))
-	_day_arrived = int(saved.arrivals)
-	if int(saved.get("daily_quota", 0)) < GUESTS_PER_DAY and not is_complete():
+	for guest: Dictionary in saved.get("guests", []):
+		_day_guests.append(restore_soul(guest))
+	_day_arrived = clampi(int(saved.get("arrivals", 0)), 0, _day_guests.size())
+	if _day_guests.is_empty():
 		_fill_day_roster()
 
 
@@ -293,40 +225,23 @@ static func meets_requirements(stats: Vector3i, bounds: Array[Vector3i]) -> bool
 	return stats == stats.clamp(bounds[0], bounds[1])
 
 
-func service_fee(stats: Vector3i) -> int:
-	var adjustment := (stats - stats.clamp(requirements[0], requirements[1])).abs()
-	var total := adjustment.x + adjustment.y + adjustment.z
-	if total >= 8:
-		return 50
-	if total >= 5:
-		return 40
-	if total >= 3:
-		return 30
-	return 20 if total > 0 else 0
+func service_fee(_stats: Vector3i) -> int:
+	return Data.RELEASE_REWARD
 
 
 func first_service(soul: Dictionary) -> bool:
 	return not _first_services.has(soul.case_id)
 
 
-func has_commission(soul: Dictionary) -> bool:
-	return soul.case_id == BOATMAN_CASE and requirements[0].z <= BOATMAN_COMMISSION_WILL and requirements[1].z >= BOATMAN_COMMISSION_WILL
-
-
-func service_bonus(soul: Dictionary) -> int:
-	return int(soul.fee * 0.10)
-
-
 static func doses_used(soul: Dictionary) -> int:
 	return maxi(0, int(soul.get("doses_used", int(soul.get("served", false)))))
 
 
-func release_reward(soul: Dictionary, stats: Vector3i, dose_count: int) -> int:
-	var bonuses := int(first_service(soul))
-	if has_commission(soul) and stats.z == BOATMAN_COMMISSION_WILL:
-		bonuses += 1
-	var full_reward := int(soul.fee) + service_bonus(soul) * bonuses
-	return floori(full_reward * pow(0.5, maxi(0, dose_count - 1)))
+func release_reward(soul: Dictionary, stats: Vector3i, _dose_count: int) -> int:
+	if not is_eligible(stats):
+		return 0
+	var perfect: bool = bool(soul.get("used_variant_compound", false)) or (soul.get("perfect_target") != null and stats == soul.perfect_target)
+	return Data.PERFECT_REWARD if perfect else Data.RELEASE_REWARD
 
 
 func spend(cost: int) -> bool:
@@ -341,7 +256,7 @@ func release_soul(id: int) -> bool:
 		return false
 	var soul := get_soul(id)
 	last_story_outcome = ""
-	last_payout = release_reward(soul, soul.stats, doses_used(soul))
+	last_payout = reward_for(id)
 	coins += last_payout
 	_first_services[soul.case_id] = true
 	souls.erase(soul)
@@ -361,11 +276,6 @@ func record_catch(result: Dictionary) -> void:
 	state_changed.emit()
 
 
-func record_bone() -> void:
-	recovered_bones += 1
-	state_changed.emit()
-
-
 func refine(id: int) -> bool:
 	if not active or paused:
 		return false
@@ -374,8 +284,6 @@ func refine(id: int) -> bool:
 			continue
 		var species: int = catch.species
 		essences[species] += yield_for(catch)
-		if species == Data.LANTERN and catch.size == 0:
-			concentrate += 1
 		catches.erase(catch)
 		state_changed.emit()
 		return true
@@ -426,20 +334,23 @@ func preview(id: int, essence: bool, item: int) -> Dictionary:
 		return {}
 	var before: Vector3i = soul.stats
 	var effect: Vector3i = medicine.effect
-	var after := (before + effect).clamp(Vector3i.ZERO, STAT_CEILING)
-	var dose_count := doses_used(soul) + 1
-	return {
-		"name": medicine.name, "before": before, "after": after, "effect": effect,
-		"doses_used": dose_count,
-		"reward": release_reward(soul, after, dose_count) if is_eligible(after) else 0,
-	}
+	var after := before + effect
+	var in_bounds := after == after.clamp(Vector3i.ZERO, STAT_CEILING)
+	var available := in_bounds and not bool(soul.get("served", false)) and int(soul.get("doses_used", 0)) < 1
+	var eligible := in_bounds and is_eligible(after)
+	var giant := not essence and Data.is_variant_compound(str(medicine.kind))
+	var precise: bool = soul.get("perfect_target") != null and after == soul.perfect_target
+	var perfect: bool = eligible and (giant or precise)
+	return {"name": medicine.name, "kind": medicine.kind, "before": before, "after": after, "effect": effect,
+		"available": available, "in_bounds": in_bounds, "eligible": eligible, "perfect": perfect,
+		"contains_variant": giant, "reward": (Data.PERFECT_REWARD if perfect else Data.RELEASE_REWARD) if eligible else 0}
 
 
 func serve(id: int, essence: bool, item: int) -> bool:
 	if not active or paused:
 		return false
 	var change := preview(id, essence, item)
-	if change.is_empty():
+	if change.is_empty() or not change.available:
 		return false
 	if essence:
 		essences[item] -= 1
@@ -449,30 +360,17 @@ func serve(id: int, essence: bool, item: int) -> bool:
 	soul.before = change.before
 	soul.stats = change.after
 	soul.served = true
-	soul["doses_used"] = change.doses_used
+	soul["doses_used"] = 1
+	soul["medicine_kind"] = change.kind
+	soul["used_variant_compound"] = change.contains_variant
 	soul_served.emit(id)
 	state_changed.emit()
 	return true
 
 
-func strengthen(essence: bool, item: int, attribute: int, amount: int) -> bool:
-	if not active or paused or concentrate <= 0 or attribute < 0 or attribute >= 3 or absi(amount) != 1:
-		return false
-	var medicine := dose(essence, item)
-	if medicine.is_empty() or medicine.attribute >= 0:
-		return false
-	var effect: Vector3i = medicine.effect
-	effect[attribute] += amount
-	concentrate -= 1
-	if essence:
-		essences[item] -= 1
-		_add_potion(medicine.kind, medicine.name, effect, attribute, amount)
-	else:
-		medicine.effect = effect
-		medicine.attribute = attribute
-		medicine.adjustment = amount
-	state_changed.emit()
-	return true
+func strengthen(_essence: bool, _item: int, _attribute: int, _amount: int) -> bool:
+	# Disabled in this rules version, including direct API calls and old inventory.
+	return false
 
 
 func has_story_case(id: int) -> bool:
@@ -522,6 +420,9 @@ func feed_story_potion(id: int, essence: bool, item: int) -> bool:
 		potions.erase(get_potion(item))
 	if not runtime.feed_potion(medicine.effect, str(medicine.name)):
 		return false
+	soul.served = true
+	soul["doses_used"] = 1
+	soul["medicine_kind"] = medicine.kind
 	soul_served.emit(id)
 	state_changed.emit()
 	return true
@@ -539,7 +440,7 @@ func finish_story(id: int) -> bool:
 	last_payout = 0
 	last_story_outcome = result
 	if result == "release":
-		last_payout = int(outcome.get("payout", soul.fee))
+		last_payout = Data.RELEASE_REWARD
 		coins += last_payout
 		released_count += 1
 	else:
@@ -589,8 +490,8 @@ func _advance_day_if_ready() -> void:
 		return
 	if is_complete():
 		return
-	_open_day(day + 1)
-	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	awaiting_next_day = true
+	day_finished.emit()
 
 
 func get_day_report() -> Dictionary:
@@ -606,8 +507,8 @@ func close_day_report() -> void:
 	if final:
 		state_changed.emit()
 		return
-	_open_day(day + 1)
-	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	awaiting_next_day = true
+	day_finished.emit()
 	state_changed.emit()
 
 
@@ -642,10 +543,114 @@ func _sync_story_snapshot(id: int, emit_change: bool) -> void:
 
 
 func _add_potion(kind: String, title: String, effect: Vector3i, attribute: int, adjustment: int) -> void:
-	potions.append({"id": _allocate_item(), "kind": kind, "name": title, "effect": effect, "attribute": attribute, "adjustment": adjustment})
+	potions.append({"id": _allocate_item(), "kind": kind, "name": title, "effect": effect, "attribute": attribute, "adjustment": adjustment, "contains_variant": Data.is_variant_compound(kind)})
 
 
 func _allocate_item() -> int:
 	var id := _next_item_id
 	_next_item_id += 1
 	return id
+
+
+static func medicine_effects(species: Array) -> Array[Vector3i]:
+	var unique := {}
+	for first: int in species:
+		unique[Data.FISH[first].effect] = true
+		for second: int in species:
+			if second < first:
+				continue
+			var recipe := Data.recipe(first, second)
+			if not recipe.is_empty():
+				unique[recipe.effect] = true
+	var result: Array[Vector3i] = []
+	for effect: Vector3i in unique:
+		result.append(effect)
+	return result
+
+
+static func qualifying_targets(stats: Vector3i, effects: Array[Vector3i]) -> Array[Vector3i]:
+	var targets: Array[Vector3i] = []
+	for effect in effects:
+		var after := stats + effect
+		if meets_requirements(after, RELEASE_BOUNDS) and not targets.has(after):
+			targets.append(after)
+	return targets
+
+
+static func basics_can_release(stats: Vector3i) -> bool:
+	for species: int in Data.BASIC_FISH:
+		if meets_requirements(stats + Data.FISH[species].effect, RELEASE_BOUNDS):
+			return true
+	return false
+
+
+static func build_candidate_pool(species: Array) -> Array[Dictionary]:
+	var effects := medicine_effects(species)
+	var pool: Array[Dictionary] = []
+	for wisdom in 11:
+		for emotion in 11:
+			for will in 11:
+				var stats := Vector3i(wisdom, emotion, will)
+				if meets_requirements(stats, RELEASE_BOUNDS) or basics_can_release(stats):
+					continue
+				var targets := qualifying_targets(stats, effects)
+				if not targets.is_empty():
+					pool.append({"stats": stats, "targets": targets})
+	return pool
+
+
+static func save_soul(soul: Dictionary) -> Dictionary:
+	var out := soul.duplicate(true)
+	for key in ["stats", "before", "perfect_target"]:
+		if out.get(key) is Vector3i:
+			var value: Vector3i = out[key]
+			out[key] = [value.x, value.y, value.z]
+	return out
+
+
+static func restore_soul(saved: Dictionary) -> Dictionary:
+	var out := saved.duplicate(true)
+	for key in ["stats", "before", "perfect_target"]:
+		if out.get(key) is Array:
+			var value: Array = out[key]
+			out[key] = Vector3i(int(value[0]), int(value[1]), int(value[2]))
+	out["doses_used"] = int(out.get("doses_used", int(out.get("served", false))))
+	out["used_variant_compound"] = Data.is_variant_compound(str(out.get("medicine_kind", "")))
+	out["perfect_target"] = out.get("perfect_target")
+	out["fee"] = Data.RELEASE_REWARD
+	return out
+
+
+func is_perfect(id: int) -> bool:
+	var soul := get_soul(id)
+	if soul.is_empty() or soul.has("story_case") or not is_eligible(soul.stats):
+		return false
+	return bool(soul.get("used_variant_compound", false)) or (soul.get("perfect_target") != null and soul.stats == soul.perfect_target)
+
+
+func reward_for(id: int) -> int:
+	if not can_release(id):
+		return 0
+	return Data.PERFECT_REWARD if is_perfect(id) else Data.RELEASE_REWARD
+
+
+func dismiss_soul(id: int) -> bool:
+	var soul := get_soul(id)
+	if not active or paused or soul.is_empty() or soul.has("story_case") or not soul.get("served", false) or can_release(id):
+		return false
+	souls.erase(soul)
+	failed_count += 1
+	last_payout = 0
+	last_story_outcome = "failed"
+	_advance_day_if_ready()
+	state_changed.emit()
+	return true
+
+
+func start_next_day() -> bool:
+	if not active or paused or awaiting_day_report or not awaiting_next_day or day >= DAY_COUNT:
+		return false
+	_open_day(day + 1)
+	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+	state_changed.emit()
+	return true

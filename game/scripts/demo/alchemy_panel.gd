@@ -11,21 +11,15 @@ var active_tab: int = 0
 var selected_fish_id: int = -1
 var mix_first: int = -1
 var mix_second: int = -1
-var selected_medicine: Variant = null
-var selected_attribute: int = 0
-var selected_adjustment: int = 1
 
 var refine_button: Button
 var mix_button: Button
-var strengthen_button: Button
 var fish_cards: Array[Button] = []
 var essence_cards: Array[Button] = []
-var medicine_cards: Array[Button] = []
 
 var _tab_buttons: Array[Button] = []
 var _tab_views: Array[Control] = []
-var _stock_concentrate: Label
-var _stock_bones: Label
+var _stock_finger_bones: Label
 var _status: Label
 var _controls_hint: Label
 var _essence_cursor := 0
@@ -53,14 +47,6 @@ var _mix_out_title: Label
 var _mix_out_note: Label
 var _mix_stats_box: Control
 
-# Strengthen view nodes
-var _med_grid: GridContainer
-var _med_empty: Label
-var _str_title: Label
-var _str_attr_btns: Array[Button] = []
-var _str_adj_btns: Array[Button] = []
-var _str_before_box: Control
-var _str_after_box: Control
 
 
 func setup(value: Session) -> void:
@@ -70,20 +56,17 @@ func setup(value: Session) -> void:
 
 	# Top workbench strip: inline tabs + resource badges
 	UI.panel(self, Rect2(28, 112, 1564, 68), "dark_wood")
-	var tab_titles := ["提炼鱼获", "配制复方", "强化成品"]
-	for i in 3:
+	var tab_titles := ["提炼鱼获", "配制复方"]
+	for i in 2:
 		var btn := UI.tab_button(self, tab_titles[i], Rect2(46 + i * 212, 122, 198, 48), _switch_tab.bind(i), i == 0)
 		btn.add_theme_font_size_override("font_size", 21)
 		_tab_buttons.append(btn)
 
-	UI.icon_rect(self, UI.ICON_CONCENTRATE, Rect2(1010, 130, 32, 32))
-	_stock_concentrate = UI.label(self, "浓缩的灵魂 ×0", Rect2(1048, 124, 210, 44), 20, UI.MINT)
-	_stock_bones = UI.label(self, "遗骨 ×0　指骨 ×0", Rect2(1270, 124, 300, 44), 20, UI.GOLD)
-	_stock_bones.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_stock_finger_bones = UI.label(self, "指骨 ×0", Rect2(1270, 124, 300, 44), 20, UI.GOLD)
+	_stock_finger_bones.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	_build_refine_tab()
 	_build_mix_tab()
-	_build_strengthen_tab()
 
 	UI.panel(self, Rect2(28, 906, 1564, 48), "dark_wood")
 	_controls_hint = UI.label(self, "", Rect2(48, 912, 946, 36), 18, UI.CREAM)
@@ -220,91 +203,14 @@ func _build_mix_tab() -> void:
 	mix_button.add_theme_font_size_override("font_size", 25)
 
 
-func _build_strengthen_tab() -> void:
-	var view := Control.new()
-	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(view)
-	_tab_views.append(view)
-
-	# Left: Unstrengthened Medicine Cards
-	UI.panel(view, Rect2(28, 190, 924, 704), "dark_wood")
-	UI.icon_rect(view, UI.ICON_CONCENTRATE, Rect2(50, 206, 32, 32))
-	UI.label(view, "可强化药剂 · 每剂仅可强化一次", Rect2(92, 204, 740, 38), 24, UI.GOLD)
-	var scroll := UI.create_scroll(view, Rect2(46, 252, 888, 624))
-	_med_grid = GridContainer.new()
-	_med_grid.columns = 2
-	_med_grid.add_theme_constant_override("h_separation", 14)
-	_med_grid.add_theme_constant_override("v_separation", 12)
-	scroll.add_child(_med_grid)
-	_med_empty = UI.label(view, "暂无可强化的原液或复方药剂。", Rect2(100, 440, 780, 90), 23, UI.MUTED)
-	_med_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-	# Right: Direct Attribute + Sign Toggle Buttons + Preview + Confirm (NO dropdowns!)
-	UI.panel(view, Rect2(970, 190, 622, 704), "dark_wood")
-	UI.label(view, "强化预览", Rect2(996, 204, 300, 38), 24, UI.MINT)
-	UI.panel(view, Rect2(996, 252, 570, 58), "slot")
-	_str_title = UI.label(view, "请从左侧选择一剂药", Rect2(1016, 258, 530, 44), 23, UI.CREAM)
-
-	UI.label(view, "选择调整属性", Rect2(996, 326, 280, 30), 19, UI.MUTED)
-	for i in 3:
-		var btn := Button.new()
-		btn.position = Vector2(996 + i * 194, 362)
-		btn.size = Vector2(182, 58)
-		UI.style_slot_button(btn, i == selected_attribute, false)
-		btn.pressed.connect(func() -> void:
-			selected_attribute = i
-			_update_previews()
-		)
-		view.add_child(btn)
-		UI.icon_rect(btn, UI.STAT_ICONS[i], Rect2(20, 13, 32, 32))
-		UI.label(btn, Data.STAT_NAMES[i], Rect2(60, 10, 110, 38), 21, Data.STAT_COLORS[i])
-		_str_attr_btns.append(btn)
-
-	UI.label(view, "选择增减方向", Rect2(996, 434, 280, 30), 19, UI.MUTED)
-	var adjs := [[1, "+1  提升"], [-1, "-1  降低"]]
-	for j in 2:
-		var delta_val: int = adjs[j][0]
-		var btn := Button.new()
-		btn.position = Vector2(996 + j * 292, 470)
-		btn.size = Vector2(278, 54)
-		UI.style_slot_button(btn, delta_val == selected_adjustment, false)
-		btn.pressed.connect(func() -> void:
-			selected_adjustment = delta_val
-			_update_previews()
-		)
-		view.add_child(btn)
-		var lbl := UI.label(btn, adjs[j][1], Rect2(10, 8, 258, 38), 21, UI.GOOD if delta_val > 0 else UI.WARN)
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_str_adj_btns.append(btn)
-
-	UI.panel(view, Rect2(996, 542, 570, 240), "hud_wood")
-	UI.label(view, "强化前", Rect2(1018, 554, 160, 30), 18, Color("2b1c1c"), false)
-	_str_before_box = Control.new()
-	_str_before_box.position = Vector2(1014, 586)
-	_str_before_box.size = Vector2(534, 70)
-	_str_before_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	view.add_child(_str_before_box)
-
-	UI.label(view, "强化后", Rect2(1018, 666, 160, 30), 18, Color("2b1c1c"), false)
-	_str_after_box = Control.new()
-	_str_after_box.position = Vector2(1014, 698)
-	_str_after_box.size = Vector2(534, 70)
-	_str_after_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	view.add_child(_str_after_box)
-
-	strengthen_button = UI.button(view, "消耗 1 份浓缩的灵魂 · 确认强化", Rect2(996, 800, 570, 72), _strengthen, true)
-	strengthen_button.add_theme_font_size_override("font_size", 23)
-
-
 func _switch_tab(index: int) -> void:
-	active_tab = index
+	active_tab = clampi(index, 0, 1)
 	for i in _tab_views.size():
 		_tab_views[i].visible = i == active_tab
 		UI.set_tab_active(_tab_buttons[i], i == active_tab)
 	_controls_hint.text = [
 		"WASD 选鱼　空格 提炼　Shift 切换页签　C 返回河岸",
 		"WASD 选原液　空格 放入　F 配制　Shift 切换页签　C 撤回／返回",
-		"WASD 选药剂　X 切换属性　V 切换增减　空格 强化　Shift 切换页签　C 返回河岸",
 	][active_tab]
 	_status.text = ""
 	_update_previews()
@@ -315,25 +221,17 @@ func handle_key(code: Key) -> bool:
 		KEY_W, KEY_A, KEY_S, KEY_D:
 			_move_card(code)
 		KEY_SHIFT:
-			_switch_tab(posmod(active_tab + 1, _tab_views.size()))
+			_switch_tab(posmod(active_tab + 1, 2))
 		KEY_SPACE:
 			match active_tab:
 				0: UI.activate(refine_button)
 				1:
 					if not essence_cards.is_empty():
 						UI.activate(essence_cards[_essence_cursor])
-				2: UI.activate(strengthen_button)
 		KEY_F:
 			if active_tab != 1:
 				return false
 			UI.activate(mix_button)
-		KEY_X, KEY_V:
-			if active_tab != 2:
-				return false
-			if code == KEY_X:
-				UI.activate(_str_attr_btns[posmod(selected_attribute + 1, _str_attr_btns.size())])
-			else:
-				UI.activate(_str_adj_btns[1 if selected_adjustment == 1 else 0])
 		KEY_C:
 			if active_tab != 1 or (mix_first < 0 and mix_second < 0):
 				return false
@@ -344,13 +242,13 @@ func handle_key(code: Key) -> bool:
 
 
 func _move_card(code: Key) -> void:
-	var cards: Array[Button] = [fish_cards, essence_cards, medicine_cards][active_tab]
+	var cards: Array[Button] = [fish_cards, essence_cards][active_tab]
 	if cards.is_empty():
 		return
-	var grid: GridContainer = [_fish_grid, _essence_grid, _med_grid][active_tab]
+	var grid: GridContainer = [_fish_grid, _essence_grid][active_tab]
 	var index := _essence_cursor if active_tab == 1 else 0
 	if active_tab != 1:
-		var selected: Variant = selected_fish_id if active_tab == 0 else selected_medicine
+		var selected: int = selected_fish_id
 		for i in cards.size():
 			if cards[i].get_meta("item") == selected:
 				index = i
@@ -369,17 +267,16 @@ func _move_card(code: Key) -> void:
 	UI.reveal(grid.get_parent() as ScrollContainer, cards[index])
 
 
-static func medicine_rows(session_value: Session, only_unstrengthened: bool = false) -> Array:
+static func medicine_rows(session_value: Session) -> Array:
 	var rows: Array = []
 	for species in session_value.essences.size():
 		if session_value.essences[species] > 0:
 			rows.append(["%s ×%d" % [Data.FISH[species]["essence"], session_value.essences[species]], [true, species]])
 	for potion in session_value.potions:
-		if not only_unstrengthened or potion.attribute < 0:
-			var title: String = potion.name
-			if potion.attribute >= 0:
-				title += "（%s %s%d）" % [Data.STAT_NAMES[potion.attribute], "+" if potion.adjustment > 0 else "", potion.adjustment]
-			rows.append([title, [false, potion.id]])
+		var title: String = potion.name
+		if Data.is_variant_compound(str(potion.kind)):
+			title += " · 巨刺"
+		rows.append([title, [false, potion.id]])
 	return rows
 
 
@@ -389,12 +286,9 @@ func refresh() -> void:
 	var essence_total := 0
 	for count in session.essences:
 		essence_total += count
-	var med_rows := medicine_rows(session, true)
 	_tab_buttons[0].text = "提炼鱼获 (%d)" % session.catches.size()
 	_tab_buttons[1].text = "配制复方 (%d)" % essence_total
-	_tab_buttons[2].text = "强化成品 (%d)" % med_rows.size()
-	_stock_concentrate.text = "浓缩的灵魂 ×%d" % session.concentrate
-	_stock_bones.text = "遗骨 ×%d　指骨 ×%d" % [session.recovered_bones, session.finger_bones]
+	_stock_finger_bones.text = "指骨 ×%d" % session.finger_bones
 
 	# Validate selections
 	var fish_found := false
@@ -412,18 +306,8 @@ func refresh() -> void:
 	if mix_first >= 0 and mix_first == mix_second and session.essences[mix_first] < 2:
 		mix_second = -1
 
-	var med_valid := false
-	if selected_medicine != null:
-		for row in med_rows:
-			if row[1] == selected_medicine:
-				med_valid = true
-				break
-	if not med_valid:
-		selected_medicine = med_rows[0][1] if not med_rows.is_empty() else null
-
 	_rebuild_fish_grid()
 	_rebuild_essence_grid()
-	_rebuild_medicine_grid(med_rows)
 	_update_previews()
 
 
@@ -533,35 +417,6 @@ func _pick_essence(species: int) -> void:
 	_update_previews()
 
 
-func _rebuild_medicine_grid(med_rows: Array) -> void:
-	UI.clear_cards(_med_grid)
-	medicine_cards.clear()
-	_med_empty.visible = med_rows.is_empty()
-	for row in med_rows:
-		var key: Array = row[1]
-		var dose := session.dose(key[0], key[1])
-		if dose.is_empty():
-			continue
-		var card := Button.new()
-		card.custom_minimum_size = Vector2(430, 102)
-		card.set_meta("item", key)
-		UI.style_slot_button(card, selected_medicine == key, false)
-		card.pressed.connect(func() -> void:
-			selected_medicine = key
-			for medicine_card in medicine_cards:
-				UI.style_slot_button(medicine_card, medicine_card == card, false)
-			_update_previews()
-		)
-		_med_grid.add_child(card)
-		medicine_cards.append(card)
-		UI.icon_rect(card, UI.ICON_ESSENCE if key[0] else UI.ICON_POTION, Rect2(16, 18, 36, 36))
-		var lbl := UI.label(card, str(row[0]), Rect2(60, 16, 354, 34), 20, UI.CREAM)
-		lbl.clip_text = true
-		var eff := UI.make_effect_row(dose.effect, 22, 18, false)
-		eff.position = Vector2(60, 56)
-		card.add_child(eff)
-
-
 func _populate_big_stat_cards(container: Control, effect: Variant, highlight_stat: int = -1, compact: bool = false) -> void:
 	for child in container.get_children():
 		child.queue_free()
@@ -621,7 +476,7 @@ func _update_previews() -> void:
 		_refine_fish_title.text = Data.fish_name(species, fsize)
 		_refine_fish_sub.text = Data.size_label(selected_catch)
 		_refine_out_title.text = "%s ×%d" % [fish.essence, Session.yield_for(selected_catch)]
-		_refine_out_bonus.text = "额外产出：浓缩的灵魂 ×1" if species == Data.LANTERN and fsize == 0 else "每份药剂数值预览"
+		_refine_out_bonus.text = "每份原液数值固定，体型只影响产量"
 		_populate_big_stat_cards(_refine_stats_box, fish.effect)
 	refine_button.disabled = session.paused or selected_catch.is_empty()
 
@@ -657,32 +512,9 @@ func _update_previews() -> void:
 		_mix_out_title.text = "%s ×1" % recipe.name
 		_mix_out_note.text = ("特殊反应：" + str(recipe.reaction)) if not str(recipe.reaction).is_empty() else "复方成品数值预览"
 		_populate_big_stat_cards(_mix_stats_box, recipe.effect)
+		if recipe.get("contains_variant", false):
+			_mix_out_note.text = "含巨刺：放行合规即完美，奖励不叠加"
 	mix_button.disabled = session.paused or recipe.is_empty() or not session.can_mix(mix_first, mix_second)
-
-	# 3. Strengthen preview
-	for i in 3:
-		UI.style_slot_button(_str_attr_btns[i], i == selected_attribute, false)
-	UI.style_slot_button(_str_adj_btns[0], selected_adjustment == 1, false)
-	UI.style_slot_button(_str_adj_btns[1], selected_adjustment == -1, false)
-
-	if selected_medicine == null:
-		_str_title.text = "暂无可强化的药剂"
-		_populate_big_stat_cards(_str_before_box, null, -1, true)
-		_populate_big_stat_cards(_str_after_box, null, -1, true)
-	else:
-		var dose := session.dose(selected_medicine[0], selected_medicine[1])
-		if dose.is_empty():
-			_str_title.text = "暂无可强化的药剂"
-			_populate_big_stat_cards(_str_before_box, null, -1, true)
-			_populate_big_stat_cards(_str_after_box, null, -1, true)
-		else:
-			var after_eff: Vector3i = dose.effect
-			after_eff[selected_attribute] += selected_adjustment
-			_str_title.text = str(dose.name)
-			_populate_big_stat_cards(_str_before_box, dose.effect, -1, true)
-			_populate_big_stat_cards(_str_after_box, after_eff, selected_attribute, true)
-	strengthen_button.disabled = session.paused or selected_medicine == null or session.concentrate == 0
-
 
 func _refine() -> void:
 	if selected_fish_id >= 0 and session.refine(selected_fish_id):
@@ -695,8 +527,3 @@ func _mix() -> void:
 		if not session.mix(mix_first, mix_second):
 			return
 		_status.text = "配制完成，获得 %s ×1。" % recipe.name
-
-
-func _strengthen() -> void:
-	if selected_medicine != null and session.strengthen(selected_medicine[0], selected_medicine[1], selected_attribute, selected_adjustment):
-		_status.text = "强化完成，已更新一剂药效。"

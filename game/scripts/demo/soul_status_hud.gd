@@ -82,6 +82,8 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 	var hidden := soul.has("story_case")
 	var has_preview := has_soul and not hidden and not preview.is_empty()
 	var legend := PackedStringArray(["第 %d 天" % day])
+	if has_soul and not hidden:
+		legend.append("用药%d/1" % Session.doses_used(soul))
 
 	if not has_soul:
 		_name_label.text = "等待来客"
@@ -95,14 +97,15 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 		_name_label.text = str(soul.name)
 		var ready := Session.meets_requirements(soul.stats, requirements)
 		if has_preview:
-			var will_ready := Session.meets_requirements(preview.after, requirements)
-			_state_label.text = "预览·达标" if will_ready else "预览中"
+			var will_ready := bool(preview.get("eligible", false))
+			_state_label.text = ("完美130" if preview.get("perfect", false) else "普通100") if will_ready else "预览中"
 			_state_label.add_theme_color_override("font_color", UI.GOOD if will_ready else UI.GOLD)
 		elif ready:
-			_state_label.text = "可放行"
+			var perfect: bool = bool(soul.get("used_variant_compound", false)) or (soul.get("perfect_target") != null and soul.stats == soul.perfect_target)
+			_state_label.text = "完美130" if perfect else "普通100"
 			_state_label.add_theme_color_override("font_color", UI.GOOD)
 		else:
-			_state_label.text = "待调配"
+			_state_label.text = "用药已尽" if soul.get("served", false) else "待调配"
 			_state_label.add_theme_color_override("font_color", UI.GOLD)
 
 	for index in 3:
@@ -147,7 +150,7 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 			_status_labels[index].text = "✓ 达标" if not has_preview else "→ 达标"
 			_status_labels[index].add_theme_color_override("font_color", UI.GOOD)
 
-	_legend_label.text = "　".join(legend)
+	_legend_label.text = "第%d天　用药%d/1　三项7～9" % [day, Session.doses_used(soul)] if has_soul and not hidden else "第%d天　三项7～9" % day
 	_bars_canvas.queue_redraw()
 
 

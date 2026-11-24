@@ -81,6 +81,8 @@ func _run() -> void:
 		session.release_soul(int(soul.id))
 	_check(session.get_day_report().day == 1, "Wukong's report belongs to day one")
 	session.close_day_report()
+	_check(session.awaiting_next_day and session.day == 1, "Report closes into the current night market")
+	_check(session.start_next_day(), "Night-market confirmation starts the next shift")
 	_check(session.day == 2 and not session.awaiting_day_report, "the next shift opens after the report")
 	for _guest in 6:
 		session.spawn_remaining = 0.0
@@ -110,7 +112,7 @@ func _run() -> void:
 	_check(orpheus.get_outcome_id() == "accepted.reunion", "orpheus reunion with wukong rampage")
 	_check(session.finish_story(orpheus_id), "session finishes orpheus")
 	_check(session.released_count == 6 and session.rejected_count == 1, "orpheus release counts")
-	_check(session.coins == coins_before_orpheus + 60, "orpheus pays the fee")
+	_check(session.coins == coins_before_orpheus + 100, "orpheus pays the fee")
 	_check(session.story_state.ledger.size() == 2, "ledger gets two entries")
 	_check(str(session.story_state.ledger[1].get("who", "")) == "亚历克斯", "orpheus ledger keeps the alias")
 	_check(str(session.story_state.ledger[1].get("result", "")) == "已入境", "orpheus ledger records admission")

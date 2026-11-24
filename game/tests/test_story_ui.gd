@@ -75,6 +75,8 @@ func _run() -> void:
 	_finish_ordinary_guests()
 	_check(_demo.day_report.visible and session.get_day_report().day == 1, "Wukong's aftermath is shown at the end of day one")
 	_demo._close_day_report()
+	_check(session.awaiting_next_day and _demo.current_location == "Market", "Report ends at the night market")
+	_press(KEY_F)
 	_check(session.day == 2 and not session.awaiting_day_report, "Closing the report allows the next day")
 	_press(KEY_E)
 	_arrive(5)

@@ -124,13 +124,15 @@ func _on_served(id: int) -> void:
 
 
 func begin_departure() -> bool:
-	if session.paused or not session.can_release(selected_id):
+	var soul := session.get_soul(selected_id)
+	if session.paused or soul.is_empty() or soul.has("story_case") or (not session.can_release(selected_id) and not soul.get("served", false)):
 		return false
 	var start := 0.0 if departure_times.is_empty() else minf(0.0, departure_times.back() - COUNTER_CLEAR_TIME)
 	departure_times.append(start)
 	departure_sprites.append("")
 	departure_ids.append(selected_id)
-	if not session.release_soul(selected_id):
+	var finished := session.release_soul(selected_id) if session.can_release(selected_id) else session.dismiss_soul(selected_id)
+	if not finished:
 		departure_times.pop_back()
 		departure_sprites.pop_back()
 		departure_ids.pop_back()
