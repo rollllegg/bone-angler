@@ -2,7 +2,6 @@ extends Node
 
 signal state_changed
 signal pull_judged(success: bool, message: String)
-signal bone_recovered
 
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
@@ -21,12 +20,16 @@ enum Judgement { NONE, NORMAL, PERFECT, MISS }
 var phase := Phase.READY
 var session: Session
 var rod := 0
-var hook := 0
+var hook := 1
+var grip := 0
 var bait := 0
 var rods_owned: Array[bool] = [true, false]
-var hooks_owned: Array[bool] = [true, false, false]
-var grip_durability := Data.GRIP_CAPACITY
-var quick_repair_available := true
+var hooks_owned: Array[bool] = [false, true, false]
+var grip_durability: Array[int] = [12, 15, 10]
+var grips_owned: Array[bool] = [true, false, false]
+var shared_wear := 0
+var bait_unlocked: Array[bool] = [true, false, false, false, false, false, false, false]
+var variant_available_day := 0
 var charms_owned := 0
 var bait_stock: Array[int] = []
 var scare := 0.0
@@ -94,30 +97,31 @@ func is_busy() -> bool:
 
 
 func durability() -> int:
-	return grip_durability
+	return grip_durability[grip]
 
 
 func equipped_charms() -> int:
 	return mini(rod + 1, charms_owned)
 
 
-func set_rig(body: int, size_hook: int, selected_bait: int) -> void:
+func set_rig(body: int, size_hook: int, handle: int, selected_bait: int) -> void:
 	if is_busy() or session.paused:
 		return
 	if body < 0 or body >= rods_owned.size() or size_hook < 0 or size_hook >= hooks_owned.size():
 		return
-	if not rods_owned[body] or not hooks_owned[size_hook]:
+	if not rods_owned[body] or not hooks_owned[size_hook] or handle < 0 or handle >= grips_owned.size() or not grips_owned[handle]:
 		return
-	if selected_bait < 0 or selected_bait >= bait_stock.size():
+	if selected_bait < 0 or selected_bait >= bait_stock.size() or not is_bait_available(selected_bait):
 		return
 	rod = body
 	hook = size_hook
+	grip = handle
 	bait = selected_bait
 	state_changed.emit()
 
 
 func buy_bait(index: int, quantity: int) -> bool:
-	if quantity <= 0 or index < 0 or index >= bait_stock.size() or not session.spend(Data.BAIT_PRICES[index] * quantity):
+	if quantity <= 0 or not is_bait_available(index) or not session.spend(Data.BAIT_PRICES[index] * quantity):
 		return false
 	var auto_equipped := bait_stock[bait] == 0 and not is_busy()
 	bait_stock[index] += quantity
@@ -129,17 +133,9 @@ func buy_bait(index: int, quantity: int) -> bool:
 
 func restore_bait_inventory(saved_stock: Array, equipped_bait: int) -> void:
 	bait_stock.fill(0)
-	if saved_stock.is_empty():
-		bait_stock[Data.Bait.DEFAULT] = Data.STARTING_BAIT
-	if Data.LEGACY_BAIT_MAPS.has(saved_stock.size()):
-		var mapping: Array = Data.LEGACY_BAIT_MAPS[saved_stock.size()]
-		for index in saved_stock.size():
-			bait_stock[mapping[index]] += int(saved_stock[index])
-		bait = mapping[clampi(equipped_bait, 0, saved_stock.size() - 1)]
-		return
 	for index in mini(saved_stock.size(), bait_stock.size()):
-		bait_stock[index] = int(saved_stock[index])
-	bait = clampi(equipped_bait, 0, bait_stock.size() - 1)
+		bait_stock[index] = maxi(0, int(saved_stock[index]))
+	bait = equipped_bait if equipped_bait >= 0 and equipped_bait < bait_stock.size() else Data.Bait.DEFAULT
 
 
 func save_pending() -> Dictionary:
@@ -228,8 +224,12 @@ func can_buy_device(index: int) -> bool:
 			return not rods_owned[index]
 		2, 3, 4:
 			return not hooks_owned[index - 2]
-		Data.STEADY_CHARM:
-			return charms_owned < Data.CHARM_LIMIT
+		5:
+			return not grips_owned[0]
+		6:
+			return charms_owned < 1
+		7, 8:
+			return not grips_owned[index - 6]
 	return false
 
 
@@ -241,28 +241,32 @@ func buy_device(index: int) -> bool:
 			rods_owned[index] = true
 		2, 3, 4:
 			hooks_owned[index - 2] = true
-		Data.STEADY_CHARM:
-			charms_owned += 1
+		5:
+			grips_owned[0] = true
+		6:
+			charms_owned = 1
+		7, 8:
+			grips_owned[index - 6] = true
+	_sync_durability()
 	state_changed.emit()
 	return true
 
 
-func can_repair(full: bool) -> bool:
-	return not is_busy() and grip_durability == 0 and (full or quick_repair_available)
+func can_repair(_full: bool = true) -> bool:
+	return not is_busy() and shared_wear > 0
 
 
-func repair(full: bool) -> bool:
-	var cost := Data.GRIP_FULL_REPAIR_COST if full else Data.GRIP_QUICK_REPAIR_COST
-	if not can_repair(full) or not session.spend(cost):
+func repair(points: int) -> bool:
+	if is_busy() or points <= 0 or shared_wear == 0 or not session.spend(Data.REPAIR_PRICE):
 		return false
-	grip_durability = Data.GRIP_CAPACITY if full else Data.GRIP_QUICK_REPAIR_DURABILITY
-	quick_repair_available = full
+	shared_wear = 0
+	_sync_durability()
 	state_changed.emit()
 	return true
 
 
 func can_cast() -> bool:
-	return not session.paused and not is_busy() and durability() > 0 and bait_stock[bait] > 0
+	return not session.paused and not is_busy() and durability() > 0 and bait_stock[bait] > 0 and is_bait_available(bait)
 
 
 func cast() -> bool:
@@ -477,9 +481,8 @@ func true_name_hint() -> String:
 func _bite() -> void:
 	var selected_bait: int = _snapshot.bait
 	var water: int = _snapshot.rod
-	if _rng.randf() >= (0.40 if selected_bait == Data.BONE_BAIT else 0.80):
-		locked = {"bone": true}
-	elif water == 1 and selected_bait == Data.VARIANT_BAIT and _rng.randf() < Data.VARIANT_CHANCE:
+	# Every hooked event is a fish. Only the deep-water variant branch is separate.
+	if water == 1 and selected_bait == Data.VARIANT_BAIT and _rng.randf() < Data.VARIANT_CHANCE:
 		locked = {"species": Data.VARIANT, "size": 3, "cm": _rng.randf_range(30.0001, 38.0)}
 	else:
 		locked = _roll_fish(water, selected_bait)
@@ -489,10 +492,8 @@ func _bite() -> void:
 		state_changed.emit()
 		return
 	bait_stock[selected_bait] -= 1
-	grip_durability -= 1
-	if locked.has("bone"):
-		_land()
-		return
+	shared_wear += 1
+	_sync_durability()
 	if not _at_river:
 		phase = Phase.AWAITING_RETURN
 		remaining = RETURN_LIMIT
@@ -537,10 +538,11 @@ func fish_weights(water: int, selected_bait: int, selected_school: int = 0) -> A
 	return weights
 
 
-func size_weights(selected_hook: int) -> Array[float]:
+func size_weights(selected_hook: int, selected_bait: int = -1) -> Array[float]:
 	var weights: Array[float] = []
 	for size in 3:
-		weights.append(Data.SIZE_WEIGHTS[size] * Data.HOOK_WEIGHTS[selected_hook][size])
+		var multiplier := 3.0 if Data.SIZE_BAITS.get(selected_bait, -1) == size else 1.0
+		weights.append(Data.SIZE_WEIGHTS[size] * Data.HOOK_WEIGHTS[selected_hook][size] * multiplier)
 	return weights
 
 
@@ -548,7 +550,7 @@ func _roll_fish(water: int, selected_bait: int) -> Dictionary:
 	var species := _weighted_index(fish_weights(water, selected_bait))
 	if species < 0:
 		return {}
-	var size := _weighted_index(size_weights(_snapshot.hook))
+	var size := _weighted_index(size_weights(_snapshot.hook, _snapshot.bait))
 	var bounds: Vector2 = Data.FISH[species]["cm"]
 	var from := [bounds.x * 0.5, bounds.x, bounds.y + 0.0001]
 	var to := [bounds.x - 0.0001, bounds.y, bounds.y * 1.5]
@@ -619,25 +621,19 @@ func _judge(judgement: Judgement, reason: String) -> void:
 func _land() -> void:
 	phase = Phase.CAUGHT
 	remaining = 0.0
-	if locked.has("bone"):
-		disturb(10.0)
-		session.record_bone()
-		last_message = "已自动回收遗骨 ×1。"
-		bone_recovered.emit()
-	else:
-		var species: int = locked.species
-		var size: int = locked.size
-		if species == Data.CHAIN:
-			if size == 1:
-				bone_bonus = int(_rng.randf() < 0.60)
-			elif size == 2:
-				bone_bonus = 1 + int(_rng.randf() < 0.50)
-		locked["finger_bones"] = bone_bonus
-		disturb([15.0, 20.0, 25.0, 30.0][size])
-		session.record_catch(locked)
-		last_message = "%s　%s，已入鱼篓。" % [Data.fish_name(species, size), Data.size_label(locked)]
-		if bone_bonus > 0:
-			last_message += " 指骨 +%d" % bone_bonus
+	var species: int = locked.species
+	var size: int = locked.size
+	if species == Data.CHAIN:
+		if size == 1:
+			bone_bonus = int(_rng.randf() < 0.60)
+		elif size == 2:
+			bone_bonus = 1 + int(_rng.randf() < 0.50)
+	locked["finger_bones"] = bone_bonus
+	disturb([15.0, 20.0, 25.0, 30.0][size])
+	session.record_catch(locked)
+	last_message = "%s　%s，已入鱼篓。" % [Data.fish_name(species, size), Data.size_label(locked)]
+	if bone_bonus > 0:
+		last_message += " 指骨 +%d" % bone_bonus
 	state_changed.emit()
 
 
@@ -647,3 +643,57 @@ func _fail(message: String) -> void:
 	disturb(15.0)
 	last_message = message
 	state_changed.emit()
+
+
+func is_bait_available(index: int) -> bool:
+	return index >= 0 and index < bait_unlocked.size() and bait_unlocked[index] and (index != Data.VARIANT_BAIT or session.day >= variant_available_day)
+
+
+func all_gear_unlocked() -> bool:
+	return not rods_owned.has(false) and not hooks_owned.has(false) and not grips_owned.has(false) and charms_owned >= 1
+
+
+func can_unlock_bait(index: int) -> bool:
+	if index < 0 or index >= bait_unlocked.size() or bait_unlocked[index]:
+		return false
+	if index == Data.VARIANT_BAIT:
+		for ordinary in bait_unlocked.size():
+			if ordinary != Data.VARIANT_BAIT and not bait_unlocked[ordinary]:
+				return false
+		return all_gear_unlocked()
+	return true
+
+
+func unlock_bait(index: int) -> bool:
+	if not can_unlock_bait(index) or not session.spend(Data.BAIT_UNLOCK_PRICES[index]):
+		return false
+	bait_unlocked[index] = true
+	if index == Data.VARIANT_BAIT:
+		variant_available_day = session.day + 1
+	state_changed.emit()
+	return true
+
+
+func get_available_species() -> Array:
+	var species: Array = []
+	for index in Data.FISH.size():
+		if index == Data.VARIANT:
+			if rods_owned[1] and is_bait_available(Data.VARIANT_BAIT):
+				species.append(index)
+		elif Data.FISH[index].water[0] > 0 or (rods_owned[1] and Data.FISH[index].water[1] > 0):
+			species.append(index)
+	return species
+
+
+func repair_cost(points: int) -> int:
+	return Data.REPAIR_PRICE if points > 0 and shared_wear > 0 else 0
+
+
+func grip_capacity() -> int:
+	return Data.GRIP_CAPACITIES[grip]
+
+
+func _sync_durability() -> void:
+	# One shared wear counter survives all rod, hook and grip changes.
+	for index in grip_durability.size():
+		grip_durability[index] = maxi(0, int(Data.GRIP_CAPACITIES[index]) - shared_wear)

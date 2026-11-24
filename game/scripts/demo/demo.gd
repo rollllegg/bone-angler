@@ -18,10 +18,8 @@ const Session := preload("res://scripts/systems/playtest_session.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const BASE_SIZE := Vector2(1620, 972)
 const STORY_LAB_ARG := "--story-lab"
-const LEGACY_DUPLICATE_GRIP_PRICE := 30
 const RIVER_TAB_TEXT := "Q 河岸"
 const RIVER_ALERT_COLOR := Color("ff5353")
-const BONE_NOTICE_DURATION := 4.0
 const FONT := preload("res://assets/fonts/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf.woff2")
 const FONT_FALLBACK := preload("res://assets/fonts/NotoSansSC.ttf")
 const CATCH_BOX_SIZES := [Vector2(184, 112), Vector2(236, 144), Vector2(288, 176), Vector2(310, 184)]
@@ -57,6 +55,8 @@ var current_location: String = "River"
 var auto_pause_on_focus_loss: bool = true
 var persist_save: bool = true
 var save_directory := "user://"
+var _run_id := "%d-%d-%d" % [int(Time.get_unix_time_from_system() * 1000), OS.get_process_id(), Time.get_ticks_usec()]
+var _restoring_save := false
 var start_button: Button
 var continue_button: Button
 var settings_button: Button
@@ -86,7 +86,6 @@ var _river_bite_alert: Label
 var _river_notice: Panel
 var _river_notice_title: Label
 var _river_notice_detail: Label
-var _bone_notice_remaining := 0.0
 var _shop_button: Button
 var _alchemy_button: Button
 var _market_button: Button
@@ -164,6 +163,10 @@ func _ready() -> void:
 	qte.name = "PlaytestFishing"
 	qte.session = session
 	add_child(qte)
+	session.available_species = qte.get_available_species
+	session.day_finished.connect(_on_day_finished)
+	session.state_changed.connect(_checkpoint_progress)
+	qte.state_changed.connect(_checkpoint_progress)
 
 	var river_display := _pixel_display(River)
 	river = river_display["world"]
@@ -217,7 +220,6 @@ func _ready() -> void:
 	shop.presentation_changed.connect(_refresh_shared)
 	qte.state_changed.connect(_refresh_river)
 	qte.state_changed.connect(_refresh_river_notice)
-	qte.bone_recovered.connect(_show_bone_notice)
 	qte.state_changed.connect(_refresh_economy)
 	resized.connect(_resize)
 	_resize()
@@ -581,9 +583,10 @@ func _start_story_lab() -> void:
 				soul.stats = session.requirements[0]
 				session.release_soul(int(soul.id))
 	session.coins = 200
+	session.essences.fill(0)
 	session.potions.clear()
 	session._add_potion("lab", "暖心药", Vector3i(0, 4, 0), -1, 0)
-	session._add_potion("lab", "极识药", Vector3i(10, 0, -4), -1, 0)
+	session._add_potion("lab", "极识药", Vector3i(8, 0, -2), -1, 0)
 	session._add_potion("lab", "零值药", Vector3i(1, 0, -1), -1, 0)
 	_show_location("Shop")
 	for soul in session.souls:
@@ -652,7 +655,7 @@ func _save_to_slot(slot: int) -> void:
 	_pause_buttons[2].disabled = false
 
 
-func save_progress(slot: int) -> bool:
+func save_progress(slot: int, checkpoint_only: bool = false) -> bool:
 	if not persist_save or not started or slot < 0 or slot >= SaveSlots.COUNT:
 		return false
 	var saved_potions: Array = []
@@ -663,29 +666,20 @@ func save_progress(slot: int) -> bool:
 			"attribute": int(p.attribute), "adjustment": int(p.adjustment),
 		})
 	var saved_souls: Array = []
-	for s in session.souls:
-		var entry := {
-			"id": int(s.id), "case_id": int(s.case_id), "name": str(s.name),
-			"stats": [s.stats.x, s.stats.y, s.stats.z],
-			"before": [s.before.x, s.before.y, s.before.z],
-			"served": bool(s.served), "doses_used": Session.doses_used(s), "fee": int(s.fee),
-		}
-		if s.has("story_case"):
-			entry["story_case"] = str(s.story_case)
-			entry["story_state"] = s.get("story_state", {})
-			entry["story_outcome"] = str(s.get("story_outcome", ""))
-		saved_souls.append(entry)
+	for soul in session.souls:
+		saved_souls.append(Session.save_soul(soul))
 	var payload := {
+		"run_id": _run_id, "saved_at_msec": int(Time.get_unix_time_from_system() * 1000),
 		"saved_at": Time.get_datetime_string_from_system(false, true).substr(0, 16),
+		"rules_version": Data.RULES_VERSION,
 		"location": current_location,
 		"coins": session.coins,
 		"released_count": session.released_count,
+		"failed_count": session.failed_count,
 		"day_schedule": session.save_day(),
 		"arrived": session._arrived,
 		"next_item_id": session._next_item_id,
 		"spawn_remaining": session.spawn_remaining,
-		"concentrate": session.concentrate,
-		"recovered_bones": session.recovered_bones,
 		"finger_bones": session.finger_bones,
 		"first_services": session._first_services,
 		"catches": session.catches,
@@ -697,8 +691,9 @@ func save_progress(slot: int) -> bool:
 		"bait": qte.bait,
 		"rods_owned": qte.rods_owned,
 		"hooks_owned": qte.hooks_owned,
-		"grip_durability": qte.grip_durability,
-		"quick_repair_available": qte.quick_repair_available,
+		"grip": qte.grip, "shared_wear": qte.shared_wear,
+		"grips_owned": qte.grips_owned, "bait_unlocked": qte.bait_unlocked,
+		"variant_available_day": qte.variant_available_day,
 		"charms_owned": qte.charms_owned,
 		"bait_stock": qte.bait_stock,
 		"story": session.story_state.snapshot(),
@@ -712,15 +707,29 @@ func save_progress(slot: int) -> bool:
 		"casting": river.casting,
 		"cast_elapsed": river.cast_elapsed,
 	}
-	return SaveSlots.write(save_directory, slot, payload)
+	if checkpoint_only:
+		return SaveSlots.write_checkpoint(save_directory, _run_id, payload)
+	return SaveSlots.write(save_directory, slot, payload) and SaveSlots.write_checkpoint(save_directory, _run_id, payload)
+
+
+func _checkpoint_progress() -> void:
+	if started and persist_save and not _restoring_save:
+		save_progress(0, true)
 
 
 func load_progress(slot: int) -> bool:
 	if not persist_save or slot < 0 or slot >= SaveSlots.COUNT:
 		return false
 	var data := SaveSlots.read(SaveSlots.existing_path(save_directory, slot))
-	if data.is_empty():
+	if data.is_empty() or int(data.get("rules_version", 0)) not in [14, Data.RULES_VERSION]:
 		return false
+	# A manual slot from this run cannot rewind committed stock, medication or payouts.
+	var committed := SaveSlots.read_checkpoint(save_directory, str(data.get("run_id", "")))
+	if not committed.is_empty() and int(committed.get("saved_at_msec", 0)) >= int(data.get("saved_at_msec", 0)):
+		data = committed
+	var migrating := int(data.rules_version) == 14
+	_restoring_save = true
+	_run_id = str(data.get("run_id", _run_id))
 	_save_menu.dismiss()
 	_close_settings()
 	_close_rig_popup()
@@ -733,15 +742,21 @@ func load_progress(slot: int) -> bool:
 	shop.departure_times.clear()
 	shop.fed_flash = 0.0
 	_selected_dose = null
-	_bone_notice_remaining = 0.0
 	session.coins = int(data.get("coins", Data.STARTING_COINS))
 	session.released_count = int(data.get("released_count", 0))
-	session.rejected_count = int(data.get("rejected_count", data.get("failed_count", 0)))
+	session.failed_count = int(data.get("failed_count", 0))
+	if migrating:
+		var old_unlocks: Array = data.get("bait_unlocked", [])
+		var old_stock: Array = data.get("bait_stock", [])
+		if old_unlocks.size() > 8 and bool(old_unlocks[8]):
+			session.coins += 80
+		if old_stock.size() > 8:
+			session.coins += maxi(0, int(old_stock[8]))
+	session.rejected_count = int(data.get("rejected_count", 0))
 	session._arrived = int(data.get("arrived", 0))
 	session._next_item_id = int(data.get("next_item_id", 1))
 	session.spawn_remaining = float(data.get("spawn_remaining", Data.ARRIVAL_MIN))
-	session.concentrate = int(data.get("concentrate", 0))
-	session.recovered_bones = int(data.get("recovered_bones", 0))
+	session.concentrate = 0
 	session.finger_bones = int(data.get("finger_bones", 0))
 	session.restore_story(data.get("story", {}))
 	session._first_services = {}
@@ -759,38 +774,17 @@ func load_progress(slot: int) -> bool:
 	for i in session.essences.size():
 		session.essences[i] = int(ess[i]) if i < ess.size() else 0
 	session.potions.clear()
-	for p in data.get("potions", []):
-		if p is Dictionary:
-			var e: Array = p.get("effect", [0, 0, 0])
-			session.potions.append({
-				"id": int(p.get("id", 0)), "kind": str(p.get("kind", "")), "name": str(p.get("name", "")),
-				"effect": Vector3i(int(e[0]), int(e[1]), int(e[2])),
-				"attribute": int(p.get("attribute", -1)), "adjustment": int(p.get("adjustment", 0)),
-			})
+	for potion in data.get("potions", []):
+		var recipe := Data.recipe_by_id(str(potion.get("kind", "")))
+		if recipe.is_empty():
+			continue
+		session.potions.append({"id": int(potion.id), "kind": recipe.id, "name": recipe.name,
+			"effect": recipe.effect, "attribute": -1, "adjustment": 0, "contains_variant": recipe.contains_variant})
 	session.souls.clear()
-	var fees_to_recalculate: Array[Dictionary] = []
-	var from_v15 := int(data.get("rules_version", 0)) == 15
-	for s in data.get("souls", []):
-		if s is Dictionary:
-			var st: Array = s.get("stats", [8, 8, 8])
-			var bf: Array = s.get("before", st)
-			var soul := {
-				"id": int(s.get("id", 0)), "case_id": int(s.get("case_id", 0)), "name": str(s.get("name", "")),
-				"stats": Vector3i(int(st[0]), int(st[1]), int(st[2])),
-				"before": Vector3i(int(bf[0]), int(bf[1]), int(bf[2])),
-				"served": bool(s.get("served", false)), "doses_used": Session.doses_used(s), "fee": int(s.get("fee", 40)),
-			}
-			if str(s.get("story_case", "")) != "":
-				soul["story_case"] = str(s.story_case)
-				soul["story_state"] = s.get("story_state", {})
-				soul["story_outcome"] = str(s.get("story_outcome", ""))
-			elif from_v15 or not s.has("doses_used") or not s.has("fee"):
-				fees_to_recalculate.append(soul)
-			session.souls.append(soul)
+	for soul in data.get("souls", []):
+		session.souls.append(Session.restore_soul(soul))
 	var schedule: Dictionary = data.get("day_schedule", {})
 	session.restore_day(schedule)
-	for soul in fees_to_recalculate:
-		soul.fee = session.service_fee(soul.before)
 	session.story_state.run["run.day"] = session.day
 	var saved_report = data.get("day_report", {})
 	session.day_story_entries.clear()
@@ -801,34 +795,28 @@ func load_progress(slot: int) -> bool:
 		var pending = saved_report.get("pending", {})
 		session.pending_day_report = pending if pending is Dictionary else {}
 		session.awaiting_day_report = bool(saved_report.get("awaiting", false))
-	if from_v15 and schedule.get("awaiting_next_day", false) and session.day < Session.DAY_COUNT and session.souls.is_empty() and not session.awaiting_day_report:
-		session._open_day(session.day + 1)
-		session.spawn_remaining = Data.ARRIVAL_MIN
 	session.story_state.run["run.released"] = session.released_count
 	session.story_state.run["run.rejected"] = session.rejected_count
 	var ro: Array = data.get("rods_owned", [true, false])
 	for i in qte.rods_owned.size():
 		qte.rods_owned[i] = bool(ro[i]) if i < ro.size() else i == 0
-	var ho: Array = data.get("hooks_owned", [true, false, false])
+	var ho: Array = data.get("hooks_owned", [false, true, false])
 	for i in qte.hooks_owned.size():
-		qte.hooks_owned[i] = bool(ho[i]) if i < ho.size() else i == 0
+		qte.hooks_owned[i] = bool(ho[i]) if i < ho.size() else i == 1
 	_restore_grip(data)
 	qte.charms_owned = clampi(int(data.get("charms_owned", 0)), 0, Data.CHARM_LIMIT)
-	var stock: Array = data.get("bait_stock", [])
-	var equipped_bait := int(data.get("bait", 0))
-	if from_v15 and stock.size() == 8:
-		# The three retired size baits occupy the old attribute-bait slots.
-		for index in range(4, 7):
-			stock[0] = int(stock[0]) + int(stock[index])
-			stock[index] = 0
-		if equipped_bait in [4, 5, 6]:
-			equipped_bait = Data.Bait.DEFAULT
-	qte.restore_bait_inventory(stock, equipped_bait)
+	var unlocked: Array = data.get("bait_unlocked", [true])
+	for index in qte.bait_unlocked.size():
+		qte.bait_unlocked[index] = bool(unlocked[index]) if index < unlocked.size() else index == 0
+	qte.variant_available_day = int(data.get("variant_available_day", 0))
+	qte.restore_bait_inventory(data.get("bait_stock", []), int(data.get("bait", 0)))
 	qte.rod = clampi(int(data.get("rod", 0)), 0, qte.rods_owned.size() - 1)
-	qte.hook = clampi(int(data.get("hook", 0)), 0, qte.hooks_owned.size() - 1)
-	var saved_fishing: Dictionary = data.get("fishing", {})
-	if from_v15 and saved_fishing.get("snapshot") is Dictionary:
-		saved_fishing.snapshot.bait = qte.bait
+	qte.hook = clampi(int(data.get("hook", 1)), 0, qte.hooks_owned.size() - 1)
+	var saved_fishing: Dictionary = data.get("fishing", {}).duplicate(true)
+	if migrating and saved_fishing.get("locked", {}).has("bone"):
+		saved_fishing = {} # A retired remains event has no catch in v1.5.
+	if saved_fishing.get("snapshot") is Dictionary and int(saved_fishing.snapshot.get("bait", 0)) == 8:
+		saved_fishing.snapshot.bait = Data.Bait.DEFAULT
 	qte.restore_pending(saved_fishing)
 	river.casting = bool(data.get("casting", false)) and not qte.is_busy()
 	river.cast_elapsed = float(data.get("cast_elapsed", 0.0))
@@ -842,21 +830,19 @@ func load_progress(slot: int) -> bool:
 	_show_location(current_location)
 	session.state_changed.emit()
 	qte.state_changed.emit()
+	_restoring_save = false
+	if migrating and not save_progress(slot):
+		return false
 	return true
 
 
 func _restore_grip(data: Dictionary) -> void:
-	var remaining := Data.GRIP_CAPACITY - int(data.get("shared_wear", 0))
-	var saved: Variant = data.get("grip_durability", remaining)
-	qte.quick_repair_available = bool(data.get("quick_repair_available", true))
-	if saved is Array:
-		if saved.is_empty():
-			saved = Data.GRIP_CAPACITY
-		else:
-			var equipped := clampi(int(data.get("grip", 0)), 0, saved.size() - 1)
-			session.coins += (saved.size() - 1) * LEGACY_DUPLICATE_GRIP_PRICE
-			saved = saved[equipped]
-	qte.grip_durability = clampi(int(saved), 0, Data.GRIP_CAPACITY)
+	var owned: Array = data.get("grips_owned", [true, false, false])
+	for index in qte.grips_owned.size():
+		qte.grips_owned[index] = bool(owned[index]) if index < owned.size() else index == 0
+	qte.grip = clampi(int(data.get("grip", 0)), 0, qte.grips_owned.size() - 1)
+	qte.shared_wear = maxi(0, int(data.get("shared_wear", 0)))
+	qte._sync_durability()
 
 
 func _show_location(value: String) -> void:
@@ -938,11 +924,11 @@ func _open_rig_popup(slot: int) -> void:
 	for child in _rig_popup.get_children():
 		if child is Button and child.text == "×":
 			child.position.x = popup_w - 64.0
-	var titles := ["更换竿体", "更换鱼钩", "握柄状态", "选择鱼饵"]
+	var titles := ["更换竿体", "更换鱼钩", "更换握柄", "选择鱼饵"]
 	_rig_popup_icon.texture = UI.RIG_ICONS[slot]
 	_rig_popup_title.text = titles[slot]
 	_populate_rig_popup(slot)
-	_rig_option_cursor = [qte.rod, qte.hook, 0, qte.bait][slot]
+	_rig_option_cursor = [qte.rod, qte.hook, qte.grip, qte.bait][slot]
 	_highlight_rig_option()
 	_refresh_river()
 
@@ -967,24 +953,29 @@ func _populate_rig_popup(slot: int) -> void:
 		for i in Data.RODS.size():
 			var owned: bool = qte.rods_owned[i]
 			_add_rig_option(UI.ICON_ROD, Data.RODS[i], Data.ROD_DESCS[i], "已装备" if qte.rod == i else ("未拥有" if not owned else "可装配"), qte.rod == i, not owned, Vector2(342, 68), func() -> void:
-				qte.set_rig(i, qte.hook, qte.bait)
+				qte.set_rig(i, qte.hook, qte.grip, qte.bait)
 				_close_rig_popup()
 			)
 	elif slot == 1:
 		for i in Data.HOOKS.size():
 			var owned: bool = qte.hooks_owned[i]
 			_add_rig_option(UI.ICON_HOOK, Data.HOOKS[i], Data.HOOK_DESCS[i], "已装备" if qte.hook == i else ("未拥有" if not owned else "可装配"), qte.hook == i, not owned, Vector2(342, 68), func() -> void:
-				qte.set_rig(qte.rod, i, qte.bait)
+				qte.set_rig(qte.rod, i, qte.grip, qte.bait)
 				_close_rig_popup()
 			)
 	elif slot == 2:
-		var status := "耐久 %d / %d · 归零后可到市场维修" % [qte.durability(), Data.GRIP_CAPACITY]
-		_add_rig_option(UI.ICON_GRIP, "基础握柄", status, "已装备", true, false, Vector2(342, 68), _close_rig_popup)
+		for i in Data.GRIP_NAMES.size():
+			var owned: bool = qte.grips_owned[i]
+			var status := "共享耐久 %d / %d" % [qte.grip_durability[i], Data.GRIP_CAPACITIES[i]]
+			_add_rig_option(UI.ICON_GRIP, Data.GRIP_NAMES[i], status, "已装备" if qte.grip == i else ("可装配" if owned else "未解锁"), qte.grip == i, not owned, Vector2(342, 68), func() -> void:
+				qte.set_rig(qte.rod, qte.hook, i, qte.bait)
+				_close_rig_popup()
+			)
 	elif slot == 3:
 		for i in Data.BAITS.size():
 			var count: int = qte.bait_stock[i]
-			_add_rig_option(UI.ICON_BAIT, Data.BAITS[i], Data.bait_hint(i), "×%d" % count, qte.bait == i, false, Vector2(228, 74), func() -> void:
-				qte.set_rig(qte.rod, qte.hook, i)
+			_add_rig_option(UI.ICON_BAIT, Data.BAITS[i], Data.bait_hint(i), "×%d" % count if qte.is_bait_available(i) else "未开放", qte.bait == i, not qte.is_bait_available(i), Vector2(228, 74), func() -> void:
+				qte.set_rig(qte.rod, qte.hook, qte.grip, i)
 				_close_rig_popup()
 			)
 
@@ -1268,20 +1259,15 @@ func _refresh_summary() -> void:
 	_summary.text = "第 %d 天　鱼篓 %d　等候 %d　放行 %d / %d　渡魂币 %d" % [session.day, session.catches.size(), session.souls.size(), session.released_count, session.total_guests(), session.coins]
 
 
-func _show_bone_notice() -> void:
-	_bone_notice_remaining = BONE_NOTICE_DURATION
-	_refresh_river_notice()
-
-
 func _refresh_river_notice() -> void:
 	var fish_hooked := started and current_location != "River" and qte.phase == Fishing.Phase.AWAITING_RETURN
 	_river_bite_alert.visible = fish_hooked
 	_river_button.text = "" if fish_hooked else RIVER_TAB_TEXT
 	_river_button.accessibility_name = "有鱼上钩了，返回河岸" if fish_hooked else ""
-	_river_notice.visible = started and (fish_hooked or _bone_notice_remaining > 0.0)
+	_river_notice.visible = fish_hooked
 	if _river_notice.visible:
-		_river_notice_title.text = "有鱼上钩了！" if fish_hooked else "钓到了遗骨！"
-		_river_notice_detail.text = "按 Q 返回河岸" if fish_hooked else "已回收遗骨 ×1"
+		_river_notice_title.text = "有鱼上钩了！"
+		_river_notice_detail.text = "按 Q 返回河岸"
 
 
 func _refresh_economy() -> void:
@@ -1329,27 +1315,23 @@ func _refresh_shared() -> void:
 	else:
 		shop.clear_story_sprite()
 		var ready := session.can_release(shop.selected_id)
-		_guest_state.text = "达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂")
+		_guest_state.text = ("完美救赎" if session.is_perfect(shop.selected_id) else "达到要求 · 可以放行") if ready else ("窗口空闲" if selected.is_empty() else ("用药已尽 · 未达标" if selected.served else "等待调配药剂"))
 		_guest_state.add_theme_color_override("font_color", UI.GOOD if ready else UI.GOLD)
-		_release_button.disabled = session.paused or not ready
-		_release_button.text = "Shift  放行"
-
+		_release_button.disabled = session.paused or selected.is_empty() or (not ready and not selected.get("served", false))
+		_release_button.text = "Shift  送离（无报酬）" if not selected.is_empty() and selected.served and not ready else "Shift  放行"
 		_service_fee.text = ""
 		if not selected.is_empty():
-			_service_fee.text = "基础服务费 %d 枚" % selected.fee
-			var bonus := session.service_bonus(selected)
-			if session.first_service(selected):
-				_service_fee.text += "　首次 +%d 枚" % bonus
-			if session.has_commission(selected):
-				_service_fee.text += "\n个人委托：意志达到 %d　+%d 枚" % [Session.BOATMAN_COMMISSION_WILL, bonus]
-			var dose_count := Session.doses_used(selected)
-			if ready and dose_count > 1:
-				_service_fee.text = "已用 %d 剂　放行奖金 %d 枚" % [dose_count, session.release_reward(selected, selected.stats, dose_count)]
-			elif dose_count > 0 and not ready:
-				_service_fee.text += "\n已用 %d 剂　再次用药奖金减半" % dose_count
+			_service_fee.text = "普通100　完美130　用药%d/1" % Session.doses_used(selected)
+			if selected.get("perfect_target") != null:
+				var target: Vector3i = selected.perfect_target
+				_service_fee.text += "\n完美目标：%d / %d / %d" % [target.x, target.y, target.z]
+			else:
+				_service_fee.text += "\n含巨刺复方：合规即完美"
+			if ready:
+				_service_fee.text += "\n本次报酬：%d" % session.reward_for(shop.selected_id)
 
 	if not shop.departure_times.is_empty():
-		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome in ["reject", "leave"] else "放行成功　渡魂币 +%d" % session.last_payout
+		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome in ["reject", "leave", "failed"] else "放行成功　渡魂币 +%d" % session.last_payout
 	else:
 		_payout_notice.text = ""
 	if session.is_complete():
@@ -1357,7 +1339,7 @@ func _refresh_shared() -> void:
 		_dialog.text = "\n".join(ending_lines) if not ending_lines.is_empty() else "五天的灵魂都已放行。"
 	elif story == null:
 		if selected.is_empty():
-			_dialog.text = "还没有来客，可以先去冥河备料。"
+			_dialog.text = "当班结束，前往夜市补给，按F开始次日。" if session.awaiting_next_day else "还没有来客，可以先去冥河备料。"
 		elif selected.served:
 			_dialog.text = "饮药后感觉变化明显：\n%s" % Data.effect_text(selected.stats - selected.before)
 		else:
@@ -1478,15 +1460,21 @@ func _refresh_dose() -> void:
 	if _selected_dose != null:
 		preview = session.preview(shop.selected_id, _selected_dose[0], _selected_dose[1])
 	soul_hud.set_state(selected, preview, session.day, session.requirements)
-	_serve_button.disabled = session.paused or preview.is_empty()
-	if preview.is_empty():
-		_dose_preview.text = "按 W / S 选择药剂，预览属性变化"
-		_dose_preview.add_theme_color_override("font_color", UI.MUTED)
+	_serve_button.disabled = session.paused or preview.is_empty() or not preview.get("available", false)
+	if not selected.is_empty() and selected.get("served", false):
+		_dose_preview.text = "用药1/1，不能追加第二剂"
+	elif preview.is_empty():
+		_dose_preview.text = "W / S选药，先预览再用唯一一剂"
+	elif not preview.in_bounds:
+		_dose_preview.text = "数值超出0—10，无法用药"
 	else:
 		var after: Vector3i = preview.after
-		var ok := session.is_eligible(after)
-		_dose_preview.text = "预览饮后：%d / %d / %d　%s" % [after.x, after.y, after.z, "放行 %d 枚" % int(preview.reward) if ok else "仍需继续调整"]
-		_dose_preview.add_theme_color_override("font_color", UI.GOOD if ok else UI.GOLD)
+		var result := ("完美130" if preview.perfect else "普通100") if preview.eligible else "不合规，无法补药"
+		_dose_preview.text = "%d / %d / %d　%s" % [after.x, after.y, after.z, result]
+		if preview.contains_variant:
+			_dose_preview.text += "\n含巨刺复方：放行合规即完美"
+	_dose_preview.add_theme_color_override("font_color", UI.GOOD if preview.get("eligible", false) else UI.GOLD)
+
 
 
 func _serve_dose() -> void:
@@ -1549,13 +1537,13 @@ func _refresh_rig_slots() -> void:
 	var values := [
 		Data.RODS[qte.rod],
 		Data.HOOKS[qte.hook],
-		"基础握柄",
+		Data.GRIP_NAMES[qte.grip],
 		Data.BAITS[qte.bait],
 	]
 	var badges := [
 		"深水" if qte.rod == 1 else "浅水",
 		"偏大" if qte.hook == 2 else ("正常" if qte.hook == 1 else "偏小"),
-		"%d/%d" % [qte.durability(), Data.GRIP_CAPACITY],
+		"%d/%d" % [qte.durability(), qte.grip_capacity()],
 		"×%d" % qte.bait_stock[qte.bait],
 	]
 	for i in 4:
@@ -1574,15 +1562,15 @@ func _draw_rig_durability_bar() -> void:
 	var rect := Rect2(Vector2.ZERO, _rig_durability_bar.size)
 	_rig_durability_bar.draw_rect(rect.grow(2.0), UI.INK)
 	_rig_durability_bar.draw_rect(rect, Color("29202e"))
-	var ratio := clampf(float(qte.durability()) / float(Data.GRIP_CAPACITY), 0.0, 1.0)
+	var ratio := clampf(float(qte.durability()) / float(qte.grip_capacity()), 0.0, 1.0)
 	var col := UI.GOOD if ratio > 0.4 else UI.WARN
 	var w := rect.size.x * ratio
 	if w > 0.5:
 		_rig_durability_bar.draw_rect(Rect2(0, 0, w, rect.size.y), col)
 		_rig_durability_bar.draw_rect(Rect2(0, 2, w, 4), col.lightened(0.35))
 		_rig_durability_bar.draw_rect(Rect2(0, rect.size.y - 4, w, 4), col.darkened(0.28))
-	for i in range(1, Data.GRIP_CAPACITY):
-		var tx := rect.size.x * (float(i) / float(Data.GRIP_CAPACITY))
+	for i in range(1, qte.grip_capacity()):
+		var tx := rect.size.x * (float(i) / float(qte.grip_capacity()))
 		_rig_durability_bar.draw_line(Vector2(tx, 0), Vector2(tx, rect.size.y), Color(UI.INK, 0.55), 2.0)
 
 
@@ -1625,7 +1613,7 @@ func _refresh_river() -> void:
 	_retract_button.disabled = not busy or session.paused
 
 	_refresh_rig_slots()
-	_rig_status.text = "握柄耐久 %d / %d　　鱼饵 ×%d" % [qte.durability(), Data.GRIP_CAPACITY, qte.bait_stock[qte.bait]]
+	_rig_status.text = "握柄耐久 %d / %d　　鱼饵 ×%d" % [qte.durability(), qte.grip_capacity(), qte.bait_stock[qte.bait]]
 	_rig_hint.text = "稳魂指骨自动装配 %d / %d" % [qte.equipped_charms(), qte.rod + 1]
 	_rig_hint.add_theme_color_override("font_color", UI.MUTED)
 	if qte.bait == Data.VARIANT_BAIT and qte.rod == 0:
@@ -1672,7 +1660,7 @@ func _refresh_river() -> void:
 			_river_hint.text = "依次输入出现的字母，输错后从头开始。"
 		Fishing.Phase.CAUGHT:
 			_river_status.text = qte.last_message
-			_river_hint.text = "空格抛竿，继续钓鱼。" if qte.locked.has("bone") else "按 R 前往炼药台查看鱼获并提炼，或再抛一竿。"
+			_river_hint.text = "按 R 前往炼药台查看鱼获并提炼，或再抛一竿。"
 		Fishing.Phase.ESCAPED:
 			_river_status.text = qte.last_message
 			_river_hint.text = "可以再次抛竿。"
@@ -1690,9 +1678,9 @@ func _refresh_river() -> void:
 func _process(delta: float) -> void:
 	if not started:
 		return
-	if _bone_notice_remaining > 0.0 and not session.paused:
-		_bone_notice_remaining = maxf(_bone_notice_remaining - delta, 0.0)
-		if _bone_notice_remaining == 0.0:
-			_refresh_river_notice()
 	_refresh_river()
 	_arrival.text = "本班来客已全部到达" if not session.has_more_arrivals() else "%.0f 秒后有新来客" % ceilf(session.spawn_remaining)
+
+
+func _on_day_finished() -> void:
+	_show_location("Market")

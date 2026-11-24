@@ -28,7 +28,7 @@ func _run() -> void:
 	_check(demo.session.released_count == 10, "story lab skips ordinary reception on both days")
 	_check(demo.session.potions.size() == 3, "story lab stocks three test potions")
 	_check(demo.session.potions[0].effect == Vector3i(0, 4, 0), "story lab hot potion")
-	_check(demo.session.potions[1].effect == Vector3i(10, 0, -4), "story lab clear potion")
+	_check(demo.session.potions[1].effect == Vector3i(8, 0, -2), "story lab clear potion")
 	_check(demo.session.potions[2].effect == Vector3i(1, 0, -1), "story lab zero potion")
 	_check(not demo.story_panel.visible, "story lab uses the ordinary reception layout")
 	_check(demo.shop.selected_id == 6, "story lab selects Wukong first")
