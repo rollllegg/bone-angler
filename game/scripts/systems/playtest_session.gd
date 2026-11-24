@@ -103,7 +103,7 @@ func is_complete() -> bool:
 
 func total_guests() -> int:
 	var remaining := souls.size() + _day_guests.size() - _day_arrived + (DAY_COUNT - day) * GUESTS_PER_DAY
-	return mini(Data.SOULS.size(), released_count + rejected_count + remaining)
+	return mini(DAY_COUNT * GUESTS_PER_DAY, released_count + rejected_count + remaining)
 
 
 func advance(delta: float) -> void:
@@ -114,6 +114,8 @@ func advance(delta: float) -> void:
 	while spawn_remaining <= 0.0 and has_more_arrivals():
 		var slot := _day_arrived
 		var guest := _day_guests[slot]
+		if day == 3 and slot == GUESTS_PER_DAY - 1 and story_state != null and bool(story_state.world.get("world.orpheus_lost", false)):
+			guest = Vector2i(Data.DROWNED_LYRE_PLAYER, -1)
 		var entry: Array = Data.SOULS[guest.x]
 		var stats: Vector3i = entry[1]
 		if guest.y >= 0:

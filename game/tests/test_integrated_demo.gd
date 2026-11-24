@@ -7,6 +7,7 @@ const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 const River := preload("res://scripts/demo/pixel_river.gd")
 const TitleMenu := preload("res://scripts/demo/title_menu.gd")
+const Audio := preload("res://scripts/demo/demo_audio.gd")
 
 var demo
 var checks := 0
@@ -89,6 +90,7 @@ func _run() -> void:
 	_check(arrival >= Data.ARRIVAL_MIN and arrival <= Data.ARRIVAL_MAX, "The first arrival keeps the demo interval")
 	_check(demo._rig.size() == 4, "Only rod, hook, grip and bait can be selected at the river")
 	_check(demo._stage.find_children("*", "OptionButton", true, false).is_empty(), "No native OptionButton dropdowns remain in the redesigned UI")
+	_check_location_navigation()
 	await _check_rig_picker()
 	await _check_ferry_crossing()
 	_key(KEY_SPACE, true)
@@ -111,10 +113,16 @@ func _run() -> void:
 	_key(KEY_P)
 	demo.river.advance_cast(10.0)
 	_check(demo.river.get_cast_frame() == 1 and demo._pause_banner.visible and demo._pause_banner.get_rect().end.y < 96.0, "Manual pause suspends casting and fits within the top bar")
+	_check(demo._pause_button.icon == demo.RESUME_ICON and demo._pause_button.text.is_empty(), "The paused HUD shows the pixel play icon")
+	_key(KEY_Q)
+	_key(KEY_E)
+	_check(demo.current_location == "River", "Q and E leave the location unchanged while paused")
 	await _capture("02b-manual-pause")
 	_click(demo._pause_button)
 	_check(not demo.session.paused and not demo._pause_banner.visible, "The top-bar button resumes manual pause")
-	_key(KEY_P)
+	_check(demo._pause_button.icon == demo.PAUSE_ICON and demo._pause_button.text.is_empty(), "The running HUD shows the pixel pause icon")
+	_click(demo._pause_button)
+	_check(demo.session.paused, "Clicking the running icon pauses gameplay")
 	_key(KEY_SPACE)
 	_check(not demo.session.paused and demo.river.casting, "Space resumes without another cast")
 	demo.river.advance_cast(0.25)
@@ -130,6 +138,7 @@ func _run() -> void:
 	_check(is_equal_approx(fishing.wait_extension, 2.0) and fishing.remaining <= 10.0, "Scare adds at most two seconds")
 	_key(KEY_X)
 	_check(fishing.phase == Fishing.Phase.READY and fishing.durability() == 10 and fishing.bait_stock[0] == Data.STARTING_BAIT, "Early retrieval preserves resources")
+	_check(not demo._audio._players.has(Audio.Cue.REEL), "Early retrieval does not play the pull QTE cue")
 	fishing.scare = 0.0
 	await _capture("02-river")
 	_check_attribute_baits(fishing)
@@ -142,34 +151,47 @@ func _run() -> void:
 	_check(is_equal_approx(fishing.remaining, wait_before - 0.5) and not demo._river_notice.visible, "Waiting keeps ticking at reception and the alert only appears on a bite")
 	_hook_fish(fishing, 1, 1)
 	_check(fishing.phase == Fishing.Phase.AWAITING_RETURN and is_equal_approx(fishing.remaining, 3.0), "A bite away from the river starts a three-second return window")
-	_check(demo._river_bite_alert.visible and demo._river_bite_alert.text == "!" and demo._river_button.text.is_empty(), "A red exclamation mark replaces the Q in the river tab")
+	_check(not demo._audio._players.has(Audio.Cue.REEL), "An off-river bite does not play the reel cue")
+	_check(demo._river_bite_alert.visible and demo._river_bite_alert.text == "!" and demo._river_button.text == "河岸", "A red exclamation mark appears next to the river tab label")
 	_check(demo._river_notice.visible and demo._river_notice_title.text == "有鱼上钩了！" and demo._river_notice_detail.text.contains("Q"), "Reception shows the left-side bite bubble and the return shortcut")
 	await _capture("02c-bite-alert")
-	_key(KEY_R)
+	_key(KEY_E)
 	fishing._process(2.9)
 	_check(fishing.phase == Fishing.Phase.AWAITING_RETURN and demo._river_notice.visible, "Switching between other locations keeps the same return window and alert")
 	_click(demo._river_button)
-	_check(demo.current_location == "River" and not demo._river_bite_alert.visible and demo._river_button.text == "Q 河岸", "Clicking the alert returns to the river and restores Q")
+	_check(demo.current_location == "River" and not demo._river_bite_alert.visible, "Clicking the alert tab returns to the river and clears the alert")
 	_check(not demo._river_notice.visible, "Returning to the river dismisses the bite bubble")
 	_check(fishing.phase == Fishing.Phase.PREPARING and fishing.durability() == 9 and fishing.bait_stock[0] == Data.STARTING_BAIT - 1, "A locked fish spends one bait and one shared durability")
+	_check(not demo._audio._players.has(Audio.Cue.REEL), "Entering the pull QTE waits for player input before playing the reel cue")
 	_check(demo._river_status.text == "有鱼上钩了！" and not demo._river_status.text.contains("冥河鲫"), "Hooked status box does not spoil the fish species before landing")
 	fishing.advance(Data.PREPARATION)
 	_check(fishing.target == 4 and is_equal_approx(fishing.get_capture_time(), 20.0), "The normal carp uses the easy target and full first-round time")
 	fishing.advance(fishing.get_target_time())
 	demo.river._process(fishing.get_target_time())
 	_check(demo.river.tension.length() > 0.8, "Rod bends along fish direction while reeling")
+	var direction_key: Key = Fishing.DIRECTION_KEYS[fishing.get_expected_direction()]
+	_key(direction_key, true)
+	_key(direction_key, false, false)
+	_check(not demo._audio._players.has(Audio.Cue.REEL), "A repeated key event and release do not play the reel cue")
 	await _capture("03-direction")
 	_pull(fishing.get_expected_direction())
 	_check(fishing.progress == 2 and fishing.last_judgement == Fishing.Judgement.PERFECT, "A timed opposite key earns two progress")
+	var reel := demo._audio._players.get(Audio.Cue.REEL) as AudioStreamPlayer
+	_check(reel != null and reel.playing, "The first direction press plays the reel cue")
+	demo._audio.stop(Audio.Cue.REEL)
 	demo.river._process(Data.ROUND_GAP)
 	_check(demo.river.tension.length() < 0.1 and demo.river.hit_timer > 0.0, "Rod returns rapidly toward center during feedback while hit label stays readable")
 	fishing.advance(Data.ROUND_GAP)
 	_pull(fishing.get_expected_direction())
 	_check(fishing.progress == 1 and fishing.mistakes == 1, "An early press costs one progress")
+	_check(reel != null and reel.playing, "An early direction press still plays the reel cue")
+	demo._audio.stop(Audio.Cue.REEL)
 	fishing.advance(Data.ROUND_GAP)
 	fishing.advance(fishing.get_target_time() - 0.25)
-	_pull(fishing.get_expected_direction())
+	_pull(fishing.get_expected_direction(), true)
 	_check(fishing.progress == 2 and fishing.last_judgement == Fishing.Judgement.NORMAL, "An ordinary-window press earns one progress")
+	_check(reel != null and reel.playing, "An arrow-key press plays the same reel cue")
+	demo._audio.stop(Audio.Cue.REEL)
 	fishing.advance(Data.ROUND_GAP)
 	fishing.advance(fishing.get_target_time() + 0.05)
 	_key(KEY_E)
@@ -178,6 +200,7 @@ func _run() -> void:
 	_key(KEY_Q)
 	_pull(fishing.get_expected_direction())
 	_check(fishing.phase == Fishing.Phase.CAUGHT and session.catches.size() == 1, "Capture completes and adds the fish once")
+	_check(reel != null and reel.playing, "The final pull plays the reel cue again")
 	_check(demo._catch_fish_rect.visible and demo._catch_fish_rect.texture == Data.fish_texture(1, 1), "Caught fish displays the Feishu fish sprite instead of the temporary placeholder")
 	var sprite: TextureRect = demo._catch_fish_rect
 	var mouth := Vector2(3, 64) * (sprite.size / sprite.texture.get_size())
@@ -186,8 +209,9 @@ func _run() -> void:
 	_check(fishing.durability() == 9 and fishing.bait_stock[0] == Data.STARTING_BAIT - 1, "Landing does not charge a second time")
 	await _capture("03b-caught-fish")
 
-	_key(KEY_R)
-	_check(demo.alchemy.visible and not demo._shop_ui.visible, "R opens the alchemy station")
+	_key(KEY_E)
+	_key(KEY_E)
+	_check(demo.alchemy.visible and not demo._shop_ui.visible, "Cycling forward twice from the river opens the alchemy station")
 	_check(demo.alchemy.fish_cards.size() == 1 and demo.alchemy._refine_fish_tex.texture == Data.fish_texture(1, 1), "Alchemy displays the caught fish sprite and previews its potion")
 	await _capture("04-alchemy")
 	_key(KEY_SPACE)
@@ -200,7 +224,7 @@ func _run() -> void:
 		_click(demo.alchemy.essence_cards[0])
 	await _capture("04b-alchemy-mix")
 	_click(demo.alchemy._tab_buttons[0])
-	_key(KEY_E)
+	_key(KEY_Q)
 	_check(demo.soul_hud.soul.stats == Vector3i(8, 5, 8) and demo._dose_buttons.size() == 1, "Reception shows soul stats in the top-left HUD and lists potions directly below")
 	_check(demo._serve_button.disabled and demo.soul_hud.preview.is_empty(), "No potion preview is active before clicking a potion in the list")
 	_click(demo._dose_buttons[0])
@@ -219,8 +243,9 @@ func _run() -> void:
 	demo.shop.advance_presentation(5.0)
 	_check(demo.shop.departure_times.is_empty() and session.released_count == 1 and session.coins == 62, "Departure completion does not award the fee again")
 
-	_key(KEY_T)
-	_check(demo.market.visible and demo.market.active_filter == demo.market.Filter.ALL, "T opens the Octopath-style market showing ALL wares sorted by category")
+	_key(KEY_E)
+	_key(KEY_E)
+	_check(demo.market.visible and demo.market.active_filter == demo.market.Filter.ALL, "Cycling to the market shows all wares sorted by category")
 	var has_grip_ware: bool = demo.market._filtered_catalog().any(func(item: Dictionary) -> bool: return item.name == "基础握柄")
 	_check(not has_grip_ware, "The starter grip is absent from the market's all-wares list")
 	_key(KEY_SPACE)
@@ -302,6 +327,9 @@ func _run() -> void:
 	await _check_save_slots()
 	_check_dose_rewards()
 	await _check_return_to_title()
+	unload_current_scene()
+	# Let the audio server release playback from the final menu confirmation.
+	await create_timer(0.10).timeout
 	print("Integrated playtest: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)
 
@@ -393,14 +421,22 @@ func _check_title_river(fish: TitleMenu.RiverFish) -> void:
 	fish._process(jump.airtime * 0.5)
 	_check(jump.origin.is_equal_approx(origin) and jump.offset(TitleMenu.RiverFish.GRAVITY).y < -20.0
 		and not is_zero_approx(jump.velocity.x), "The fish follows an upward arc from the clicked position")
+	_check(not demo._audio._players.has(Audio.Cue.TITLE_FISH_SPLASH), "The title fish makes no sound before landing")
 	await _capture("01e-title-fish-jump")
 	fish._process(jump.airtime * 0.5 + 0.01)
 	var splash := fish._bursts.back() as TitleMenu.RiverFish.Burst
 	_check(fish._jumps.is_empty() and splash.landing and surface.water_at(splash.origin)
 		and is_equal_approx(splash.origin.y, origin.y), "The fish lands at its launch height and creates a splash within the river")
-	_check(fish.find_children("*", "AudioStreamPlayer", true, false).is_empty(), "Title fish land silently")
+	var player := demo._audio._players.get(Audio.Cue.TITLE_FISH_SPLASH) as AudioStreamPlayer
+	_check(player != null and player.playing and player.stream.resource_path.ends_with("/fish_water_plip.wav"),
+		"Landing plays the dedicated fish splash on the same frame")
 	fish._process(0.20)
 	await _capture("01f-title-fish-splash")
+	_click_at(fish.get_global_transform() * origin)
+	_click_at(fish.get_global_transform() * origin)
+	fish._process(1.0)
+	_check(fish._jumps.is_empty() and fish._bursts.size() == 2 and player != null and player.playing and player.max_polyphony >= 2,
+		"Two fish landing on the same frame trigger splash sounds without cutting each other off")
 	# The open gap between Continue and Settings lies within the painted menu scrim.
 	_click_at(fish.get_global_transform() * surface.cover_to_stage(Vector2(385, 168)))
 	_check(fish._jumps.size() == 1, "The painted gap between the menu rows still accepts water clicks")
@@ -448,19 +484,23 @@ func _check_save_slots() -> void:
 	root.add_child(demo)
 	demo.session.set_process(false)
 	demo.qte.set_process(false)
+	_move_mouse(Vector2(24, 24))
 	_check(demo.continue_button.disabled, "A fresh profile has no saved game to continue")
 	_key(KEY_SPACE)
 	_check(demo._summary.position.x == 48 and not demo.has_save(), "The summary starts at the left and a new game leaves all save slots empty")
 	demo.session.coins = 91
 	demo.qte.cast()
 	demo.qte.advance(0.5)
-	_key(KEY_R)
+	_key(KEY_E)
+	_key(KEY_E)
 	_key(KEY_P)
 	var wait: float = demo.qte.remaining
 	_key(KEY_D)
 	_key(KEY_SPACE)
 	var menu = demo._save_menu
-	_check(menu.visible and menu.saving and menu.slot_buttons.size() == 3 and menu.slot_buttons[0].text.contains("空位"), "Pause opens three empty slots with the keyboard")
+	_check(menu.visible and menu.saving and menu.slot_buttons.size() == 5
+		and menu.slot_buttons[4].text.contains("空位") and menu.delete_buttons[4].disabled,
+		"Pause opens five empty slots with delete actions disabled")
 	await _capture("10-save-slots", 0.20)
 	_key(KEY_SPACE)
 	var first_path := SaveSlots.existing_path(directory, 0)
@@ -481,9 +521,32 @@ func _check_save_slots() -> void:
 	demo.session.coins = 220
 	_key(KEY_S)
 	_key(KEY_SPACE)
+	demo.session.coins = 224
+	_key(KEY_S)
+	_key(KEY_SPACE)
+	demo.session.coins = 225
+	_key(KEY_S)
+	_key(KEY_SPACE)
 	var second_path := SaveSlots.existing_path(directory, 1)
 	var third_path := SaveSlots.existing_path(directory, 2)
-	_check(int(SaveSlots.read(second_path).coins) == 205 and int(SaveSlots.read(third_path).coins) == 220, "The three manual saves are independent")
+	var fourth_path := SaveSlots.existing_path(directory, 3)
+	var fifth_path := SaveSlots.existing_path(directory, 4)
+	_check(int(SaveSlots.read(second_path).coins) == 205 and int(SaveSlots.read(third_path).coins) == 220
+		and int(SaveSlots.read(fourth_path).coins) == 224 and int(SaveSlots.read(fifth_path).coins) == 225,
+		"Each of the five save slots stores independent progress")
+	_click(menu.delete_buttons[3])
+	_check(menu._confirmation.visible and menu._confirm_cursor == 0, "Clicking Delete opens a confirmation with Cancel selected")
+	_move_mouse(Vector2(24, 24))
+	await _capture("12-save-delete", 0.20)
+	_key(KEY_SPACE)
+	_check(not menu._confirmation.visible and FileAccess.file_exists(fourth_path), "Cancel keeps the selected save")
+	_key(KEY_DELETE)
+	_key(KEY_D)
+	_key(KEY_SPACE)
+	_check(not FileAccess.file_exists(fourth_path) and SaveSlots.existing_path(directory, 4) == fifth_path
+		and menu.slot_buttons[3].text.contains("空位") and menu.delete_buttons[3].disabled,
+		"Keyboard confirmation deletes only the selected slot and refreshes its row")
+	_check(not SaveSlots.write(directory, 5, {}) and not SaveSlots.remove(directory, -1), "Save actions reject slots outside the five-slot range")
 
 	_key(KEY_C)
 	_check(not menu.is_open and demo.session.paused, "C from the slot list returns input to the pause menu")
@@ -497,6 +560,7 @@ func _check_save_slots() -> void:
 	_key(KEY_SPACE)
 	_check(not menu.is_open and not demo.session.paused and demo.current_location == "Alchemy" and demo.session.coins == 205 and demo.session.essences[0] == 0, "Reading the second slot restores its wallet, inventory and location")
 	_check(demo.qte.phase == Fishing.Phase.WAITING and is_equal_approx(demo.qte.remaining, wait), "Reading restores the unfinished fishing timer without charging for another cast")
+	_key(KEY_Q)
 	_key(KEY_Q)
 	_hook_fish(demo.qte, 1, 1)
 	demo.qte.advance(Data.PREPARATION)
@@ -546,6 +610,7 @@ func _check_save_slots() -> void:
 	scheduled.guests = scheduled.guests.map(func(entry: Array) -> Dictionary: return {"case_id": entry[0]})
 	_check(SaveSlots.write(directory, 2, interim) and demo.load_progress(2), "A slot written during the v1.5 trial remains readable after rollback")
 	_check(Session.doses_used(demo.session.get_soul(guest.id)) == 2 and demo.qte.durability() == 7 and demo.qte.bait_stock[0] == 5, "Trial slots retain dose counts, accumulated wear and recovered starter bait")
+	_check(demo.load_progress(4) and demo.session.coins == 225, "The fifth save slot can restore progress")
 	demo.queue_free()
 	await process_frame
 
@@ -564,7 +629,7 @@ func _check_save_slots() -> void:
 	demo.qte.set_process(false)
 	_key(KEY_S)
 	_key(KEY_SPACE)
-	_check(demo._save_menu.visible and not demo.started, "Continue on the title opens the same three-slot load menu")
+	_check(demo._save_menu.visible and not demo.started, "Continue on the title opens the same five-slot load menu")
 	var fish := demo._menu.get_node("RiverFish") as TitleMenu.RiverFish
 	_click_at(fish.get_global_transform() * fish._surface.cover_to_stage(Vector2(405, 248)))
 	_check(fish._jumps.is_empty() and demo._save_menu.is_open, "An open load dialog also blocks clicks outside its panel")
@@ -577,10 +642,42 @@ func _check_save_slots() -> void:
 	_key(KEY_SPACE)
 	_key(KEY_SPACE)
 	_check(demo.started and demo.session.coins == 137 and demo.qte.phase == Fishing.Phase.READY, "The previous single-file save loads from slot one")
+	_check(demo.save_progress(0) and FileAccess.file_exists(legacy_path), "Saving slot one can coexist with the legacy file")
 	demo.queue_free()
 	await process_frame
-	for path in [legacy_path, second_path, third_path]:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	for slot in [1, 2, 4]:
+		SaveSlots.remove(directory, slot)
+	var damaged_path := FileAccess.open(fourth_path, FileAccess.WRITE)
+	damaged_path.store_string("corrupted save")
+	damaged_path.close()
+	demo = preload("res://scenes/demo/demo.tscn").instantiate()
+	demo.save_directory = directory
+	demo.auto_pause_on_focus_loss = false
+	root.add_child(demo)
+	await process_frame
+	_key(KEY_S)
+	_key(KEY_SPACE)
+	menu = demo._save_menu
+	_key(KEY_DELETE)
+	_key(KEY_D)
+	_key(KEY_SPACE)
+	_check(not FileAccess.file_exists(first_path) and not FileAccess.file_exists(legacy_path),
+		"Deleting slot one removes both its current save and the legacy fallback")
+	_check(menu.slot_buttons[3].text.contains("存档无法读取") and not menu.delete_buttons[3].disabled,
+		"A damaged save is still eligible for deletion")
+	_key(KEY_DELETE)
+	_key(KEY_D)
+	_key(KEY_SPACE)
+	_check(not FileAccess.file_exists(fourth_path) and not demo.has_save() and demo.continue_button.disabled
+		and _title_highlight_is(demo.start_button), "Deleting the final save disables Continue and selects Start")
+	_key(KEY_C)
+	_check(not menu.is_open and not demo.started, "The empty save manager returns to the title without loading a game")
+	for cue in [Audio.Cue.UI_CLICK, Audio.Cue.UI_CONFIRM]:
+		var player := demo._audio._players.get(cue) as AudioStreamPlayer
+		if player != null and player.playing:
+			await player.finished
+	demo.queue_free()
+	await process_frame
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(directory))
 
 
@@ -597,7 +694,8 @@ func _check_keyboard_workflows() -> void:
 	for species in Data.FISH.size():
 		session.record_catch({"species": Data.LANTERN if species == Data.VARIANT else species, "size": 0, "cm": 5.0})
 	var lantern: int = session.catches[Data.VARIANT].id
-	_key(KEY_R)
+	_key(KEY_E)
+	_key(KEY_E)
 	for code in [KEY_D, KEY_S, KEY_A, KEY_S, KEY_S, KEY_D]:
 		_key(code)
 	await process_frame
@@ -630,7 +728,7 @@ func _check_keyboard_workflows() -> void:
 	session.advance(session.spawn_remaining)
 	var first_id: int = session.souls[0].id
 	var second_id: int = session.souls[1].id
-	_key(KEY_E)
+	_key(KEY_Q)
 	_key(KEY_D)
 	_check(demo.shop.selected_id == second_id, "D selects the next waiting soul")
 	_key(KEY_A)
@@ -659,7 +757,8 @@ func _check_keyboard_workflows() -> void:
 	demo.shop.advance_presentation(10.0)
 	_check(demo.shop.departure_times.is_empty() and session.coins == balance, "All animations finish with no extra payouts")
 
-	_key(KEY_T)
+	_key(KEY_E)
+	_key(KEY_E)
 	for i in 4:
 		_key(KEY_S)
 	_key(KEY_SPACE)
@@ -691,7 +790,8 @@ func _check_stillfin() -> void:
 	_check(fishing.phase == Fishing.Phase.CAUGHT and landed.species == Data.STILLFIN, "Completing the QTE lands the stillfin in the basket")
 	_check(demo._catch_fish_rect.visible and demo._catch_fish_rect.texture == Data.fish_texture(Data.STILLFIN), "The landed stillfin displays its own sprite")
 	await _capture("10-stillfin-caught")
-	_key(KEY_R)
+	_key(KEY_E)
+	_key(KEY_E)
 	_key(KEY_SHIFT)
 	demo.alchemy.fish_cards.back().pressed.emit()
 	_check(demo.alchemy._refine_fish_tex.texture == Data.fish_texture(Data.STILLFIN), "The fish basket previews the stillfin sprite")
@@ -702,7 +802,7 @@ func _check_stillfin() -> void:
 	var guest: Dictionary = session.souls[0]
 	session.requirements[1] = Vector3i(10, 10, 8)
 	guest.stats = Vector3i(6, 8, 9)
-	_key(KEY_E)
+	_key(KEY_Q)
 	_key(KEY_S)
 	_key(KEY_S)
 	_check(demo._selected_dose == [true, Data.STILLFIN] and demo.soul_hud.preview.after == Vector3i(6, 8, 8), "Reception previews the stillfin lowering just the excess will")
@@ -1037,7 +1137,7 @@ func _check_recipes(session: Session) -> void:
 
 
 func _check_special_cases(fishing: Fishing, session: Session) -> void:
-	_key(KEY_Q)
+	_key(KEY_E)
 	fishing.set_rig(1, 0, Data.VARIANT_BAIT)
 	_check(fishing.equipped_charms() == 2 and demo._rig_hint.text.contains("2 / 2"), "The long rod automatically equips both purchased charms")
 	fishing.cast()
@@ -1047,11 +1147,11 @@ func _check_special_cases(fishing: Fishing, session: Session) -> void:
 		if rng.randf() < 0.80 and rng.randf() < Data.VARIANT_CHANCE:
 			fishing._rng.seed = seed
 			break
-	_key(KEY_T)
+	_key(KEY_Q)
 	fishing._process(fishing.remaining)
 	_check(fishing.phase == Fishing.Phase.AWAITING_RETURN and demo._river_notice.visible, "A variant also raises an alert away from the river")
 	_key(KEY_Q)
-	_check(fishing.phase == Fishing.Phase.TRUE_NAME and fishing.locked.species == Data.VARIANT, "The deep-water bait opens the independent variant branch")
+	_check(demo.current_location == "River" and fishing.phase == Fishing.Phase.TRUE_NAME and fishing.locked.species == Data.VARIANT, "Q returns directly from the market to start the variant capture")
 	_check(is_equal_approx(fishing.remaining, Fishing.VARIANT_LIMIT), "Returning to the river starts the full true-name timer")
 	_check(demo._river_status.text == "神秘鱼影 · 真名捕获" and not demo._river_status.text.contains("巨刺灰鳞鱼"), "True-name status box also keeps the species hidden before capture")
 	for character in Fishing.VARIANT_WORD:
@@ -1080,11 +1180,13 @@ func _check_special_cases(fishing: Fishing, session: Session) -> void:
 		if rng.randf() >= 0.40:
 			fishing._rng.seed = seed
 			break
-	_key(KEY_R)
+	_key(KEY_E)
+	_key(KEY_E)
 	fishing._process(fishing.remaining)
 	_check(fishing.phase == Fishing.Phase.CAUGHT and fishing.durability() == 8 and fishing.bait_stock[Data.BONE_BAIT] == 1, "A bone lands automatically and consumes one bait and one durability")
 	_check(demo._river_notice.visible and demo._river_notice_title.text == "钓到了遗骨！" and demo._river_notice_detail.text == "已回收遗骨 ×1" and not demo._river_bite_alert.visible, "Automatic bone recovery shows a distinct left-side notice in alchemy")
 	await _capture("07e-bone-notice")
+	_key(KEY_Q)
 	_key(KEY_Q)
 	_check(demo._river_notice.visible, "Returning to the river keeps the bone recovery notice visible")
 	demo._process(4.0)
@@ -1108,7 +1210,7 @@ func _check_missed_bite(fishing: Fishing, session: Session) -> void:
 	var bait_before := fishing.bait_stock[fishing.bait]
 	var catch_count := session.catches.size()
 	fishing.cast()
-	_key(KEY_T)
+	_key(KEY_Q)
 	_hook_fish(fishing, 1, 1)
 	fishing._process(2.75)
 	_key(KEY_P)
@@ -1116,10 +1218,30 @@ func _check_missed_bite(fishing: Fishing, session: Session) -> void:
 	_check(fishing.phase == Fishing.Phase.AWAITING_RETURN and is_equal_approx(fishing.remaining, 0.25), "Pausing freezes the bite alert countdown")
 	_key(KEY_P)
 	fishing._process(0.25)
-	_check(fishing.phase == Fishing.Phase.ESCAPED and demo._river_button.text == "Q 河岸" and not demo._river_notice.visible, "At three seconds the fish escapes and the bite bubble closes")
-	_key(KEY_Q)
+	_check(fishing.phase == Fishing.Phase.ESCAPED and not demo._river_bite_alert.visible and not demo._river_notice.visible, "At three seconds the fish escapes and the bite bubble closes")
+	_key(KEY_E)
 	_check(fishing.phase == Fishing.Phase.ESCAPED and demo._river_status.text.contains("鱼脱钩了"), "Returning after the deadline shows the escaped fish status")
 	_check(fishing.durability() == durability_before - 1 and fishing.bait_stock[fishing.bait] == bait_before - 1 and session.catches.size() == catch_count, "A missed bite charges exactly once and gives no catch")
+
+
+func _check_location_navigation() -> void:
+	for location in ["Shop", "Alchemy", "Market", "River"]:
+		_key(KEY_E)
+		_check(demo.current_location == location, "E cycles forward to %s" % location)
+	for location in ["Market", "Alchemy", "Shop", "River"]:
+		_key(KEY_Q)
+		_check(demo.current_location == location, "Q cycles backward to %s" % location)
+	_key(KEY_R)
+	_key(KEY_T)
+	_key(KEY_E, true)
+	_check(demo.current_location == "River", "R, T and held-key repeats do not change location")
+	_click(demo._alchemy_button)
+	_check(demo.alchemy.visible and demo._alchemy_button.disabled, "Clicking the alchemy tab opens and selects it")
+	_click(demo._previous_location_button)
+	_check(demo._shop_ui.visible and demo._shop_button.disabled, "The Q button goes to the previous location")
+	_click(demo._next_location_button)
+	_check(demo.alchemy.visible and demo._alchemy_button.disabled, "The E button goes to the next location")
+	_click(demo._river_button)
 
 
 func _hook_fish(fishing: Fishing, species: int, size: int) -> void:
@@ -1135,8 +1257,8 @@ func _hook_fish(fishing: Fishing, species: int, size: int) -> void:
 	_check(false, "Could not find a deterministic regular catch")
 
 
-func _pull(direction: int) -> void:
-	var code: Key = Fishing.DIRECTION_KEYS[direction]
+func _pull(direction: int, use_arrow: bool = false) -> void:
+	var code: Key = Fishing.ARROW_KEYS[direction] if use_arrow else Fishing.DIRECTION_KEYS[direction]
 	_key(code)
 	demo._submit_pending_pull()
 	if demo.qte.phase == Fishing.Phase.HOLDING:

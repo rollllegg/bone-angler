@@ -74,8 +74,8 @@ func advance_cast(delta: float) -> void:
 	cast_elapsed += maxf(delta, 0.0)
 	if cast_elapsed >= FRAME_DURATION * 4.0:
 		casting = false
-		qte.cast()
-		cast_finished.emit()
+		if qte.cast():
+			cast_finished.emit()
 	queue_redraw()
 
 

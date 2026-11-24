@@ -121,6 +121,7 @@ const HOLD_DURATIONS := [0.75, 0.95, 1.10]
 const SURGE_DURATIONS := [0.95, 1.10, 1.20]
 const RELEASE_HALF_WINDOW := [0.25, 0.22, 0.20]
 const RELEASE_CUE_LEAD := 0.16
+const DROWNED_LYRE_PLAYER := 30
 const SOULS := [
 	["忘了归途的旅人", Vector3i(5, 8, 8)],
 	["对旧信无动于衷的邮差", Vector3i(8, 5, 8)],
@@ -152,6 +153,7 @@ const SOULS := [
 	["仍在清点旧货的仓管", Vector3i(8, 5, 9)],
 	["只记得门牌号的送货人", Vector3i(5, 8, 8)],
 	["害怕钟声停下的敲钟人", Vector3i(7, 9, 9)],
+	["殉情的琴手", Vector3i(8, 10, 0)],
 ]
 # Start with cases that have simple shallow-water solutions.
 const SOUL_ORDER := [

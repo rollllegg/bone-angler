@@ -2,6 +2,7 @@ extends Control
 ## The playable fishing, alchemy and soul reception loop with pixel-art UI.
 
 const UI := preload("res://scripts/demo/demo_ui.gd")
+const Audio := preload("res://scripts/demo/demo_audio.gd")
 const TitleMenu := preload("res://scripts/demo/title_menu.gd")
 const TitleSettings := preload("res://scripts/demo/title_settings.gd")
 const SoulHUD := preload("res://scripts/demo/soul_status_hud.gd")
@@ -19,9 +20,12 @@ const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const BASE_SIZE := Vector2(1620, 972)
 const STORY_LAB_ARG := "--story-lab"
 const LEGACY_DUPLICATE_GRIP_PRICE := 30
-const RIVER_TAB_TEXT := "Q 河岸"
+const LOCATION_ORDER := ["River", "Shop", "Alchemy", "Market"]
 const RIVER_ALERT_COLOR := Color("ff5353")
+const PAUSE_ICON := preload("res://assets/art/ui/icon_pause.png")
+const RESUME_ICON := preload("res://assets/art/ui/icon_resume.png")
 const BONE_NOTICE_DURATION := 4.0
+const BOBBER_WAIT_INTERVAL := 1.8
 const FONT := preload("res://assets/fonts/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf.woff2")
 const FONT_FALLBACK := preload("res://assets/fonts/NotoSansSC.ttf")
 const CATCH_BOX_SIZES := [Vector2(184, 112), Vector2(236, 144), Vector2(288, 176), Vector2(310, 184)]
@@ -63,6 +67,8 @@ var settings_button: Button
 var quit_button: Button
 
 var _stage: Control
+var _audio: Audio
+var _bobber_sound_in := BOBBER_WAIT_INTERVAL
 var _menu: TitleMenu
 var _menu_pointer: Control
 var _menu_buttons: Array[Button] = []
@@ -90,6 +96,8 @@ var _bone_notice_remaining := 0.0
 var _shop_button: Button
 var _alchemy_button: Button
 var _market_button: Button
+var _previous_location_button: Button
+var _next_location_button: Button
 var _pause_button: Button
 
 # Fishing UI
@@ -146,6 +154,9 @@ var _requires_release := false
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_audio = Audio.new()
+	_audio.name = "DemoAudio"
+	add_child(_audio)
 	_stage = Control.new()
 	_stage.size = BASE_SIZE
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -170,12 +181,14 @@ func _ready() -> void:
 	_river_image = river_display["image"]
 	_river_viewport = river_display["viewport"]
 	river.bind(qte)
+	river.cast_finished.connect(_audio.play.bind(Audio.Cue.BOBBER_SPLASH))
 
 	var shop_display := _pixel_display(Shop)
 	shop = shop_display["world"]
 	_shop_image = shop_display["image"]
 	_shop_viewport = shop_display["viewport"]
 	shop.bind(session)
+	shop.walk_started.connect(_audio.play.bind(Audio.Cue.FOOTSTEPS))
 
 
 	_build_menu()
@@ -192,20 +205,21 @@ func _ready() -> void:
 	alchemy = Alchemy.new()
 	alchemy.name = "Alchemy"
 	_stage.add_child(alchemy)
-	alchemy.setup(session)
+	alchemy.setup(session, _audio)
 
 	market = Market.new()
 	market.name = "Market"
 	_stage.add_child(market)
-	market.setup(qte)
+	market.setup(qte, _audio)
 
 	_build_pause()
 	_build_river_notice()
 	_save_menu = SaveMenu.new()
 	_stage.add_child(_save_menu)
-	_save_menu.setup(BASE_SIZE)
+	_save_menu.setup(BASE_SIZE, _audio)
 	_save_menu.slot_selected.connect(_select_save_slot)
 	_save_menu.overwrite_confirmed.connect(_save_to_slot)
+	_save_menu.delete_confirmed.connect(_delete_save_slot)
 
 	_title_transition = ColorRect.new()
 	_title_transition.size = BASE_SIZE
@@ -250,7 +264,7 @@ func _pixel_display(world_script: Script) -> Dictionary:
 func _build_menu() -> void:
 	_menu = TitleMenu.new()
 	_stage.add_child(_menu)
-	_menu.setup(BASE_SIZE, _start_game, _open_save_slots.bind(false), _open_settings, get_tree().quit)
+	_menu.setup(BASE_SIZE, _start_game, _open_save_slots.bind(false), _open_settings, _quit_from_title, _audio)
 	_menu_buttons = _menu.buttons
 	_menu_pointer = _menu.pointer
 	start_button = _menu_buttons[0]
@@ -261,12 +275,14 @@ func _build_menu() -> void:
 
 	_settings_modal = TitleSettings.new()
 	_menu.add_child(_settings_modal)
-	_settings_modal.setup(BASE_SIZE, _set_display_mode, _set_auto_pause)
+	_settings_modal.setup(BASE_SIZE, _set_display_mode, _set_auto_pause, _audio)
 	_settings_panel = _settings_modal.panel
 	_refresh_settings_ui()
 
 
 func _select_title_button(index: int) -> void:
+	if index != _menu.cursor and not _menu_buttons[index].disabled:
+		_audio.play(Audio.Cue.UI_CLICK)
 	_menu.select(index)
 
 
@@ -274,6 +290,8 @@ func _refresh_continue_button() -> void:
 	var available := has_save()
 	continue_button.disabled = not available
 	continue_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
+	if not available and _menu_buttons[_menu.cursor] == continue_button:
+		_menu.select(0)
 
 
 func _open_settings() -> void:
@@ -306,29 +324,30 @@ func _build_hud() -> void:
 	_stage.add_child(_hud)
 	UI.panel(_hud, Rect2(24, 18, 1572, 78), "dark_wood")
 	_summary = UI.label(_hud, "", Rect2(48, 34, 874, 44), 20, UI.GOLD)
-	_river_button = UI.tab_button(_hud, RIVER_TAB_TEXT, Rect2(936, 32, 122, 48), func() -> void: _show_location("River"), true)
-	_shop_button = UI.tab_button(_hud, "E 接待", Rect2(1066, 32, 122, 48), func() -> void: _show_location("Shop"), false)
-	_alchemy_button = UI.tab_button(_hud, "R 炼药", Rect2(1196, 32, 122, 48), func() -> void: _show_location("Alchemy"), false)
-	_market_button = UI.tab_button(_hud, "T 市场", Rect2(1326, 32, 122, 48), func() -> void: _show_location("Market"), false)
-	_pause_button = UI.button(_hud, "P 暂停", Rect2(1460, 32, 114, 48), func() -> void: _set_paused(not session.paused), false)
-	for b in [_river_button, _shop_button, _alchemy_button, _market_button, _pause_button]:
+	_previous_location_button = UI.button(_hud, "< Q", Rect2(936, 32, 54, 48), _cycle_location.bind(-1))
+	_previous_location_button.accessibility_name = "上一个地点"
+	_next_location_button = UI.button(_hud, "E >", Rect2(1446, 32, 54, 48), _cycle_location.bind(1))
+	_next_location_button.accessibility_name = "下一个地点"
+	_next_location_button.tooltip_text = "下一个地点（E）"
+	_river_button = UI.tab_button(_hud, "河岸", Rect2(998, 32, 104, 48), _show_location.bind("River", true), true)
+	_shop_button = UI.tab_button(_hud, "接待", Rect2(1110, 32, 104, 48), _show_location.bind("Shop", true))
+	_alchemy_button = UI.tab_button(_hud, "炼药", Rect2(1222, 32, 104, 48), _show_location.bind("Alchemy", true))
+	_market_button = UI.tab_button(_hud, "市场", Rect2(1334, 32, 104, 48), _show_location.bind("Market", true))
+	for b in [_river_button, _shop_button, _alchemy_button, _market_button]:
 		b.add_theme_font_size_override("font_size", 24)
-	var tab_font_size := _river_button.get_theme_font_size("font_size")
-	var tab_font := _river_button.get_theme_font("font")
-	var caption_width := tab_font.get_string_size(RIVER_TAB_TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, tab_font_size).x
-	var shortcut_width := tab_font.get_string_size("Q", HORIZONTAL_ALIGNMENT_LEFT, -1, tab_font_size).x
-	var name_offset := tab_font.get_string_size("Q ", HORIZONTAL_ALIGNMENT_LEFT, -1, tab_font_size).x
-	var text_left := floorf((_river_button.size.x - caption_width) * 0.5)
-	var alert_shift_left := 3.0
-	var height := _river_button.size.y
-	_river_bite_alert = UI.label(_river_button, "!", Rect2(text_left - alert_shift_left, 0, shortcut_width, height), 24, RIVER_ALERT_COLOR)
+	_river_bite_alert = UI.label(_river_button, "!", Rect2(8, 0, 18, 48), 24, RIVER_ALERT_COLOR)
 	var alert_font := FontVariation.new()
 	alert_font.base_font = FONT
 	alert_font.variation_transform = Transform2D(Vector2(1.8, 0), Vector2.DOWN, Vector2.ZERO)
 	_river_bite_alert.add_theme_font_override("font", alert_font)
 	_river_bite_alert.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UI.label(_river_bite_alert, "河岸", Rect2(name_offset + alert_shift_left, 0, caption_width - name_offset, height), tab_font_size)
 	_river_bite_alert.hide()
+	_pause_button = UI.button(_hud, "", Rect2(1520, 29, 54, 54), func() -> void: _set_paused(not session.paused))
+	var icon_style := StyleBoxEmpty.new()
+	for state in ["normal", "hover", "pressed"]:
+		_pause_button.add_theme_stylebox_override(state, icon_style)
+	_pause_button.add_theme_color_override("icon_hover_color", UI.GOLD)
+	_pause_button.add_theme_color_override("icon_pressed_color", UI.GOLD.darkened(0.22))
 
 
 func _build_river_notice() -> void:
@@ -474,7 +493,7 @@ func _build_shop_ui() -> void:
 	_dose_list = VBoxContainer.new()
 	_dose_list.add_theme_constant_override("separation", 8)
 	_dose_scroll.add_child(_dose_list)
-	_dose_empty = UI.label(_shop_ui, "暂无可用药剂\n按 R 前往炼药台提炼鱼获", Rect2(56, 548, 392, 86), 20, UI.MUTED)
+	_dose_empty = UI.label(_shop_ui, "暂无可用药剂\n按 E 前往炼药台提炼鱼获", Rect2(56, 548, 392, 86), 20, UI.MUTED)
 	_dose_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	UI.panel(_shop_ui, Rect2(44, 824, 416, 40), "wood_inset")
@@ -535,6 +554,7 @@ func _build_pause() -> void:
 	var actions := [_set_paused.bind(false), _open_save_slots.bind(true), _open_save_slots.bind(false), _return_to_title]
 	for index in labels.size():
 		var button := UI.button(_pause_banner, labels[index], Rect2(96 + index * 142, 0, 132, 48), actions[index])
+		button.pressed.connect(_audio.play.bind(Audio.Cue.UI_CLICK))
 		button.mouse_entered.connect(_select_pause_button.bind(index))
 		_pause_buttons.append(button)
 	UI.label(_pause_banner, "A / D 选择　空格 确认", Rect2(666, 0, 214, 48), 18, UI.CREAM)
@@ -603,6 +623,14 @@ func _return_to_title() -> void:
 	get_tree().reload_current_scene.call_deferred()
 
 
+func _quit_from_title() -> void:
+	# Let the title confirmation finish before closing the audio device.
+	_menu.mouse_behavior_recursive = Control.MOUSE_BEHAVIOR_DISABLED
+	set_process_unhandled_key_input(false)
+	await get_tree().create_timer(0.15).timeout
+	get_tree().quit()
+
+
 func has_save() -> bool:
 	if persist_save:
 		for slot in SaveSlots.COUNT:
@@ -627,17 +655,20 @@ func _save_slot_entries() -> Array[Dictionary]:
 			summary = "第 %d 天　渡魂币 %d" % [day_number, int(data.coins)]
 			if data.has("saved_at"):
 				summary += "　%s" % data.saved_at
-		entries.append({"summary": summary, "readable": not data.is_empty()})
+		entries.append({"summary": summary, "occupied": not path.is_empty()})
 	return entries
 
 
 func _select_save_slot(slot: int) -> void:
 	if not _save_menu.saving:
-		if not load_progress(slot):
+		if load_progress(slot):
+			_audio.play(Audio.Cue.UI_CONFIRM)
+		else:
 			_save_menu.update_slots(_save_slot_entries())
 			_save_menu.show_status("读取失败，请选择其他存档。", true)
 		return
 	if persist_save and not SaveSlots.existing_path(save_directory, slot).is_empty():
+		_audio.play(Audio.Cue.UI_CLICK)
 		_save_menu.ask_overwrite(slot)
 		return
 	_save_to_slot(slot)
@@ -647,9 +678,25 @@ func _save_to_slot(slot: int) -> void:
 	if not save_progress(slot):
 		_save_menu.show_status("保存失败，请重试。", true)
 		return
+	_audio.play(Audio.Cue.UI_CONFIRM)
 	_save_menu.update_slots(_save_slot_entries())
 	_save_menu.show_status("已保存到存档 %d。" % (slot + 1))
+	_refresh_continue_button()
 	_pause_buttons[2].disabled = false
+
+
+func _delete_save_slot(slot: int) -> void:
+	var removed := persist_save and SaveSlots.remove(save_directory, slot)
+	_save_menu.update_slots(_save_slot_entries())
+	_refresh_continue_button()
+	_pause_buttons[2].disabled = continue_button.disabled
+	if _pause_buttons[_pause_cursor].disabled:
+		_select_pause_button(0)
+	if removed:
+		_audio.play(Audio.Cue.UI_CONFIRM)
+		_save_menu.show_status("已删除存档 %d。" % (slot + 1))
+	else:
+		_save_menu.show_status("删除失败，请重试。", true)
 
 
 func save_progress(slot: int) -> bool:
@@ -725,6 +772,10 @@ func load_progress(slot: int) -> bool:
 	_close_settings()
 	_close_rig_popup()
 	_clear_pull_input()
+	_audio.stop(Audio.Cue.FERRY)
+	_audio.stop(Audio.Cue.FOOTSTEPS)
+	_audio.stop(Audio.Cue.BOBBER_WAIT)
+	_bobber_sound_in = BOBBER_WAIT_INTERVAL
 	session.active = false
 	session.paused = false
 	session.last_payout = 0
@@ -836,7 +887,7 @@ func load_progress(slot: int) -> bool:
 	river.hit_timer = 0.0
 	river.pulse = 0.0
 	var loc := str(data.get("location", "River"))
-	current_location = loc if loc in ["River", "Shop", "Alchemy", "Market"] else "River"
+	current_location = loc if loc in LOCATION_ORDER else "River"
 	started = true
 	session.active = true
 	_show_location(current_location)
@@ -859,9 +910,19 @@ func _restore_grip(data: Dictionary) -> void:
 	qte.grip_durability = clampi(int(saved), 0, Data.GRIP_CAPACITY)
 
 
-func _show_location(value: String) -> void:
-	if not started or session.paused or value not in ["River", "Shop", "Alchemy", "Market"]:
+func _cycle_location(step: int) -> void:
+	if step < 0 and qte.phase == Fishing.Phase.AWAITING_RETURN:
+		_show_location("River", true)
 		return
+	var index := posmod(LOCATION_ORDER.find(current_location) + step, LOCATION_ORDER.size())
+	_show_location(LOCATION_ORDER[index], true)
+
+
+func _show_location(value: String, from_input: bool = false) -> void:
+	if not started or session.paused or value not in LOCATION_ORDER:
+		return
+	if from_input and current_location != value:
+		_audio.play(Audio.Cue.MARKET_OPEN if value == "Market" else Audio.Cue.PAGE_TURN)
 	_close_rig_popup()
 	_clear_pull_input()
 	current_location = value
@@ -889,6 +950,8 @@ func _update_activation() -> void:
 	_shop_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if _shop_image.visible else SubViewport.UPDATE_DISABLED
 	_pause_banner.visible = started and session.paused
 	_summary.visible = not session.paused
+	_previous_location_button.disabled = session.paused
+	_next_location_button.disabled = session.paused
 	_river_button.disabled = session.paused or current_location == "River"
 	_shop_button.disabled = session.paused or current_location == "Shop"
 	_alchemy_button.disabled = session.paused or current_location == "Alchemy"
@@ -897,13 +960,18 @@ func _update_activation() -> void:
 	UI.set_tab_active(_shop_button, current_location == "Shop")
 	UI.set_tab_active(_alchemy_button, current_location == "Alchemy")
 	UI.set_tab_active(_market_button, current_location == "Market")
-	_pause_button.text = "P 继续" if session.paused else "P 暂停"
+	_pause_button.icon = RESUME_ICON if session.paused else PAUSE_ICON
+	_pause_button.accessibility_name = "继续游戏" if session.paused else "暂停游戏"
+	_pause_button.tooltip_text = "%s（P / Esc）" % _pause_button.accessibility_name
+	_pause_button.add_theme_color_override("icon_normal_color", UI.MINT if session.paused else UI.CREAM)
 	_refresh_river_notice()
+	_update_scene_audio(0.0)
 
 
 func _cast_line() -> void:
 	if started and current_location == "River" and _rig_slot_cursor < 0 and not session.is_time_suspended():
-		river.start_cast()
+		if river.start_cast():
+			_audio.play(Audio.Cue.CAST)
 		_refresh_river()
 
 
@@ -925,6 +993,7 @@ func _toggle_rig_popup(slot: int) -> void:
 
 
 func _open_rig_popup(slot: int) -> void:
+	_audio.play(Audio.Cue.RIG_SELECT)
 	_rig_slot_cursor = slot
 	_rig_open_slot = slot
 	_rig_backdrop.visible = true
@@ -967,15 +1036,13 @@ func _populate_rig_popup(slot: int) -> void:
 		for i in Data.RODS.size():
 			var owned: bool = qte.rods_owned[i]
 			_add_rig_option(UI.ICON_ROD, Data.RODS[i], Data.ROD_DESCS[i], "已装备" if qte.rod == i else ("未拥有" if not owned else "可装配"), qte.rod == i, not owned, Vector2(342, 68), func() -> void:
-				qte.set_rig(i, qte.hook, qte.bait)
-				_close_rig_popup()
+				_equip_rig(i, qte.hook, qte.bait)
 			)
 	elif slot == 1:
 		for i in Data.HOOKS.size():
 			var owned: bool = qte.hooks_owned[i]
 			_add_rig_option(UI.ICON_HOOK, Data.HOOKS[i], Data.HOOK_DESCS[i], "已装备" if qte.hook == i else ("未拥有" if not owned else "可装配"), qte.hook == i, not owned, Vector2(342, 68), func() -> void:
-				qte.set_rig(qte.rod, i, qte.bait)
-				_close_rig_popup()
+				_equip_rig(qte.rod, i, qte.bait)
 			)
 	elif slot == 2:
 		var status := "耐久 %d / %d · 归零后可到市场维修" % [qte.durability(), Data.GRIP_CAPACITY]
@@ -984,9 +1051,14 @@ func _populate_rig_popup(slot: int) -> void:
 		for i in Data.BAITS.size():
 			var count: int = qte.bait_stock[i]
 			_add_rig_option(UI.ICON_BAIT, Data.BAITS[i], Data.bait_hint(i), "×%d" % count, qte.bait == i, false, Vector2(228, 74), func() -> void:
-				qte.set_rig(qte.rod, qte.hook, i)
-				_close_rig_popup()
+				_equip_rig(qte.rod, qte.hook, i)
 			)
+
+
+func _equip_rig(rod_index: int, hook_index: int, bait_index: int) -> void:
+	if qte.set_rig(rod_index, hook_index, bait_index):
+		_audio.play(Audio.Cue.RIG_EQUIP)
+	_close_rig_popup()
 
 
 func _add_rig_option(icon: Texture2D, title: String, subtitle: String, badge: String, selected: bool, locked: bool, card_size: Vector2, callback: Callable) -> void:
@@ -1020,6 +1092,7 @@ func _begin_rig_selection() -> void:
 		return
 	_clear_pull_input()
 	_rig_slot_cursor = 0
+	_audio.play(Audio.Cue.RIG_SELECT)
 	_refresh_river()
 
 
@@ -1035,10 +1108,16 @@ func _rig_key(code: Key) -> bool:
 			elif code in [KEY_W, KEY_S]:
 				var step := 1 if code == KEY_S else -1
 				if _rig_open_slot >= 0:
-					_rig_option_cursor = UI.next_button(_rig_option_buttons, _rig_option_cursor, step)
+					var option := UI.next_button(_rig_option_buttons, _rig_option_cursor, step)
+					if option != _rig_option_cursor:
+						_audio.play(Audio.Cue.RIG_SELECT)
+					_rig_option_cursor = option
 					_highlight_rig_option()
 				else:
-					_rig_slot_cursor = UI.next_button(_rig, _rig_slot_cursor, step)
+					var slot := UI.next_button(_rig, _rig_slot_cursor, step)
+					if slot != _rig_slot_cursor:
+						_audio.play(Audio.Cue.RIG_SELECT)
+					_rig_slot_cursor = slot
 					_refresh_rig_slots()
 		KEY_SPACE:
 			if _rig_open_slot >= 0:
@@ -1063,6 +1142,7 @@ func _move_rig_grid_cursor(code: Key) -> void:
 		KEY_A: index = maxi(index - 1, index - column)
 		KEY_D: index = mini(index + 1, mini(index - column + columns - 1, last))
 	if index != _rig_option_cursor:
+		_audio.play(Audio.Cue.RIG_SELECT)
 		_rig_option_cursor = index
 		_highlight_rig_option()
 
@@ -1133,14 +1213,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		handled = _rig_key(code)
 	elif code == KEY_ESCAPE:
 		_set_paused(true)
-	elif code == KEY_Q:
-		_show_location("River")
-	elif code == KEY_E:
-		_show_location("Shop")
-	elif code == KEY_R:
-		_show_location("Alchemy")
-	elif code == KEY_T:
-		_show_location("Market")
+	elif code in [KEY_Q, KEY_E]:
+		_cycle_location(-1 if code == KEY_Q else 1)
 	else:
 		match current_location:
 			"River": handled = _river_key(code)
@@ -1148,7 +1222,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			"Alchemy": handled = alchemy.handle_key(code)
 			"Market": handled = market.handle_key(code)
 		if not handled and code == KEY_C and current_location != "River":
-			_show_location("River")
+			_show_location("River", true)
 			handled = true
 	if handled:
 		get_viewport().set_input_as_handled()
@@ -1172,7 +1246,10 @@ func _pause_key(code: Key) -> bool:
 	match code:
 		KEY_A, KEY_LEFT, KEY_W, KEY_UP, KEY_D, KEY_RIGHT, KEY_S, KEY_DOWN:
 			var step := -1 if code in [KEY_A, KEY_LEFT, KEY_W, KEY_UP] else 1
-			_select_pause_button(UI.next_button(_pause_buttons, _pause_cursor, step))
+			var next := UI.next_button(_pause_buttons, _pause_cursor, step)
+			if next != _pause_cursor:
+				_audio.play(Audio.Cue.UI_CLICK)
+			_select_pause_button(next)
 		KEY_SPACE, KEY_ENTER, KEY_KP_ENTER:
 			UI.activate(_pause_buttons[_pause_cursor])
 		KEY_C, KEY_ESCAPE, KEY_P:
@@ -1231,9 +1308,11 @@ func _switch_guest(direction: int) -> void:
 
 func _queue_pull(code: int, direction: int) -> void:
 	_held_keys[code] = true
-	if river.casting or not qte.is_line_action() or (qte.phase == Fishing.Phase.REELING and _requires_release):
+	if (river.casting or session.is_time_suspended() or not qte.is_line_action()
+			or (qte.phase == Fishing.Phase.REELING and _requires_release)):
 		_requires_release = true
 		return
+	_audio.play(Audio.Cue.REEL)
 	if _pending_directions.is_empty():
 		_submit_pending_pull.call_deferred()
 	if direction not in _pending_directions:
@@ -1276,8 +1355,8 @@ func _show_bone_notice() -> void:
 func _refresh_river_notice() -> void:
 	var fish_hooked := started and current_location != "River" and qte.phase == Fishing.Phase.AWAITING_RETURN
 	_river_bite_alert.visible = fish_hooked
-	_river_button.text = "" if fish_hooked else RIVER_TAB_TEXT
 	_river_button.accessibility_name = "有鱼上钩了，返回河岸" if fish_hooked else ""
+	_previous_location_button.tooltip_text = "返回河岸（Q）" if fish_hooked else "上一个地点（Q）"
 	_river_notice.visible = started and (fish_hooked or _bone_notice_remaining > 0.0)
 	if _river_notice.visible:
 		_river_notice_title.text = "有鱼上钩了！" if fish_hooked else "钓到了遗骨！"
@@ -1431,6 +1510,7 @@ func _select_dose(key: Array) -> void:
 		_selected_dose = null
 	else:
 		_selected_dose = key
+		_audio.play(Audio.Cue.ESSENCE_SELECT if key[0] else Audio.Cue.MEDICINE_SELECT)
 	_rebuild_dose_list()
 	_refresh_dose()
 
@@ -1514,11 +1594,13 @@ func _release_guest() -> void:
 		return
 	var story = _selected_story_runtime()
 	if story == null:
-		shop.begin_departure()
+		if shop.begin_departure() and session.last_payout > 0:
+			_audio.play(Audio.Cue.COINS)
 		return
 	story.skip_dialogue()
 	if story.is_closed() or story.choose("admit"):
-		shop.begin_story_departure()
+		if shop.begin_story_departure() and session.last_payout > 0:
+			_audio.play(Audio.Cue.COINS)
 
 
 func _story_action() -> void:
@@ -1540,6 +1622,7 @@ func _story_action() -> void:
 
 func _close_day_report() -> void:
 	if session.awaiting_day_report:
+		_audio.play(Audio.Cue.UI_CLICK)
 		session.close_day_report()
 		_refresh_shared()
 
@@ -1672,24 +1755,39 @@ func _refresh_river() -> void:
 			_river_hint.text = "依次输入出现的字母，输错后从头开始。"
 		Fishing.Phase.CAUGHT:
 			_river_status.text = qte.last_message
-			_river_hint.text = "空格抛竿，继续钓鱼。" if qte.locked.has("bone") else "按 R 前往炼药台查看鱼获并提炼，或再抛一竿。"
+			_river_hint.text = "空格抛竿，继续钓鱼。" if qte.locked.has("bone") else "到炼药台查看鱼获并提炼，或再抛一竿。"
 		Fishing.Phase.ESCAPED:
 			_river_status.text = qte.last_message
 			_river_hint.text = "可以再次抛竿。"
 	if not busy and not qte.can_cast() and not session.paused:
 		if qte.durability() == 0 and qte.bait_stock[qte.bait] == 0:
-			_river_hint.text = "握柄耐久与当前鱼饵均已耗尽，按 T 去市场维修并补充鱼饵。"
+			_river_hint.text = "握柄耐久与当前鱼饵均已耗尽，按 Q 去市场维修并补充鱼饵。"
 		elif qte.durability() == 0:
-			_river_hint.text = "当前握柄耐久已耗尽，按 T 去市场维修，或按 Shift 更换备用握柄。"
+			_river_hint.text = "当前握柄耐久已耗尽，按 Q 去市场维修，或按 Shift 更换备用握柄。"
 		elif qte.has_any_bait():
-			_river_hint.text = "当前「%s」已耗尽，按 Shift 换饵，或按 T 购买。" % Data.BAITS[qte.bait]
+			_river_hint.text = "当前「%s」已耗尽，按 Shift 换饵，或按 Q 去市场购买。" % Data.BAITS[qte.bait]
 		else:
-			_river_hint.text = "当前「%s」已耗尽，按 T 去市场补充鱼饵。" % Data.BAITS[qte.bait]
+			_river_hint.text = "当前「%s」已耗尽，按 Q 去市场补充鱼饵。" % Data.BAITS[qte.bait]
+
+
+func _update_scene_audio(delta: float) -> void:
+	var suspended := session.is_time_suspended()
+	_audio.sync_ferry(river.get_ferry_rect().has_area(), suspended)
+	_audio.set_paused(Audio.Cue.FOOTSTEPS, session.paused or current_location != "Shop")
+	if not river.active or suspended or qte.phase != Fishing.Phase.WAITING:
+		_bobber_sound_in = BOBBER_WAIT_INTERVAL
+		_audio.stop(Audio.Cue.BOBBER_WAIT)
+		return
+	_bobber_sound_in -= delta
+	if _bobber_sound_in <= 0.0 and qte.remaining > 0.75:
+		_audio.play(Audio.Cue.BOBBER_WAIT)
+		_bobber_sound_in = BOBBER_WAIT_INTERVAL
 
 
 func _process(delta: float) -> void:
 	if not started:
 		return
+	_update_scene_audio(delta)
 	if _bone_notice_remaining > 0.0 and not session.paused:
 		_bone_notice_remaining = maxf(_bone_notice_remaining - delta, 0.0)
 		if _bone_notice_remaining == 0.0:

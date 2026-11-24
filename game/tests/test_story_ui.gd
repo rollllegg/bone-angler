@@ -1,6 +1,8 @@
 extends SceneTree
 ## Exercises the special guests through the shared reception UI.
 
+const Audio := preload("res://scripts/demo/demo_audio.gd")
+const CLICK_SOUND := preload("res://assets/audio/ui_click.wav")
 const WUKONG_LINE := "还不赶快放俺老s……俺过去。"
 const ORPHEUS_LINE := "欧律狄刻现在在哪，她是我的爱人，比我早逝去。我来和她相会了"
 
@@ -74,9 +76,17 @@ func _run() -> void:
 
 	_finish_ordinary_guests()
 	_check(_demo.day_report.visible and session.get_day_report().day == 1, "Wukong's aftermath is shown at the end of day one")
-	_demo._close_day_report()
+	var click_player := _demo._audio._players.get(Audio.Cue.UI_CLICK) as AudioStreamPlayer
+	if click_player != null and click_player.playing:
+		await click_player.finished
+		await process_frame
+	if click_player != null:
+		click_player.stream = null
+	var next_day := _demo.day_report._close as Button
+	_click(next_day)
 	_check(session.day == 2 and not session.awaiting_day_report, "Closing the report allows the next day")
-	_press(KEY_E)
+	click_player = _demo._audio._players.get(Audio.Cue.UI_CLICK) as AudioStreamPlayer
+	_check(click_player != null and click_player.stream == CLICK_SOUND, "Clicking Next Day triggers the UI click cue")
 	_arrive(5)
 	_check(session.souls.all(func(soul: Dictionary) -> bool: return not soul.has("story_case")), "Day two starts with five ordinary guests")
 	_arrive(1)
@@ -99,8 +109,20 @@ func _run() -> void:
 	_check(session.get_soul(12).is_empty() and orpheus.get_outcome_id() == "accepted.reunion", "Shift admits Orpheus and preserves the cross-day ending")
 	_finish_ordinary_guests()
 	_check(session.get_day_report().entries.size() == 1 and session.get_day_report().day == 2, "Orpheus has his own day-two report")
+	if click_player != null and click_player.playing:
+		await click_player.finished
+		await process_frame
+	if click_player != null:
+		click_player.stream = null
+	_press(KEY_ENTER)
+	_check(session.day == 3 and click_player != null and click_player.stream == CLICK_SOUND, "Keyboard confirmation advances the day and triggers the UI click cue")
 
-	_demo.free()
+	for player: AudioStreamPlayer in _demo._audio._players.values():
+		var clip := player.stream as AudioStreamWAV
+		if player.playing and clip != null and clip.loop_mode == AudioStreamWAV.LOOP_DISABLED:
+			await player.finished
+	_demo.queue_free()
+	await process_frame
 	print("StoryUI: %d checks, %d failures" % [_checks, _failures])
 	quit(0 if _failures == 0 else 1)
 
@@ -125,6 +147,18 @@ func _press(code: Key) -> void:
 	event.keycode = code
 	event.pressed = true
 	_demo._unhandled_key_input(event)
+
+
+func _click(button: Button) -> void:
+	var point := button.get_global_rect().get_center()
+	for pressed in [true, false]:
+		var event := InputEventMouseButton.new()
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.position = point
+		event.global_position = point
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
 
 
 func _type_name(value: String) -> void:

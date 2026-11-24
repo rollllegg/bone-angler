@@ -2,11 +2,16 @@ extends Node2D
 ## One guest at the counter with independent departures along the path.
 
 signal presentation_changed
+signal walk_started
 
 const BACKGROUND := preload("res://assets/art/demo/shop.png")
 const FRONT := preload("res://assets/art/demo/guest_front.png")
 const TURN := preload("res://assets/art/demo/guest_turn.png")
 const BACK := [preload("res://assets/art/demo/guest_back_01.png"), preload("res://assets/art/demo/guest_back_02.png")]
+const DROWNED_SPRITE := "drowned_lyre_player"
+const DROWNED_FRONT := preload("res://assets/art/demo/drowned_lyre_front.png")
+const DROWNED_TURN := preload("res://assets/art/demo/drowned_lyre_turn.png")
+const DROWNED_BACK := [preload("res://assets/art/demo/drowned_lyre_back_01.png"), preload("res://assets/art/demo/drowned_lyre_back_02.png")]
 const STORY_SPRITES := {
 	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise.png"),
 	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey.png"),
@@ -37,6 +42,7 @@ const START_SCALE := 1.45
 const STORY_SCALE := 1.0
 const STORY_OFFSET := Vector2(-32, -94)
 
+const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 
 var session: Session
@@ -126,9 +132,10 @@ func _on_served(id: int) -> void:
 func begin_departure() -> bool:
 	if session.paused or not session.can_release(selected_id):
 		return false
+	var soul := session.get_soul(selected_id)
 	var start := 0.0 if departure_times.is_empty() else minf(0.0, departure_times.back() - COUNTER_CLEAR_TIME)
 	departure_times.append(start)
-	departure_sprites.append("")
+	departure_sprites.append(DROWNED_SPRITE if soul.case_id == Data.DROWNED_LYRE_PLAYER else "")
 	departure_ids.append(selected_id)
 	if not session.release_soul(selected_id):
 		departure_times.pop_back()
@@ -160,6 +167,7 @@ func advance_presentation(delta: float) -> void:
 	fed_flash = maxf(fed_flash - delta, 0.0)
 	var had_departures := not departure_times.is_empty()
 	for i in range(departure_times.size() - 1, -1, -1):
+		var was_turning := departure_times[i] < TURN_DURATION
 		departure_times[i] += delta
 		if departure_times[i] >= TURN_DURATION + WALK_DURATION + FADE_DURATION:
 			departure_times.remove_at(i)
@@ -167,6 +175,8 @@ func advance_presentation(delta: float) -> void:
 				departure_sprites.remove_at(i)
 			if i < departure_ids.size():
 				departure_ids.remove_at(i)
+		elif was_turning and departure_times[i] >= TURN_DURATION:
+			walk_started.emit()
 	if had_departures and departure_times.is_empty():
 		presentation_changed.emit()
 	queue_redraw()
@@ -188,19 +198,19 @@ func _draw_departure(elapsed: float, sprite_id: String) -> void:
 	var scale_start := START_SCALE
 	var scale_end := 0.36
 	var offset := Vector2(-24, -62)
-	if sprite_id != "":
-		var turn_id := str(STORY_TURNS.get(sprite_id, sprite_id))
-		if STORY_SPRITES.has(turn_id):
-			texture = STORY_SPRITES[turn_id]
-			scale_start = STORY_SCALE
-			scale_end = 0.25
-			offset = STORY_OFFSET
+	var turn_id := str(STORY_TURNS.get(sprite_id, sprite_id))
+	if sprite_id == DROWNED_SPRITE:
+		texture = DROWNED_TURN if walk_time < 0.0 else DROWNED_BACK[step]
+	elif STORY_SPRITES.has(turn_id):
+		texture = STORY_SPRITES[turn_id]
+		scale_start = STORY_SCALE
+		scale_end = 0.25
+		offset = STORY_OFFSET
 	point.y -= step * (1.0 - t)
 	draw_set_transform(point.round(), 0.0, Vector2.ONE * lerpf(scale_start, scale_end, t))
-	if sprite_id != "":
-		var shadow: Texture2D = STORY_SHADOWS.get(str(STORY_TURNS.get(sprite_id, sprite_id)))
-		if shadow != null:
-			draw_texture(shadow, offset, Color(1, 1, 1, 0.35 * opacity))
+	var shadow: Texture2D = STORY_SHADOWS.get(turn_id)
+	if shadow != null:
+		draw_texture(shadow, offset, Color(1, 1, 1, 0.35 * opacity))
 	draw_texture(texture, offset, Color(1, 1, 1, opacity))
 	draw_set_transform(Vector2.ZERO)
 
@@ -222,7 +232,7 @@ func _draw() -> void:
 				departure_elapsed = departure_times[index]
 				break
 		var opacity := 1.0 if departure_elapsed < 0.0 else smoothstep(TURN_DURATION, COUNTER_CLEAR_TIME, departure_elapsed)
-		var texture: Texture2D = FRONT
+		var texture: Texture2D = DROWNED_FRONT if selected.case_id == Data.DROWNED_LYRE_PLAYER else FRONT
 		var sprite_scale := START_SCALE
 		var offset := Vector2(-24, -62)
 		if story_sprite != "" and selected.has("story_case"):

@@ -5,6 +5,7 @@ extends Control
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 const UI := preload("res://scripts/demo/demo_ui.gd")
+const Audio := preload("res://scripts/demo/demo_audio.gd")
 
 var session: Session
 var active_tab: int = 0
@@ -29,6 +30,7 @@ var _stock_bones: Label
 var _status: Label
 var _controls_hint: Label
 var _essence_cursor := 0
+var _audio: Audio
 
 # Refine view nodes
 var _fish_grid: GridContainer
@@ -63,8 +65,9 @@ var _str_before_box: Control
 var _str_after_box: Control
 
 
-func setup(value: Session) -> void:
+func setup(value: Session, audio: Audio) -> void:
 	session = value
+	_audio = audio
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
@@ -109,7 +112,7 @@ func _build_refine_tab() -> void:
 	_fish_grid.add_theme_constant_override("h_separation", 14)
 	_fish_grid.add_theme_constant_override("v_separation", 14)
 	scroll.add_child(_fish_grid)
-	_fish_empty = UI.label(view, "鱼篓目前空空如也。\n按 Q 前往阿刻戎河垂钓，钓起的鱼会展示在这里。", Rect2(100, 440, 780, 110), 23, UI.MUTED)
+	_fish_empty = UI.label(view, "鱼篓目前空空如也。\n回到河岸垂钓，钓起的鱼会展示在这里。", Rect2(100, 440, 780, 110), 23, UI.MUTED)
 	_fish_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_fish_empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -297,6 +300,8 @@ func _build_strengthen_tab() -> void:
 
 
 func _switch_tab(index: int) -> void:
+	if index != active_tab:
+		_audio.play(Audio.Cue.PAGE_TURN)
 	active_tab = index
 	for i in _tab_views.size():
 		_tab_views[i].visible = i == active_tab
@@ -349,8 +354,8 @@ func _move_card(code: Key) -> void:
 		return
 	var grid: GridContainer = [_fish_grid, _essence_grid, _med_grid][active_tab]
 	var index := _essence_cursor if active_tab == 1 else 0
+	var selected: Variant = selected_fish_id if active_tab == 0 else selected_medicine
 	if active_tab != 1:
-		var selected: Variant = selected_fish_id if active_tab == 0 else selected_medicine
 		for i in cards.size():
 			if cards[i].get_meta("item") == selected:
 				index = i
@@ -362,9 +367,11 @@ func _move_card(code: Key) -> void:
 		KEY_A: index = index - 1 if index % grid.columns > 0 else index
 		KEY_D: index = index + 1 if index < last and index % grid.columns < grid.columns - 1 else index
 	if active_tab == 1:
+		if index != _essence_cursor:
+			_audio.play(Audio.Cue.UI_CLICK)
 		_essence_cursor = index
 		_highlight_essences()
-	else:
+	elif cards[index].get_meta("item") != selected:
 		UI.activate(cards[index])
 	UI.reveal(grid.get_parent() as ScrollContainer, cards[index])
 
@@ -440,6 +447,8 @@ func _rebuild_fish_grid() -> void:
 		card.set_meta("item", cid)
 		UI.style_slot_button(card, cid == selected_fish_id, false)
 		card.pressed.connect(func() -> void:
+			if selected_fish_id != cid:
+				_audio.play(Audio.Cue.UI_CLICK)
 			selected_fish_id = cid
 			for fish_card in fish_cards:
 				UI.style_slot_button(fish_card, fish_card == card, false)
@@ -529,6 +538,7 @@ func _pick_essence(species: int) -> void:
 			_status.text = "同种原液配制需要至少 2 份库存。"
 		else:
 			mix_second = species
+	_audio.play(Audio.Cue.ESSENCE_SELECT)
 	_highlight_essences()
 	_update_previews()
 
@@ -547,6 +557,7 @@ func _rebuild_medicine_grid(med_rows: Array) -> void:
 		card.set_meta("item", key)
 		UI.style_slot_button(card, selected_medicine == key, false)
 		card.pressed.connect(func() -> void:
+			_audio.play(Audio.Cue.ESSENCE_SELECT if key[0] else Audio.Cue.MEDICINE_SELECT)
 			selected_medicine = key
 			for medicine_card in medicine_cards:
 				UI.style_slot_button(medicine_card, medicine_card == card, false)
@@ -686,6 +697,7 @@ func _update_previews() -> void:
 
 func _refine() -> void:
 	if selected_fish_id >= 0 and session.refine(selected_fish_id):
+		_audio.play(Audio.Cue.BREW)
 		_status.text = "提炼完成，原液已入库。"
 
 
@@ -694,9 +706,11 @@ func _mix() -> void:
 		var recipe := Data.recipe(mix_first, mix_second)
 		if not session.mix(mix_first, mix_second):
 			return
+		_audio.play(Audio.Cue.BREW)
 		_status.text = "配制完成，获得 %s ×1。" % recipe.name
 
 
 func _strengthen() -> void:
 	if selected_medicine != null and session.strengthen(selected_medicine[0], selected_medicine[1], selected_attribute, selected_adjustment):
+		_audio.play(Audio.Cue.STRENGTHEN)
 		_status.text = "强化完成，已更新一剂药效。"

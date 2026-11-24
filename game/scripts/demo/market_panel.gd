@@ -6,6 +6,7 @@ extends Control
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const UI := preload("res://scripts/demo/demo_ui.gd")
+const Audio := preload("res://scripts/demo/demo_audio.gd")
 
 enum Filter { ALL, ROD, HOOK, CHARM, BAIT, REPAIR }
 
@@ -63,10 +64,12 @@ var _rig_mini_bar: Control
 var _status: Label
 var _controls_hint: Label
 var _catalog: Array[Dictionary] = []
+var _audio: Audio
 
 
-func setup(value: Fishing) -> void:
+func setup(value: Fishing, audio: Audio) -> void:
 	fishing = value
+	_audio = audio
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
@@ -106,7 +109,10 @@ func handle_key(code: Key) -> bool:
 				var items := _filtered_catalog()
 				for i in items.size():
 					if items[i]["key"] == selected_key:
-						selected_key = items[posmod(i + step, items.size())]["key"]
+						var next := posmod(i + step, items.size())
+						if next != i:
+							_audio.play(Audio.Cue.UI_CLICK)
+						selected_key = items[next]["key"]
 						refresh()
 						break
 			else:
@@ -115,6 +121,7 @@ func handle_key(code: Key) -> bool:
 			if browsing_wares:
 				UI.activate(action_button)
 			else:
+				_audio.play(Audio.Cue.UI_CLICK)
 				browsing_wares = true
 				refresh()
 		KEY_A, KEY_D:
@@ -126,6 +133,7 @@ func handle_key(code: Key) -> bool:
 		KEY_C:
 			if not browsing_wares:
 				return false
+			_audio.play(Audio.Cue.UI_CLICK)
 			browsing_wares = false
 			refresh()
 		_:
@@ -134,6 +142,8 @@ func handle_key(code: Key) -> bool:
 
 
 func select_filter(filter_id: int) -> void:
+	if filter_id != active_filter or browsing_wares:
+		_audio.play(Audio.Cue.UI_CLICK)
 	active_filter = filter_id
 	browsing_wares = false
 	_ware_scroll.scroll_vertical = 0
@@ -273,6 +283,8 @@ func _build_right_column() -> void:
 		qbtn.add_theme_color_override("font_color", UI.CREAM)
 		UI.style_slot_button(qbtn, qty == selected_quantity, false)
 		qbtn.pressed.connect(func() -> void:
+			if qty != selected_quantity:
+				_audio.play(Audio.Cue.UI_CLICK)
 			selected_quantity = qty
 			refresh()
 		)
@@ -487,6 +499,8 @@ func refresh() -> void:
 		row.add_theme_stylebox_override("hover", _translucent_box(Color("35314a", 0.85), UI.MINT, 2))
 		row.add_theme_stylebox_override("pressed", _translucent_box(Color("4a3d5c", 0.95), UI.GOLD, 2))
 		row.pressed.connect(func() -> void:
+			if key != selected_key or not browsing_wares:
+				_audio.play(Audio.Cue.UI_CLICK)
 			selected_key = key
 			browsing_wares = true
 			refresh()
@@ -608,18 +622,21 @@ func _execute_selected() -> void:
 	if kind == "device":
 		var idx: int = int(selected["index"])
 		if fishing.buy_device(idx):
+			_audio.play(Audio.Cue.PURCHASE)
 			if idx == Data.STEADY_CHARM:
 				_status.text = "已购入稳魂指骨，按竿体槽位自动装配。"
 			else:
-				_status.text = "已购入「%s」，按 Q 返回河岸即可在钓组中装备。" % Data.DEVICES[idx][0]
+				_status.text = "已购入「%s」，按 E 返回河岸即可在钓组中装备。" % Data.DEVICES[idx][0]
 	elif kind == "bait":
 		var idx: int = int(selected["index"])
 		var was_empty := fishing.bait_stock[fishing.bait] == 0 and not fishing.is_busy()
 		if fishing.buy_bait(idx, selected_quantity):
+			_audio.play(Audio.Cue.PURCHASE)
 			if was_empty and fishing.bait == idx:
 				_status.text = "购入 %s ×%d，已自动装配到当前钓组。" % [Data.BAITS[idx], selected_quantity]
 			else:
 				_status.text = "购入 %s ×%d（可在河岸右侧「鱼饵」槽切换）。" % [Data.BAITS[idx], selected_quantity]
 	elif kind == "repair":
 		if fishing.repair(bool(selected["full"])):
+			_audio.play(Audio.Cue.PURCHASE)
 			_status.text = "%s完成，基础握柄当前耐久 %d / %d。" % [selected["name"], fishing.durability(), Data.GRIP_CAPACITY]

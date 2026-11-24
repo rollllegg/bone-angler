@@ -101,19 +101,20 @@ func equipped_charms() -> int:
 	return mini(rod + 1, charms_owned)
 
 
-func set_rig(body: int, size_hook: int, selected_bait: int) -> void:
+func set_rig(body: int, size_hook: int, selected_bait: int) -> bool:
 	if is_busy() or session.paused:
-		return
+		return false
 	if body < 0 or body >= rods_owned.size() or size_hook < 0 or size_hook >= hooks_owned.size():
-		return
+		return false
 	if not rods_owned[body] or not hooks_owned[size_hook]:
-		return
+		return false
 	if selected_bait < 0 or selected_bait >= bait_stock.size():
-		return
+		return false
 	rod = body
 	hook = size_hook
 	bait = selected_bait
 	state_changed.emit()
+	return true
 
 
 func buy_bait(index: int, quantity: int) -> bool:

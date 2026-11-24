@@ -273,6 +273,10 @@ func _live_checks() -> void:
 		demo._refresh_river()
 		await _capture("01-tap" if action == Fishing.Action.TAP else "02-hold", demo)
 		_key(KEY_W, false)
+	for player: AudioStreamPlayer in demo._audio._players.values():
+		var clip := player.stream as AudioStreamWAV
+		if player.playing and clip != null and clip.loop_mode == AudioStreamWAV.LOOP_DISABLED:
+			await player.finished
 	demo.queue_free()
 	await process_frame
 

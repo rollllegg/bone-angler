@@ -2,6 +2,7 @@ extends Control
 ## Title-only animation, with all painted pixels locked to the stage's 3px grid.
 
 const Surface := preload("res://scripts/demo/title_screen_fx.gd")
+const Audio := preload("res://scripts/demo/demo_audio.gd")
 const GRID := 3.0
 const GRAVITY := 615.0
 const COLORS := [Color("46f2e2"), Color("7ecbff"), Color("f4a3c8")]
@@ -27,6 +28,7 @@ const TAIL := [
 ]
 
 var _surface: Surface
+var _audio: Audio
 var _time := 0.0
 var _swim_turns := PackedFloat32Array()
 var _rng := RandomNumberGenerator.new()
@@ -53,8 +55,9 @@ class Burst:
 	var droplets := PackedVector3Array()
 
 
-func setup(surface: Surface) -> void:
+func setup(surface: Surface, audio: Audio) -> void:
 	_surface = surface
+	_audio = audio
 	size = surface.size
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -111,6 +114,7 @@ func _clear_when_hidden() -> void:
 	if not is_visible_in_tree():
 		_jumps.clear()
 		_bursts.clear()
+		_audio.stop(Audio.Cue.TITLE_FISH_SPLASH)
 
 
 func _process(delta: float) -> void:
@@ -128,6 +132,7 @@ func _process(delta: float) -> void:
 			var landing := fish.origin + Vector2(fish.velocity.x * fish.airtime, 0)
 			_add_burst(landing, fish.tint, true)
 			_jumps.remove_at(i)
+			_audio.play(Audio.Cue.TITLE_FISH_SPLASH)
 	queue_redraw()
 
 

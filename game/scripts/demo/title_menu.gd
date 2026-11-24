@@ -2,6 +2,7 @@ extends Control
 ## The buttons keep fixed hit areas while their painted contents animate.
 
 const UI := preload("res://scripts/demo/demo_ui.gd")
+const Audio := preload("res://scripts/demo/demo_audio.gd")
 const Atmosphere := preload("res://scripts/demo/title_screen_fx.gd")
 const RiverFish := preload("res://scripts/demo/title_river_fish.gd")
 const PixelLogo := preload("res://scripts/demo/title_pixel_logo.gd")
@@ -17,9 +18,11 @@ var pointer: Pointer
 var cursor := 0
 var _thread_progress := 0.0
 var _hints: Panel
+var _audio: Audio
 
 
-func setup(stage_size: Vector2, start: Callable, resume: Callable, settings: Callable, quit: Callable) -> void:
+func setup(stage_size: Vector2, start: Callable, resume: Callable, settings: Callable, quit: Callable, audio: Audio) -> void:
+	_audio = audio
 	size = stage_size
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -29,7 +32,7 @@ func setup(stage_size: Vector2, start: Callable, resume: Callable, settings: Cal
 	add_child(atmosphere)
 	var fish := RiverFish.new()
 	fish.name = "RiverFish"
-	fish.setup(atmosphere)
+	fish.setup(atmosphere, audio)
 	add_child(fish)
 	var logo := PixelLogo.new()
 	logo.name = "PixelLogo"
@@ -85,6 +88,7 @@ func _add_row(node_name: String, caption: String, icon: Texture2D, action: Calla
 	row.button_down.connect(row.flash)
 	row.pressed.connect(select.bind(index))
 	row.pressed.connect(row.flash)
+	row.pressed.connect(_audio.play.bind(Audio.Cue.UI_CONFIRM))
 	row.pressed.connect(action)
 	buttons.append(row)
 	add_child(row)

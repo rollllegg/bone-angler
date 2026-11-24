@@ -155,6 +155,38 @@
       255
     ]
   },
+  "drowned_lyre_front": {
+    "file": "drowned_lyre_front.png",
+    "source": "art/source/characters/drowned-lyre-player-v1/drowned_lyre_front.perfect.png",
+    "sha256": "7776fc5d88bb36bc284de33b86fa50b9c52f6729b67b298a304f5a28a30e37e1",
+    "size": [48, 64],
+    "mode": "RGBA",
+    "alpha_values": [0, 255]
+  },
+  "drowned_lyre_turn": {
+    "file": "drowned_lyre_turn.png",
+    "source": "art/source/characters/drowned-lyre-player-v1/drowned_lyre_turn.perfect.png",
+    "sha256": "626b790a3ea32c0002d8deb4a23c84c3a0ded6937fde10d0f86ea2b2788da44c",
+    "size": [48, 64],
+    "mode": "RGBA",
+    "alpha_values": [0, 255]
+  },
+  "drowned_lyre_back_01": {
+    "file": "drowned_lyre_back_01.png",
+    "source": "art/source/characters/drowned-lyre-player-v2/drowned_lyre_back_01.perfect.png",
+    "sha256": "9f46c5c968bfc784e4cc55ba76a5b501aeecd5a883f1ced6d66b74aa9f3f70cb",
+    "size": [48, 64],
+    "mode": "RGBA",
+    "alpha_values": [0, 255]
+  },
+  "drowned_lyre_back_02": {
+    "file": "drowned_lyre_back_02.png",
+    "source": "art/source/characters/drowned-lyre-player-v2/drowned_lyre_back_02.aligned.perfect.png",
+    "sha256": "3500a962f8ceffb1ada98a1085cffc517e88999bd6a587725473541b253473ae",
+    "size": [48, 64],
+    "mode": "RGBA",
+    "alpha_values": [0, 255]
+  },
   "river_ambient": {
     "file": "river_ambient.png",
     "source": "art/source/animations/river-ambient-v1/frames/river_*.perfect.png",
