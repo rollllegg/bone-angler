@@ -16,7 +16,7 @@ function Copy-FontLicenses {
 $buildRoot = Join-Path $script:ProjectRoot 'build'
 New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $buildRoot '.gdignore') -Value '' -Encoding ASCII
-Invoke-GodotChecked -GodotArguments @('--headless','--path',$script:ProjectRoot,'--editor','--quit')
+Import-GodotAssets
 if ($Target -in @('Windows','All')) {
     $destination = Join-Path $script:ProjectRoot 'build\windows'
     New-Item -ItemType Directory -Path $destination -Force | Out-Null

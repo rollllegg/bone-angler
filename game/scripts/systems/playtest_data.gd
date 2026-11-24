@@ -29,6 +29,9 @@ const RODS := ["短杆／浅水", "长杆／深水"]
 const HOOKS := ["小号钩", "中号钩", "大号钩"]
 const HOOK_WEIGHTS := [Vector3(4, 1, 0.1), Vector3(1, 4, 1), Vector3(0.1, 1, 4)]
 const GRIP_CAPACITY := 10
+const GRIP_QUICK_REPAIR_DURABILITY := 5
+const GRIP_QUICK_REPAIR_COST := 8
+const GRIP_FULL_REPAIR_COST := 20
 const SCHOOL_SPECIES := [-1, LANTERN, 4]
 const BAITS := [
 	"素指骨饵",
@@ -60,11 +63,13 @@ const BITE_MODE := 5.0
 const BITE_MAX := 8.0
 const STARTING_COINS := 40
 const STARTING_BAIT := 10
-const BAIT_PRICES := [2, 4, 4, 4, 4, 4, 4, 6, 3]
+const BAIT_PRICES := [3, 9, 9, 9, 9, 9, 9, 15, 7]
+const STEADY_CHARM := 5
+const CHARM_LIMIT := 2
 const DEVICES := [
-	["短杆", 40], ["长杆", 80],
-	["小号钩", 20], ["中号钩", 20], ["大号钩", 20],
-	["基础握柄", 30], ["稳魂指骨", 30],
+	["短杆", 40], ["长杆", 160],
+	["小号钩", 20], ["中号钩", 50], ["大号钩", 50],
+	["稳魂指骨", 70],
 ]
 const ARRIVAL_MIN := 20.0
 const ARRIVAL_MAX := 25.0
@@ -96,6 +101,26 @@ const ROUND_GAP := 0.12
 const FISH_TIME := 20.0
 const MISTAKE_LIMIT := 3
 const SLOT_BONUS := 0.10
+# Four-way line control: 0 tap, 1 sustained hold, 2 hold then release for a surge.
+# Each species repeats its own readable sequence; size still changes progress only.
+const FISHING_ACTION_PATTERNS := [
+	[0, 1, 2],
+	[0, 2, 1],
+	[1, 0, 2],
+	[1, 2, 1, 0],
+	[2, 1, 2, 0],
+	[0, 0, 2, 1],
+	[2, 0, 1],
+	[0, 1, 2, 1],
+	[2, 0, 1, 2],
+	[1, 2, 0, 2],
+	[], # The giant uses the true-name challenge.
+	[0, 1, 2], # Stillfin.
+]
+const HOLD_DURATIONS := [0.75, 0.95, 1.10]
+const SURGE_DURATIONS := [0.95, 1.10, 1.20]
+const RELEASE_HALF_WINDOW := [0.25, 0.22, 0.20]
+const RELEASE_CUE_LEAD := 0.16
 const SOULS := [
 	["忘了归途的旅人", Vector3i(5, 8, 8)],
 	["对旧信无动于衷的邮差", Vector3i(8, 5, 8)],

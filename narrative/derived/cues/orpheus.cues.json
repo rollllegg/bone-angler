@@ -1,10 +1,6 @@
 {
   "orpheus.arrival.1": [
     {
-      "type": "sprite",
-      "id": "orpheus_front"
-    },
-    {
       "type": "flash",
       "color": "#cdbdf0",
       "alpha": 0.22,
@@ -70,6 +66,10 @@
     }
   ],
   "orpheus.identify.1": [
+    {
+      "type": "sprite",
+      "id": "orpheus_front"
+    },
     {
       "type": "shake",
       "strength": 4,

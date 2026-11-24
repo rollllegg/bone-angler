@@ -1,9 +1,14 @@
 {
   "id": "orpheus",
-  "title": "俄耳普斯",
+  "title": "俄耳甫斯",
   "queue_name": "亚历克斯",
   "portrait": {
-    "default": "orpheus_front"
+    "rules": [
+      {
+        "if": "named",
+        "id": "orpheus_front"
+      }
+    ]
   },
   "entry": "arrival",
   "requires_stats": false,
@@ -14,7 +19,7 @@
       "name_if": [
         {
           "if": "named",
-          "name": "俄耳普斯"
+          "name": "俄耳甫斯"
         }
       ]
     },
@@ -85,19 +90,8 @@
       "id": "arrival",
       "steps": [
         {
+          "speaker": "俄",
           "text": "orpheus.arrival.1"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.arrival.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.arrival.3"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.arrival.4"
         }
       ],
       "next": "inspect"
@@ -323,7 +317,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ],
         "result": "已入境",
@@ -346,7 +340,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ],
         "result": "已入境",
@@ -369,7 +363,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ],
         "result": "已入境",
@@ -392,7 +386,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ],
         "result": "未入境",

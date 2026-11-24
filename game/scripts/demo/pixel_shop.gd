@@ -73,7 +73,7 @@ func select_guest(id: int) -> void:
 	if session.paused or session.get_soul(id).is_empty():
 		return
 	var current_story = session.get_story_runtime(selected_id)
-	if current_story != null and not current_story.is_closed():
+	if current_story != null and current_story.callout_active:
 		return
 	if id != selected_id:
 		clear_story_sprite()
@@ -89,7 +89,7 @@ func bind_story_props(value) -> void:
 
 
 func set_story_sprite(id: String, flip: bool = false) -> void:
-	if not STORY_SPRITES.has(id):
+	if not STORY_SPRITES.has(id) or (story_sprite == id and story_sprite_flip == flip):
 		return
 	story_sprite = id
 	story_sprite_flip = flip

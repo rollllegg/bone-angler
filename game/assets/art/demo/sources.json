@@ -45,11 +45,14 @@
   },
   "cover": {
     "file": "cover.png",
-    "source": "art/source/concepts/game-cover-river-pixel-v3.perfect.png",
-    "sha256": "35cb7c8fc9da4a87e796b411140ea5768b12ba1c7b8c750da94a485c9ce585e0",
+    "source": "art/source/concepts/title-bg-redesign-v2.composite.png",
+    "original": "art/source/concepts/title-bg-redesign-v2.png",
+    "base_source": "art/source/concepts/title-bg-redesign-v1.perfect.png",
+    "perfect_pixel_record": "art/source/concepts/title-bg-redesign-v2.perfect.json",
+    "sha256": "ef56f462da219ec13adbc3df9208ac84e9618afbe9c57e65220f27c0c1426503",
     "size": [
-      418,
-      235
+      477,
+      267
     ],
     "mode": "RGB",
     "alpha_values": null

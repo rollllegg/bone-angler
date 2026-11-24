@@ -4,4 +4,5 @@ $arguments = @('--path', $script:ProjectRoot)
 if ($Headless) { $arguments += '--headless' }
 if ($QuitAfter -gt 0) { $arguments += @('--quit-after', "$QuitAfter") }
 $arguments += @('--', '--story-lab')
+Import-GodotAssets
 Invoke-GodotChecked -GodotArguments $arguments

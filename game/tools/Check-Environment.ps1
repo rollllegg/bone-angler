@@ -5,7 +5,7 @@ if (-not $version.StartsWith($script:Toolchain.godot.version + '.stable')) {
     throw "Unexpected Godot version: $version"
 }
 Write-Host "Godot version: $version"
-Invoke-GodotChecked -GodotArguments @('--headless','--path',$script:ProjectRoot,'--editor','--quit')
+Import-GodotAssets
 Invoke-GodotChecked -GodotArguments @('--headless','--path',$script:ProjectRoot,'--quit-after','5')
 $templateRoot = Join-Path (Split-Path -Parent $godot) ('editor_data\export_templates\' + $script:Toolchain.godot.template_folder)
 foreach ($template in @('windows_release_x86_64.exe','windows_debug_x86_64.exe')) {

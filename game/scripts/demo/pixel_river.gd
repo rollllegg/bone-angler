@@ -1,5 +1,5 @@
 extends Node2D
-## Existing DirectionFishing rules, with an independent cast and dynamic line.
+## Four-way line control, with an independent cast and dynamic line.
 
 signal cast_finished
 
@@ -88,7 +88,7 @@ func _process(delta: float) -> void:
 	hit_timer = maxf(hit_timer - delta, 0.0)
 	var target := Vector2.ZERO
 	var rate := 28.0
-	if not casting and qte.phase == Fishing.Phase.REELING:
+	if not casting and qte.is_line_action():
 		target = Fishing.DIRECTIONS[qte.fish_direction] * qte.get_travel_ratio()
 		rate = 16.0
 	tension = tension.lerp(target, 1.0 - exp(-delta * rate))
@@ -113,7 +113,7 @@ func get_water_entry() -> Vector2:
 
 
 func get_rod_angle() -> float:
-	return tension.x * 0.045 - tension.y * 0.025 + pulse * (-0.025 if qte.last_success else 0.02)
+	return tension.x * 0.045 - tension.y * 0.025 + (0.025 if qte.is_holding() else 0.0) + pulse * (-0.025 if qte.last_success else 0.02)
 
 
 func get_rod_tip() -> Vector2:
@@ -147,7 +147,7 @@ func _draw() -> void:
 			_draw_line_to(CATCH_LINE_END, false)
 	elif qte.phase != Fishing.Phase.READY:
 		var entry := TIMING_FRAME.get_center()
-		if qte.phase == Fishing.Phase.REELING:
+		if qte.is_line_action():
 			entry = get_water_entry()
 		elif qte.phase == Fishing.Phase.FEEDBACK:
 			entry = TIMING_FRAME.get_center().lerp(last_entry, pulse)
@@ -155,9 +155,9 @@ func _draw() -> void:
 	draw_set_transform(GRIP, get_rod_angle())
 	draw_texture(ROD, -GRIP)
 	draw_set_transform(Vector2.ZERO)
-	if qte.phase in [Fishing.Phase.PREPARING, Fishing.Phase.REELING, Fishing.Phase.FEEDBACK]:
+	if qte.phase in [Fishing.Phase.PREPARING, Fishing.Phase.REELING, Fishing.Phase.HOLDING, Fishing.Phase.RELEASE_WAIT, Fishing.Phase.FEEDBACK]:
 		_draw_timing_frame()
-	if qte.phase == Fishing.Phase.REELING and not paused:
+	if qte.is_line_action() and not paused:
 		_draw_arrow(Vector2(282, 133), Fishing.DIRECTIONS[qte.get_expected_direction()])
 
 
@@ -165,10 +165,14 @@ func _draw_line_to(entry: Vector2, ripple: bool) -> void:
 	var tip := get_rod_tip()
 	var points := PackedVector2Array()
 	var slack := 2.0 if qte.phase == Fishing.Phase.REELING else 6.0
+	if qte.is_holding():
+		slack = 0.0
 	for index in 25:
 		var t := index / 24.0
 		points.append((tip.lerp(entry, t) + Vector2(sin(t * PI) * slack, 0)).round())
 	var color := MINT
+	if qte.phase == Fishing.Phase.RELEASE_WAIT:
+		color = GOLD
 	if pulse > 0.0:
 		color = MINT.lerp(GOLD if qte.last_success else Color("f49b8d"), pulse)
 	draw_polyline(points, color, 1.0, false)
@@ -179,7 +183,7 @@ func _draw_line_to(entry: Vector2, ripple: bool) -> void:
 			var angle := index * TAU / 16.0
 			ring.append((entry + Vector2(cos(angle) * radius, sin(angle) * radius * 0.4)).round())
 		draw_polyline(ring, Color(MINT, 0.65), 1.0, false)
-		if qte.phase == Fishing.Phase.REELING:
+		if qte.is_line_action():
 			draw_rect(Rect2(entry.round() - Vector2.ONE, Vector2(2, 2)), GOLD)
 
 
@@ -194,11 +198,22 @@ func _draw_timing_frame() -> void:
 	for y in range(int(a.y), int(b.y), 6):
 		draw_line(Vector2(a.x, y), Vector2(a.x, minf(y + 2, b.y)), color)
 		draw_line(Vector2(b.x, y), Vector2(b.x, minf(y + 2, b.y)), color)
-	if qte.phase == Fishing.Phase.REELING:
+	if qte.is_line_action():
 		var direction: Vector2 = Fishing.DIRECTIONS[qte.fish_direction]
 		var edge := TIMING_FRAME.get_center() + direction * TIMING_FRAME.size * 0.5
 		var tangent := Vector2(-direction.y, direction.x)
 		draw_line(edge - tangent * 6, edge + tangent * 6, GOLD if perfect else MINT, 2)
+		if qte.phase == Fishing.Phase.RELEASE_WAIT:
+			var ring := PackedVector2Array()
+			for index in 25:
+				var angle := index * TAU / 24.0
+				ring.append((edge + Vector2(cos(angle), sin(angle)) * 9.0).round())
+			draw_polyline(ring, GOLD, 2.0, false)
+		if qte.round_action != Fishing.Action.TAP:
+			var track := Rect2(a.x, b.y + 7, TIMING_FRAME.size.x, 3)
+			draw_rect(track, Color(MINT, 0.2))
+			track.size.x *= qte.get_hold_ratio() if qte.is_holding() else 1.0
+			draw_rect(track, GOLD if qte.phase == Fishing.Phase.RELEASE_WAIT else MINT)
 
 
 func _draw_arrow(center: Vector2, direction: Vector2) -> void:
@@ -206,4 +221,4 @@ func _draw_arrow(center: Vector2, direction: Vector2) -> void:
 	var points := PackedVector2Array()
 	for point in shape:
 		points.append((center + point.rotated(direction.angle())).round())
-	draw_colored_polygon(points, MINT)
+	draw_colored_polygon(points, GOLD if qte.phase == Fishing.Phase.RELEASE_WAIT else MINT)

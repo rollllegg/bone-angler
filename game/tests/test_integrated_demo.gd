@@ -2,10 +2,11 @@ extends SceneTree
 ## Run with -- --capture and the renderer enabled to save gameplay checkpoints.
 
 const Data := preload("res://scripts/systems/playtest_data.gd")
+const SaveSlots := preload("res://scripts/demo/save_slots.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 const River := preload("res://scripts/demo/pixel_river.gd")
-const UI := preload("res://scripts/demo/demo_ui.gd")
+const TitleMenu := preload("res://scripts/demo/title_menu.gd")
 
 var demo
 var checks := 0
@@ -38,36 +39,52 @@ func _run() -> void:
 	var arrival: float = demo.session.spawn_remaining
 	demo.session.advance(50.0)
 	_check(demo.session.spawn_remaining == arrival, "Waiting at the title does not advance the arrival clock")
-	_check(_title_highlight_is(demo.start_button), "Only Start begins with the gold title style")
-	await _capture("01-cover")
+	_check(_title_highlight_is(demo.start_button), "Only Start begins selected")
+	var fish := demo._menu.get_node("RiverFish") as TitleMenu.RiverFish
+	_click(demo.settings_button)
+	_check(demo._settings_modal.is_open and _title_highlight_is(demo.settings_button), "Clicking Settings during the title entrance responds immediately")
+	_click_at(fish.get_global_transform() * fish._surface.cover_to_stage(Vector2(304, 169)))
+	_check(fish._jumps.is_empty() and demo._settings_modal.is_open, "The Settings button and panel absorb clicks over the river")
+	_key(KEY_ESCAPE)
+	_check(not demo._settings_modal.is_open, "Escape closes Settings during its entrance")
+	_key(KEY_DOWN)
+	_key(KEY_DOWN)
+	_check(_title_highlight_is(demo.start_button), "Arrow navigation wraps to Start during the entrance")
+	await _capture("01-cover", 0.82)
+	await _check_title_river(fish)
 	var continue_disabled: bool = demo.continue_button.disabled
 	demo.continue_button.disabled = false
 	_key(KEY_S)
-	_check(_title_highlight_is(demo.continue_button), "Selecting Continue makes it gold and restores Start to blue")
+	_check(_title_highlight_is(demo.continue_button), "Selecting Continue updates the selected row and pointer target")
 	_move_mouse(demo.quit_button.get_global_rect().get_center())
 	await process_frame
-	_check(_title_highlight_is(demo.quit_button), "Mouse hover moves the gold highlight to Quit")
+	_check(_title_highlight_is(demo.quit_button), "Mouse hover selects Quit")
 	_key(KEY_S)
-	_check(_title_highlight_is(demo.start_button), "Keyboard navigation wraps from Quit and restores its blue style")
+	_check(_title_highlight_is(demo.start_button), "Keyboard navigation wraps from Quit and clears its selection")
 	demo.continue_button.disabled = continue_disabled
 	_key(KEY_S)
 	if not demo.continue_button.disabled:
 		_key(KEY_S)
-	_check(_title_highlight_is(demo.settings_button), "Only Settings is gold after navigating to it")
-	await _capture("01c-cover-settings-selected")
-	_key(KEY_SPACE)
+	_check(_title_highlight_is(demo.settings_button), "Only Settings is selected after navigating to it")
+	await _capture("01c-cover-settings-selected", 0.15)
+	_key(KEY_ENTER)
 	await process_frame
-	_check(demo._settings_panel.visible, "S moves to Settings, skipping Continue when unavailable, and Space opens it")
-	await _capture("01b-settings")
+	_check(demo._settings_panel.visible and demo._settings_modal.is_open, "S skips unavailable Continue and Enter opens Settings")
+	await _capture("01b-settings", 0.20)
 	_key(KEY_C)
-	await process_frame
-	_check(not demo._settings_panel.visible and not demo.started, "C closes Settings without leaving the title screen")
-	_key(KEY_W)
+	_check(not demo._settings_modal.is_open and not demo.started, "C releases Settings input without leaving the title screen")
+	_key(KEY_UP)
 	if not demo.continue_button.disabled:
 		_key(KEY_W)
 	_key(KEY_SPACE)
-	_check(demo.started and demo._river_image.visible and not demo._menu.visible and not demo.river.casting, "W and Space can start the game without also casting")
-	_check(demo.session.coins == 40 and demo.qte.durability() == 10 and demo.qte.bait_stock[0] == 10 and demo.qte.equipped_charms() == 1 and demo.qte.hook == 0, "Opening equipment and money match the economy specification")
+	_check(demo.started and demo._river_image.visible and not demo._menu.visible and not demo.river.casting and demo._title_transition.visible, "Space enters the river synchronously under the transition without casting")
+	_check(fish._jumps.is_empty() and fish._bursts.is_empty(), "Entering the game clears title-only fish and ripples")
+	await create_timer(0.30).timeout
+	await process_frame
+	_check(not demo._title_transition.visible and not demo.river.casting, "The title transition finishes without affecting fishing")
+	_check(not demo._settings_panel.visible, "The dismissed Settings panel finishes closing after entering the river")
+	_check(demo.session.coins == 40 and demo.qte.durability() == 10 and demo.qte.bait_stock[0] == 10 and demo.qte.charms_owned == 0 and demo.qte.hook == 0, "Opening equipment and money match the economy specification")
+	_check(demo._rig_hint.text == "稳魂指骨自动装配 0 / 1", "The short rod starts with an empty charm slot")
 	_check(not demo.qte.buy_device(1) and not demo.qte.rods_owned[1], "The deep-water rod requires the stated purchase price")
 	_check(arrival >= Data.ARRIVAL_MIN and arrival <= Data.ARRIVAL_MAX, "The first arrival keeps the demo interval")
 	_check(demo._rig.size() == 4, "Only rod, hook, grip and bait can be selected at the river")
@@ -196,26 +213,51 @@ func _run() -> void:
 	_check(session.released_count == 0 and not demo._release_button.disabled, "An eligible soul requires explicit release")
 	await _capture("05-ready-to-release")
 	_key(KEY_SHIFT)
-	_check(demo.shop.departure_times == [0.0] and session.released_count == 1 and session.coins == 88, "Shift triggers departure and pays the 40-coin fee plus a first-service bonus")
+	_check(demo.shop.departure_times == [0.0] and session.released_count == 1 and session.coins == 62, "Shift triggers departure and pays the 20-coin fee plus a first-service bonus")
 	demo.shop.advance_presentation(2.0)
 	await _capture("06-departure")
 	demo.shop.advance_presentation(5.0)
-	_check(demo.shop.departure_times.is_empty() and session.released_count == 1 and session.coins == 88, "Departure completion does not award the fee again")
+	_check(demo.shop.departure_times.is_empty() and session.released_count == 1 and session.coins == 62, "Departure completion does not award the fee again")
 
 	_key(KEY_T)
 	_check(demo.market.visible and demo.market.active_filter == demo.market.Filter.ALL, "T opens the Octopath-style market showing ALL wares sorted by category")
+	var has_grip_ware: bool = demo.market._filtered_catalog().any(func(item: Dictionary) -> bool: return item.name == "基础握柄")
+	_check(not has_grip_ware, "The starter grip is absent from the market's all-wares list")
 	_key(KEY_SPACE)
-	_check(demo.market.browsing_wares and session.coins == 88, "The first Space enters the item list without making a purchase")
+	_check(demo.market.browsing_wares and session.coins == 62, "The first Space enters the item list without making a purchase")
 	_key(KEY_W)
-	_check(demo.market.selected_key == "device:0", "W moves to the previous market item")
+	_check(demo.market.selected_key == "device:2", "W wraps from the first buyable device to the last owned device")
 	_key(KEY_S)
 	await _capture("07-market")
+	_check(demo.market._cost_value.text == "160" and demo.market.action_button.disabled, "The new long rod is priced at 160 coins and one release cannot fund it")
+	session.coins = 360
+	demo.market.refresh()
 	_key(KEY_SPACE)
-	_check(fishing.rods_owned[1] and session.coins == 8 and fishing.rod == 0, "Buying the 80-coin long rod unlocks it without replacing the active rig")
+	_check(fishing.rods_owned[1] and session.coins == 200 and fishing.rod == 0, "Buying the 160-coin long rod unlocks it without replacing the active rig")
+	var ware_keys: Array = demo.market._filtered_catalog().map(func(item: Dictionary) -> String: return item.key)
+	_check(ware_keys.slice(-3) == ["device:0", "device:1", "device:2"], "Owned devices move below baits and temporarily unavailable repairs after checkout")
 	_key(KEY_C)
 	_check(not demo.market.browsing_wares and demo.market.visible, "C backs out one level from market items")
 	_key(KEY_S)
 	_check(demo.market.active_filter == demo.market.Filter.ROD, "S selects the next market category after backing out")
+	demo.market.select_filter(demo.market.Filter.HOOK)
+	ware_keys = demo.market._filtered_catalog().map(func(item: Dictionary) -> String: return item.key)
+	_check(ware_keys == ["device:3", "device:4", "device:2"], "The hook category puts the owned hook after hooks still for sale")
+	demo.market.select_device(Data.STEADY_CHARM)
+	_check(demo.market.active_filter == demo.market.Filter.CHARM and demo.market.ware_buttons.size() == 1, "The charm category lists only the steady charm")
+	_check(demo.market._detail_meta.text.contains("0 / 2") and demo.market._cost_value.text == "70", "The market shows both charms available for individual purchase")
+	_click(demo.market.action_button)
+	_check(fishing.charms_owned == 1 and fishing.equipped_charms() == 1 and session.coins == 130, "The first purchased charm costs 70 coins and fills the short rod slot")
+	_check(demo.market._detail_meta.text.contains("1 / 2") and not demo.market.action_button.disabled, "The market shows one charm owned and offers the second")
+	demo.market.select_filter(demo.market.Filter.ALL)
+	ware_keys = demo.market._filtered_catalog().map(func(item: Dictionary) -> String: return item.key)
+	var charm_key := "device:%d" % Data.STEADY_CHARM
+	_check(ware_keys.find(charm_key) < ware_keys.find("bait:0"), "The steady charm stays with purchasable gear when one remains")
+	_click(demo.market.action_button)
+	_check(fishing.charms_owned == 2 and fishing.equipped_charms() == 1 and session.coins == 60, "The second charm costs 70 coins and stays available for a second slot")
+	_check(demo.market._detail_meta.text.contains("2 / 2") and demo.market.action_button.disabled and not fishing.buy_device(Data.STEADY_CHARM), "The market caps charm purchases at two")
+	ware_keys = demo.market._filtered_catalog().map(func(item: Dictionary) -> String: return item.key)
+	_check(ware_keys.back() == charm_key, "The steady charm moves to the bottom after its last purchase")
 	_click(demo.market.filter_buttons[4])
 	await process_frame
 	_check(demo.market.active_filter == demo.market.Filter.BAIT and demo.market.ware_buttons.size() == Data.BAITS.size(), "Left rail Bait filter shows only baits")
@@ -225,13 +267,22 @@ func _run() -> void:
 	demo.market.select_bait(Data.VARIANT_BAIT)
 	await _capture("07c-market-bait")
 	_click(demo.market.action_button)
-	_check(fishing.bait_stock[Data.VARIANT_BAIT] == 1 and session.coins == 2, "The special bait costs six coins")
+	_check(fishing.bait_stock[Data.VARIANT_BAIT] == 1 and session.coins == 45, "The special bait costs 15 coins")
 	_click(demo.market.filter_buttons[5])
 	await process_frame
 	demo.market.select_repair(true)
+	_check(demo.market.action_button.disabled and demo.market._cost_value.text == "20", "The full repair price is visible at positive durability, with checkout disabled")
+	fishing.grip_durability = 0
+	demo.market.select_repair(false)
 	await _capture("07d-market-repair")
 	_click(demo.market.action_button)
-	_check(fishing.durability() == 10 and session.coins == 1, "Repair rounds one missing point up to one coin")
+	_check(fishing.durability() == 5 and session.coins == 37 and not fishing.quick_repair_available, "Quick repair costs eight coins and spends the opportunity")
+	fishing.grip_durability = 0
+	demo.market.refresh()
+	_check(demo.market.action_button.disabled and not fishing.repair(false) and session.coins == 37, "Quick repair cannot be repeated after the restored durability runs out")
+	demo.market.select_repair(true)
+	_click(demo.market.action_button)
+	_check(fishing.durability() == 10 and session.coins == 17 and fishing.quick_repair_available, "Full repair costs 20 coins and restores the quick repair opportunity")
 
 	_check_recipes(session)
 	await _check_special_cases(fishing, session)
@@ -244,11 +295,293 @@ func _run() -> void:
 	_check(demo._release_button.get_global_rect().end.x <= demo.get_viewport_rect().size.x, "Reception controls fit the smaller window")
 	await _capture("08-small-window")
 	await _check_daily_rotation(session)
+	_check_grip_restore()
 	demo.queue_free()
 	await process_frame
 	await _check_keyboard_workflows()
+	await _check_save_slots()
+	_check_dose_rewards()
+	await _check_return_to_title()
 	print("Integrated playtest: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)
+
+
+func _check_dose_rewards() -> void:
+	var model := Session.new()
+	root.add_child(model)
+	model.active = true
+	model.day = 5
+	model.requirements.assign([Vector3i(7, 7, 7), Vector3i(9, 9, 9)])
+	var expected := [33, 16, 8]
+	for count in range(1, 4):
+		var starting := Vector3i(8, 8, 7 - count * 2)
+		var soul := {"id": 1, "case_id": 0, "stats": starting, "before": starting, "fee": 30, "served": false}
+		model.souls.assign([soul])
+		model._first_services.clear()
+		model.essences[Data.LANTERN] = count
+		for index in count:
+			var preview := model.preview(1, true, Data.LANTERN)
+			_check(preview.reward == (expected[count - 1] if index == count - 1 else 0), "A legal dose previews the rounded payout only when it reaches the threshold")
+			_check(model.serve(1, true, Data.LANTERN) and Session.doses_used(soul) == index + 1, "Each successful dose is counted and consumed once")
+		var balance := model.coins
+		_check(model.essences[Data.LANTERN] == 0 and model.release_soul(1) and model.coins == balance + expected[count - 1], "One, two and three doses pay the full, half and quarter rewards with rounding")
+	_check(Session.doses_used({"served": true}) == 1, "A legacy served flag counts as one dose")
+	model.free()
+
+
+func _check_grip_restore() -> void:
+	demo.session.coins = 12
+	demo._restore_grip({"grip": 1, "grip_durability": [9, 3, 10]})
+	_check(demo.qte.durability() == 3 and demo.qte.quick_repair_available and demo.session.coins == 72, "Legacy saves keep the equipped grip's wear and recover the purchase price of duplicate grips")
+	demo._restore_grip({"grip_durability": 0, "quick_repair_available": false})
+	_check(demo.qte.durability() == 0 and not demo.qte.quick_repair_available and demo.session.coins == 72, "Updated saves preserve exhausted repair opportunities without an additional refund")
+
+
+func _check_title_river(fish: TitleMenu.RiverFish) -> void:
+	fish.set_process(false)
+	var surface := fish._surface
+	var starting_swim := fish._swimmer_pose(0)
+	fish._process(0.48)
+	_check(TitleMenu.RiverFish.SWIMMERS.size() == 7 and fish._swimmer_pose(0).x != starting_swim.x, "Seven ambient fish swim before starting a shift")
+	var swim_time := fish._time
+	var lane: Vector3 = TitleMenu.RiverFish.SWIMMERS[0]
+	var leg := fish.size.x + TitleMenu.RiverFish.SWIM_MARGIN - fish._swim_turns[0]
+	var turn_time := leg * (1.0 - 2.0 * lane.y) / lane.z
+	fish._time = turn_time - 0.25
+	var before_turn := fish._swimmer_pose(0)
+	fish._time = turn_time
+	var at_turn := fish._swimmer_pose(0)
+	fish._time = turn_time + 0.25
+	var after_turn := fish._swimmer_pose(0)
+	_check(before_turn.z < 0.0 and after_turn.z > 0.0 and at_turn.x < before_turn.x
+		and is_equal_approx(after_turn.x, before_turn.x) and surface.water_at(Vector2(at_turn.x, at_turn.y)),
+		"The fish turns at the left bank while still in the water")
+	var exit_time := turn_time + leg / lane.z
+	fish._time = exit_time - 0.25
+	var leaving := fish._swimmer_pose(0)
+	fish._time = exit_time + 0.25
+	var entering := fish._swimmer_pose(0)
+	_check(leaving.x > fish.size.x and entering.x > fish.size.x and leaving.z > 0.0 and entering.z < 0.0,
+		"The fish loops only after swimming out of view on the right")
+	fish._time = swim_time
+
+	var rig_time := surface._time
+	surface._time = 0.0
+	var float_before := surface._float_position()
+	var line_before := surface._line_point(0.5, float_before + Vector2(-3, -2))
+	surface._time = 1.0
+	var float_after := surface._float_position()
+	var attachment := float_after + Vector2(-3, -2)
+	_check(float_before != float_after and surface._line_point(0.5, attachment) != line_before
+		and surface._line_point(0.0, attachment) == TitleMenu.Atmosphere.ROD_TIP
+		and surface._line_point(1.0, attachment) == attachment, "The fishing line flexes between the fixed rod tip and moving bobber")
+	surface._time = rig_time
+	for land: Vector2 in [Vector2(210, 134), Vector2(165, 218), Vector2(179, 240)]:
+		_click_at(fish.get_global_transform() * surface.cover_to_stage(land))
+	_check(fish._jumps.is_empty(), "Sky, shore and the angler's boots reject fish clicks")
+	if demo.continue_button.disabled:
+		_click(demo.continue_button)
+		_check(fish._jumps.is_empty(), "A disabled Continue row still shields the river")
+	fish._rng.seed = 684
+	var origin := surface.cover_to_stage(Vector2(245, 221))
+	_click_at(fish.get_global_transform() * origin)
+	_check(fish._jumps.size() == 1 and fish._bursts.size() == 1, "Clicking the open river launches one fish and one ripple")
+	if fish._jumps.is_empty():
+		fish.set_process(true)
+		return
+	var jump := fish._jumps[0]
+	fish._process(jump.airtime * 0.5)
+	_check(jump.origin.is_equal_approx(origin) and jump.offset(TitleMenu.RiverFish.GRAVITY).y < -20.0
+		and not is_zero_approx(jump.velocity.x), "The fish follows an upward arc from the clicked position")
+	await _capture("01e-title-fish-jump")
+	fish._process(jump.airtime * 0.5 + 0.01)
+	var splash := fish._bursts.back() as TitleMenu.RiverFish.Burst
+	_check(fish._jumps.is_empty() and splash.landing and surface.water_at(splash.origin)
+		and is_equal_approx(splash.origin.y, origin.y), "The fish lands at its launch height and creates a splash within the river")
+	_check(fish.find_children("*", "AudioStreamPlayer", true, false).is_empty(), "Title fish land silently")
+	fish._process(0.20)
+	await _capture("01f-title-fish-splash")
+	# The open gap between Continue and Settings lies within the painted menu scrim.
+	_click_at(fish.get_global_transform() * surface.cover_to_stage(Vector2(385, 168)))
+	_check(fish._jumps.size() == 1, "The painted gap between the menu rows still accepts water clicks")
+	_check(not demo.session.active and not demo.started, "River interaction leaves the shift clock suspended")
+	fish.set_process(true)
+
+
+func _check_return_to_title() -> void:
+	var error := change_scene_to_file("res://scenes/demo/demo.tscn")
+	_check(error == OK, "The playable scene can be opened through the scene tree")
+	if error != OK:
+		return
+	await scene_changed
+	demo = current_scene
+	for use_keyboard in [true, false]:
+		var old_scene_id: int = demo.get_instance_id()
+		demo.auto_pause_on_focus_loss = false
+		_click(demo.start_button)
+		demo.session.coins = 99
+		_key(KEY_P)
+		_check(demo._pause_banner.visible, "The active game can open the pause menu before returning to the title")
+		if use_keyboard:
+			_key(KEY_A)
+			_key(KEY_SPACE)
+		else:
+			_click(demo._pause_buttons[3])
+		_check(current_scene == demo and demo.is_inside_tree(), "Return to Title keeps the viewport attached until input dispatch finishes")
+		await process_frame
+		await process_frame
+		var reloaded := current_scene != null and current_scene.get_instance_id() != old_scene_id
+		_check(reloaded, "Return to Title reloads the playable scene")
+		if not reloaded:
+			return
+		demo = current_scene
+		_check(not demo.started and demo._menu.visible and not demo.session.paused and not demo._pause_banner.is_visible_in_tree(), "Return to Title reopens a fresh cover through the scene tree")
+	_click(demo.start_button)
+	_check(demo.started and demo.session.coins == 40 and demo._river_image.visible, "A new game can start normally after returning to the title")
+
+
+func _check_save_slots() -> void:
+	var directory := "res://build/validation/save-slots-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	demo = preload("res://scenes/demo/demo.tscn").instantiate()
+	demo.save_directory = directory
+	demo.auto_pause_on_focus_loss = false
+	root.add_child(demo)
+	demo.session.set_process(false)
+	demo.qte.set_process(false)
+	_check(demo.continue_button.disabled, "A fresh profile has no saved game to continue")
+	_key(KEY_SPACE)
+	_check(demo._summary.position.x == 48 and not demo.has_save(), "The summary starts at the left and a new game leaves all save slots empty")
+	demo.session.coins = 91
+	demo.qte.cast()
+	demo.qte.advance(0.5)
+	_key(KEY_R)
+	_key(KEY_P)
+	var wait: float = demo.qte.remaining
+	_key(KEY_D)
+	_key(KEY_SPACE)
+	var menu = demo._save_menu
+	_check(menu.visible and menu.saving and menu.slot_buttons.size() == 3 and menu.slot_buttons[0].text.contains("空位"), "Pause opens three empty slots with the keyboard")
+	await _capture("10-save-slots", 0.20)
+	_key(KEY_SPACE)
+	var first_path := SaveSlots.existing_path(directory, 0)
+	_check(not first_path.is_empty() and not menu._confirmation.visible and menu.slot_buttons[0].text.contains("渡魂币 91"), "Space writes to an empty slot immediately and updates its summary")
+	demo.session.coins = 137
+	_key(KEY_SPACE)
+	_check(menu._confirmation.visible and menu._confirm_cursor == 0, "An occupied slot asks for confirmation with Cancel selected")
+	await _capture("11-save-overwrite", 0.20)
+	_key(KEY_C)
+	_check(menu.visible and not menu._confirmation.visible and int(SaveSlots.read(first_path).coins) == 91, "C returns to the slots without overwriting")
+	_key(KEY_SPACE)
+	_key(KEY_D)
+	_key(KEY_SPACE)
+	_check(not menu._confirmation.visible and int(SaveSlots.read(first_path).coins) == 137, "Space on the overwrite confirmation replaces only that slot")
+	demo.session.coins = 205
+	_key(KEY_S)
+	_key(KEY_SPACE)
+	demo.session.coins = 220
+	_key(KEY_S)
+	_key(KEY_SPACE)
+	var second_path := SaveSlots.existing_path(directory, 1)
+	var third_path := SaveSlots.existing_path(directory, 2)
+	_check(int(SaveSlots.read(second_path).coins) == 205 and int(SaveSlots.read(third_path).coins) == 220, "The three manual saves are independent")
+
+	_key(KEY_C)
+	_check(not menu.is_open and demo.session.paused, "C from the slot list returns input to the pause menu")
+	demo.session.coins = 999
+	demo.session.essences[0] = 12
+	demo.qte.phase = Fishing.Phase.READY
+	_key(KEY_D)
+	_key(KEY_SPACE)
+	_check(menu.visible and not menu.saving, "Load is available alongside Save and Return to Title")
+	_key(KEY_S)
+	_key(KEY_SPACE)
+	_check(not menu.is_open and not demo.session.paused and demo.current_location == "Alchemy" and demo.session.coins == 205 and demo.session.essences[0] == 0, "Reading the second slot restores its wallet, inventory and location")
+	_check(demo.qte.phase == Fishing.Phase.WAITING and is_equal_approx(demo.qte.remaining, wait), "Reading restores the unfinished fishing timer without charging for another cast")
+	_key(KEY_Q)
+	_hook_fish(demo.qte, 1, 1)
+	demo.qte.advance(Data.PREPARATION)
+	demo.qte.advance(demo.qte.get_target_time())
+	var direction: int = demo.qte.get_expected_direction()
+	_check(demo.save_progress(2), "An active reel-in can be saved")
+	demo.qte.retract()
+	_check(demo.load_progress(2) and demo.qte.phase == Fishing.Phase.REELING and demo.qte.locked.species == 1, "Reading a reel-in restores the pending fish")
+	_check(demo.qte.submit_direction(direction) and demo.qte.progress == 2 and demo.qte.durability() == 9 and demo.qte.bait_stock[0] == 9, "A restored reel-in keeps its timing and consumes no additional bait or durability")
+	demo.qte.advance(Data.ROUND_GAP)
+	demo.qte.advance(demo.qte.get_target_time())
+	direction = demo.qte.get_expected_direction()
+	_check(demo.qte.submit_direction(direction) and demo.qte.phase == Fishing.Phase.HOLDING, "The next round starts a sustained input")
+	demo.qte.advance(demo.qte.remaining)
+	var release_time: float = demo.qte.remaining
+	_check(demo.qte.phase == Fishing.Phase.RELEASE_WAIT and demo.save_progress(2), "A pending surge can be saved while the gold ring is active")
+	demo.qte.retract()
+	_check(demo.load_progress(2) and demo.qte.phase == Fishing.Phase.RELEASE_WAIT and demo.qte.needs_rehold, "Reload preserves the surge and waits for a physical rehold")
+	demo.qte.advance(2.0)
+	_check(is_equal_approx(demo.qte.remaining, release_time) and demo.qte.mistakes == 0, "Reload leaves the release window frozen until rehold")
+	demo.qte.submit_direction(direction)
+	demo.qte.advance(demo.qte._release_lead)
+	demo.qte.release_direction(direction)
+	_check(demo.qte.phase == Fishing.Phase.CAUGHT and demo.session.catches.size() == 1, "The restored surge lands exactly one fish")
+	demo.session.advance(demo.session.spawn_remaining)
+	demo.session.requirements.assign([Vector3i(7, 7, 7), Vector3i(9, 9, 9)])
+	var guest: Dictionary = demo.session.souls[0]
+	guest.case_id = 0
+	guest.stats = Vector3i(6, 5, 7)
+	guest.fee = 40
+	demo.session.essences[0] = 1
+	demo.session.essences[1] = 1
+	var served: bool = demo.session.serve(guest.id, true, 0) and demo.session.serve(guest.id, true, 1)
+	_check(served and demo.save_progress(2) and demo.load_progress(2), "A visitor can be saved after taking two doses")
+	var restored_guest: Dictionary = demo.session.get_soul(guest.id)
+	_check(Session.doses_used(restored_guest) == 2 and restored_guest.fee == 40, "Reload keeps the two doses and the original base fee")
+	_check(demo.session.release_soul(guest.id) and demo.session.last_payout == 22, "A reloaded two-dose visitor still pays half of the original reward")
+	var interim := SaveSlots.read(third_path)
+	interim["rules_version"] = 15
+	interim.erase("grip_durability")
+	interim.erase("quick_repair_available")
+	interim["shared_wear"] = 3
+	interim["bait_stock"] = [2, 0, 0, 0, 3, 0, 0, 1]
+	interim["bait"] = 4
+	var scheduled: Dictionary = interim.day_schedule
+	scheduled.erase("bounds")
+	scheduled.guests = scheduled.guests.map(func(entry: Array) -> Dictionary: return {"case_id": entry[0]})
+	_check(SaveSlots.write(directory, 2, interim) and demo.load_progress(2), "A slot written during the v1.5 trial remains readable after rollback")
+	_check(Session.doses_used(demo.session.get_soul(guest.id)) == 2 and demo.qte.durability() == 7 and demo.qte.bait_stock[0] == 5, "Trial slots retain dose counts, accumulated wear and recovered starter bait")
+	demo.queue_free()
+	await process_frame
+
+	var legacy_path := directory.path_join(SaveSlots.LEGACY_NAME)
+	var legacy_data := SaveSlots.read(first_path)
+	legacy_data.erase("fishing")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(first_path))
+	var legacy_file := FileAccess.open(legacy_path, FileAccess.WRITE)
+	legacy_file.store_string(JSON.stringify(legacy_data))
+	legacy_file.close()
+	demo = preload("res://scenes/demo/demo.tscn").instantiate()
+	demo.save_directory = directory
+	demo.auto_pause_on_focus_loss = false
+	root.add_child(demo)
+	demo.session.set_process(false)
+	demo.qte.set_process(false)
+	_key(KEY_S)
+	_key(KEY_SPACE)
+	_check(demo._save_menu.visible and not demo.started, "Continue on the title opens the same three-slot load menu")
+	var fish := demo._menu.get_node("RiverFish") as TitleMenu.RiverFish
+	_click_at(fish.get_global_transform() * fish._surface.cover_to_stage(Vector2(405, 248)))
+	_check(fish._jumps.is_empty() and demo._save_menu.is_open, "An open load dialog also blocks clicks outside its panel")
+	await _capture("01d-title-load", 0.20)
+	_key(KEY_C)
+	_check(not demo._save_menu.is_open and not demo.started, "C from the title load menu returns input to the title")
+	await create_timer(0.18).timeout
+	await process_frame
+	_check(not demo._save_menu.visible, "The title load menu finishes closing after its fade")
+	_key(KEY_SPACE)
+	_key(KEY_SPACE)
+	_check(demo.started and demo.session.coins == 137 and demo.qte.phase == Fishing.Phase.READY, "The previous single-file save loads from slot one")
+	demo.queue_free()
+	await process_frame
+	for path in [legacy_path, second_path, third_path]:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(directory))
 
 
 func _check_keyboard_workflows() -> void:
@@ -332,7 +665,7 @@ func _check_keyboard_workflows() -> void:
 	_key(KEY_SPACE)
 	_key(KEY_D)
 	_key(KEY_SPACE)
-	_check(demo.qte.bait_stock[Data.Bait.DEFAULT] == Data.STARTING_BAIT + 5 and session.coins == balance - 10, "The keyboard can choose a market category, set a quantity and buy the selected bait")
+	_check(demo.qte.bait_stock[Data.Bait.DEFAULT] == Data.STARTING_BAIT + 5 and session.coins == balance - 15, "The keyboard can choose a market category, set a quantity and buy the selected bait")
 	_key(KEY_C)
 	_key(KEY_C)
 	_check(demo.current_location == "River", "Two back steps leave the item list and return to the river")
@@ -431,7 +764,7 @@ func _check_daily_rotation(session: Session) -> void:
 	for day_number in range(1, Session.DAY_COUNT + 1):
 		_check(session.day == day_number, "The previous day's last release opens exactly one new day")
 		session.advance(300.0)
-		var already_released := session.released_count - (day_number - 1) * Session.GUESTS_PER_DAY
+		var already_released := session.released_count + session.rejected_count - (day_number - 1) * Session.GUESTS_PER_DAY
 		_check(session.souls.size() + already_released == 6 and not session.has_more_arrivals(), "The day's arrivals stop after six guests")
 		if day_number == 4:
 			_check(demo.soul_hud._legend_label.text.count("～") == 3, "Reception displays all three day-four target ranges")
@@ -442,7 +775,9 @@ func _check_daily_rotation(session: Session) -> void:
 				continue
 			soul.stats = session.requirements[0]
 			_check(session.release_soul(soul.id), "A guest meeting the inclusive current bounds can be released")
-	_check(session.is_complete() and session.day == 5 and session.released_count == 30 and session._first_services.size() == 30, "All thirty guests complete the five-day shift without duplicate cases")
+		if session.awaiting_day_report:
+			session.close_day_report()
+	_check(session.is_complete() and session.day == 5 and session.released_count + session.rejected_count == 30 and session._first_services.size() == 30, "All thirty guests complete the five-day shift without duplicate cases")
 
 
 func _check_smaller_roster_save() -> void:
@@ -506,6 +841,7 @@ func _check_starter_cases() -> void:
 			single_dose_for_all = single_dose_for_all and model.souls.size() == 6
 			for soul in model.souls.duplicate():
 				if soul.has("story_case"):
+					single_dose_for_all = _resolve_story(model, soul.id) and single_dose_for_all
 					continue
 				var stats: Vector3i = soul.stats
 				var violations := 0
@@ -522,6 +858,8 @@ func _check_starter_cases() -> void:
 					new_dose_solves_will = new_dose_solves_will and model.is_eligible(stats + Vector3i(0, 0, -1))
 				soul.stats = model.requirements[0]
 				model.release_soul(soul.id)
+			if model.awaiting_day_report:
+				model.close_day_report()
 		model.free()
 	_check(single_dose_for_all, "The first two days' cases each miss one requirement and are solvable with a single shallow-water essence")
 	_check(will_cases > 0 and new_dose_solves_will, "Each early excess-will case can use one stillfin dose")
@@ -700,8 +1038,8 @@ func _check_recipes(session: Session) -> void:
 
 func _check_special_cases(fishing: Fishing, session: Session) -> void:
 	_key(KEY_Q)
-	fishing.set_rig(1, 0, 0, Data.VARIANT_BAIT)
-	_check(fishing.equipped_charms() == 1, "The long rod only equips the owned charm")
+	fishing.set_rig(1, 0, Data.VARIANT_BAIT)
+	_check(fishing.equipped_charms() == 2 and demo._rig_hint.text.contains("2 / 2"), "The long rod automatically equips both purchased charms")
 	fishing.cast()
 	var rng := RandomNumberGenerator.new()
 	for seed in 1000:
@@ -727,15 +1065,14 @@ func _check_special_cases(fishing: Fishing, session: Session) -> void:
 	session.refine(session.catches[0].id)
 	session.serve(boatman.id, true, Data.LANTERN)
 	session.serve(boatman.id, true, Data.LANTERN)
-	_check(session.release_soul(boatman.id) and session.last_payout == 56 and session.coins == 57, "The boatman pays the first-service and commission bonuses when will is 9")
+	_check(session.release_soul(boatman.id) and session.last_payout == 12 and session.coins == 29, "Two doses halve the boatman reward including the first-service and commission bonuses")
 	session.advance(session.spawn_remaining)
 	var worker: Dictionary = session.souls.back()
 	var change := session.preview(worker.id, false, session.potions.back().id)
 	_check(change.after.x == 10, "Potion preview clamps after applying the whole dose")
-	_check(fishing.buy_bait(Data.BONE_BAIT, 2) and session.coins == 51, "Two bone baits cost six coins")
+	_check(fishing.buy_bait(Data.BONE_BAIT, 2) and session.coins == 15, "Two bone baits cost 14 coins")
 	_check(fishing.bait == Data.BONE_BAIT and fishing.can_cast(), "Buying bait when the equipped bait is empty automatically equips the new bait")
-	fishing.charms_owned = 2
-	fishing.set_rig(0, 0, 0, Data.BONE_BAIT)
+	fishing.set_rig(0, 0, Data.BONE_BAIT)
 	_check(fishing.equipped_charms() == 1, "The short rod automatically equips one of two owned charms")
 	fishing.cast()
 	for seed in 1000:
@@ -759,15 +1096,11 @@ func _check_special_cases(fishing: Fishing, session: Session) -> void:
 	_hook_fish(fishing, 1, 1)
 	_key(KEY_X)
 	_check(fishing.phase == Fishing.Phase.ESCAPED and fishing.durability() == 7 and session.catches.is_empty(), "Abandoning a locked catch preserves the charge")
-	_check(fishing.buy_device(5), "The market sells an additional basic grip")
-	fishing.set_rig(0, 0, 1, 0)
-	_check(fishing.durability() == 10, "A newly purchased grip starts at full durability")
-	fishing.set_rig(0, 0, 0, 0)
-	_check(fishing.durability() == 7, "Reinstalling the previous grip restores its saved wear")
-	fishing.set_rig(0, 0, 0, 3)
+	fishing.set_rig(1, 0, Data.Bait.WILL)
+	_check(fishing.durability() == 7, "Changing rods retains the basic grip's wear")
 	demo._refresh_river()
 	_check(demo._cast_button.disabled and demo._cast_button.text == "当前鱼饵 ×0" and demo._river_hint.text.contains("Shift 换饵"), "Selecting an empty bait clearly explains how to switch bait")
-	fishing.set_rig(0, 0, 0, 0)
+	fishing.set_rig(0, 0, Data.Bait.DEFAULT)
 
 
 func _check_missed_bite(fishing: Fishing, session: Session) -> void:
@@ -806,6 +1139,10 @@ func _pull(direction: int) -> void:
 	var code: Key = Fishing.DIRECTION_KEYS[direction]
 	_key(code)
 	demo._submit_pending_pull()
+	if demo.qte.phase == Fishing.Phase.HOLDING:
+		demo.qte.advance(demo.qte.remaining)
+	if demo.qte.phase == Fishing.Phase.RELEASE_WAIT:
+		demo.qte.advance(demo.qte._release_lead)
 	_key(code, false, false)
 
 
@@ -854,10 +1191,8 @@ func _move_mouse(point: Vector2) -> void:
 
 
 func _title_highlight_is(selected: Button) -> bool:
-	for button: Button in demo._menu_buttons:
-		var style := button.get_theme_stylebox("normal") as StyleBoxTexture
-		var expected := UI.BTN_GOLD_NORMAL if button == selected else UI.BTN_NORMAL
-		if style.texture != expected:
+	for button: TitleMenu.Row in demo._menu_buttons:
+		if button.selected != (button == selected):
 			return false
 	return is_equal_approx(demo._menu_pointer.position.y, selected.position.y)
 
@@ -869,9 +1204,11 @@ func _check(condition: bool, message: String) -> void:
 		push_error("FAIL: " + message)
 
 
-func _capture(label: String) -> void:
+func _capture(label: String, settle: float = 0.0) -> void:
 	if not "--capture" in OS.get_cmdline_user_args():
 		return
+	if settle > 0.0:
+		await create_timer(settle).timeout
 	demo.river.queue_redraw()
 	demo.shop.queue_redraw()
 	for frame in 4:

@@ -2,6 +2,8 @@ extends Control
 ## The playable fishing, alchemy and soul reception loop with pixel-art UI.
 
 const UI := preload("res://scripts/demo/demo_ui.gd")
+const TitleMenu := preload("res://scripts/demo/title_menu.gd")
+const TitleSettings := preload("res://scripts/demo/title_settings.gd")
 const SoulHUD := preload("res://scripts/demo/soul_status_hud.gd")
 const River := preload("res://scripts/demo/pixel_river.gd")
 const Shop := preload("res://scripts/demo/pixel_shop.gd")
@@ -9,19 +11,19 @@ const Alchemy := preload("res://scripts/demo/alchemy_panel.gd")
 const Market := preload("res://scripts/demo/market_panel.gd")
 const StoryPanel := preload("res://scripts/demo/story_panel.gd")
 const DayReportPanel := preload("res://scripts/demo/day_report_panel.gd")
-const StoryStage := preload("res://scripts/story/story_stage.gd")
+const SaveMenu := preload("res://scripts/demo/save_menu.gd")
+const SaveSlots := preload("res://scripts/demo/save_slots.gd")
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const BASE_SIZE := Vector2(1620, 972)
-const SAVE_PATH := "user://bone_angler_save.json"
 const STORY_LAB_ARG := "--story-lab"
+const LEGACY_DUPLICATE_GRIP_PRICE := 30
 const RIVER_TAB_TEXT := "Q 河岸"
 const RIVER_ALERT_COLOR := Color("ff5353")
 const BONE_NOTICE_DURATION := 4.0
 const FONT := preload("res://assets/fonts/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf.woff2")
 const FONT_FALLBACK := preload("res://assets/fonts/NotoSansSC.ttf")
-const COVER := preload("res://assets/art/demo/cover.png")
 const CATCH_BOX_SIZES := [Vector2(184, 112), Vector2(236, 144), Vector2(288, 176), Vector2(310, 184)]
 # Mouth positions measured in each original texture before rotation.
 const FISH_MOUTH_PIXELS := {
@@ -49,31 +51,24 @@ var market: Market
 var soul_hud: SoulHUD
 var story_panel: StoryPanel
 var day_report: DayReportPanel
-var story_stage: StoryStage
 
 var started: bool = false
 var current_location: String = "River"
 var auto_pause_on_focus_loss: bool = true
 var persist_save: bool = true
+var save_directory := "user://"
 var start_button: Button
 var continue_button: Button
 var settings_button: Button
 var quit_button: Button
 
 var _stage: Control
-var _menu: Control
-var _menu_pointer: Label
+var _menu: TitleMenu
+var _menu_pointer: Control
 var _menu_buttons: Array[Button] = []
-var _menu_cursor := 0
-var _settings_backdrop: Button
+var _settings_modal: TitleSettings
 var _settings_panel: Panel
-var _settings_pointer: Label
-var _settings_buttons: Array[Button] = []
-var _settings_cursor := 0
-var _window_mode_btn: Button
-var _fullscreen_mode_btn: Button
-var _autopause_on_btn: Button
-var _autopause_off_btn: Button
+var _title_transition: ColorRect
 var _hud: Control
 var _river_ui: Control
 var _shop_ui: Control
@@ -81,10 +76,11 @@ var _river_image: TextureRect
 var _shop_image: TextureRect
 var _river_viewport: SubViewport
 var _shop_viewport: SubViewport
-var _story_screen: Control
 var _pause_banner: Control
+var _pause_buttons: Array[Button] = []
+var _pause_cursor := 0
+var _save_menu: SaveMenu
 var _summary: Label
-var _place_title: Label
 var _river_button: Button
 var _river_bite_alert: Label
 var _river_notice: Panel
@@ -141,6 +137,7 @@ var _selected_dose: Variant = null
 var _dose_preview: Label
 var _serve_button: Button
 var _release_button: Button
+var _story_action_button: Button
 
 var _held_keys: Dictionary = {}
 var _pending_directions: Array[int] = []
@@ -180,22 +177,12 @@ func _ready() -> void:
 	_shop_viewport = shop_display["viewport"]
 	shop.bind(session)
 
-	_story_screen = Control.new()
-	_story_screen.name = "StoryScreen"
-	_story_screen.size = BASE_SIZE
-	_story_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_stage.add_child(_story_screen)
 
 	_build_menu()
 	_build_hud()
 	_build_river_ui()
 	_build_shop_ui()
 
-	story_stage = StoryStage.new()
-	story_stage.name = "StoryStage"
-	_stage.add_child(story_stage)
-	story_stage.bind(shop, _story_screen)
-	story_panel.set_stage(story_stage)
 
 	day_report = DayReportPanel.new()
 	day_report.name = "DayReport"
@@ -214,14 +201,24 @@ func _ready() -> void:
 
 	_build_pause()
 	_build_river_notice()
+	_save_menu = SaveMenu.new()
+	_stage.add_child(_save_menu)
+	_save_menu.setup(BASE_SIZE)
+	_save_menu.slot_selected.connect(_select_save_slot)
+	_save_menu.overwrite_confirmed.connect(_save_to_slot)
+
+	_title_transition = ColorRect.new()
+	_title_transition.size = BASE_SIZE
+	_title_transition.color = UI.INK
+	_title_transition.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_title_transition.hide()
+	_stage.add_child(_title_transition)
 
 	shop.presentation_changed.connect(_refresh_shared)
-	session.state_changed.connect(save_progress)
 	qte.state_changed.connect(_refresh_river)
 	qte.state_changed.connect(_refresh_river_notice)
 	qte.bone_recovered.connect(_show_bone_notice)
 	qte.state_changed.connect(_refresh_economy)
-	qte.state_changed.connect(save_progress)
 	resized.connect(_resize)
 	_resize()
 	_update_activation()
@@ -251,147 +248,41 @@ func _pixel_display(world_script: Script) -> Dictionary:
 
 
 func _build_menu() -> void:
-	_menu = Control.new()
-	_menu.size = BASE_SIZE
+	_menu = TitleMenu.new()
 	_stage.add_child(_menu)
-	var backdrop := ColorRect.new()
-	backdrop.size = BASE_SIZE
-	backdrop.color = Color("1b2a4c")
-	_menu.add_child(backdrop)
-	var cover := TextureRect.new()
-	cover.position = Vector2(0, 61)
-	cover.size = Vector2(1620, 911)
-	cover.texture = COVER
-	cover.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	cover.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	cover.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_menu.add_child(cover)
-
-	# Classic indie-game vertical title menu positioned cleanly below the logo
-	var menu_x := 1138.0
-	var menu_w := 356.0
-	var btn_h := 66.0
-	var gap := 18.0
-	var start_y := 486.0
-
-	_menu_pointer = UI.label(_menu, "▶", Rect2(menu_x - 42.0, start_y, 34, btn_h), 26, UI.GOLD)
-	_menu_pointer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-	start_button = _make_title_button("开始游戏", UI.ICON_ROD, Rect2(menu_x, start_y, menu_w, btn_h), _start_game)
-	start_button.name = "StartGame"
-	continue_button = _make_title_button("继续游戏", UI.ICON_SOUL, Rect2(menu_x, start_y + (btn_h + gap) * 1.0, menu_w, btn_h), _continue_game)
-	continue_button.name = "ContinueGame"
-	settings_button = _make_title_button("游戏设置", UI.ICON_WRENCH, Rect2(menu_x, start_y + (btn_h + gap) * 2.0, menu_w, btn_h), _open_settings)
-	settings_button.name = "SettingsButton"
-	quit_button = _make_title_button("退出游戏", UI.ICON_EXIT, Rect2(menu_x, start_y + (btn_h + gap) * 3.0, menu_w, btn_h), func() -> void: get_tree().quit())
-	quit_button.name = "QuitGame"
-	UI.label(_menu, "W / S  选择　　空格  确认", Rect2(menu_x, 826, menu_w, 36), 18, UI.CREAM)
+	_menu.setup(BASE_SIZE, _start_game, _open_save_slots.bind(false), _open_settings, get_tree().quit)
+	_menu_buttons = _menu.buttons
+	_menu_pointer = _menu.pointer
+	start_button = _menu_buttons[0]
+	continue_button = _menu_buttons[1]
+	settings_button = _menu_buttons[2]
+	quit_button = _menu_buttons[3]
 	_refresh_continue_button()
 
-	# Pixel-art Settings overlay modal (hidden by default)
-	_settings_backdrop = Button.new()
-	_settings_backdrop.position = Vector2.ZERO
-	_settings_backdrop.size = BASE_SIZE
-	_settings_backdrop.focus_mode = Control.FOCUS_NONE
-	_settings_backdrop.visible = false
-	var dim := StyleBoxFlat.new()
-	dim.bg_color = Color(0.05, 0.04, 0.09, 0.62)
-	_settings_backdrop.add_theme_stylebox_override("normal", dim)
-	_settings_backdrop.add_theme_stylebox_override("hover", dim)
-	_settings_backdrop.add_theme_stylebox_override("pressed", dim)
-	_settings_backdrop.pressed.connect(_close_settings)
-	_menu.add_child(_settings_backdrop)
-
-	_settings_panel = UI.panel(_menu, Rect2(470, 224, 680, 524), "popup")
-	_settings_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_settings_panel.visible = false
-	UI.icon_rect(_settings_panel, UI.ICON_WRENCH, Rect2(26, 22, 34, 34))
-	UI.label(_settings_panel, "游戏设置", Rect2(70, 20, 300, 40), 26, UI.GOLD)
-	var close_x := UI.button(_settings_panel, "×", Rect2(614, 18, 46, 42), _close_settings, false)
-	close_x.add_theme_font_size_override("font_size", 24)
-
-	# Row 1: Display mode
-	UI.label(_settings_panel, "显示模式", Rect2(34, 88, 220, 44), 22, UI.CREAM)
-	_window_mode_btn = UI.button(_settings_panel, "窗口模式", Rect2(278, 86, 178, 48), _set_display_mode.bind(false), false)
-	_fullscreen_mode_btn = UI.button(_settings_panel, "全屏模式", Rect2(468, 86, 178, 48), _set_display_mode.bind(true), false)
-
-	# Row 2: Auto-pause on focus loss
-	UI.label(_settings_panel, "切出窗口自动暂停", Rect2(34, 154, 230, 44), 22, UI.CREAM)
-	_autopause_on_btn = UI.button(_settings_panel, "开启", Rect2(278, 152, 178, 48), _set_auto_pause.bind(true), false)
-	_autopause_off_btn = UI.button(_settings_panel, "关闭", Rect2(468, 152, 178, 48), _set_auto_pause.bind(false), false)
-
-	# Row 3: Keybinds reference box
-	UI.panel(_settings_panel, Rect2(34, 224, 612, 198), "slot")
-	UI.label(_settings_panel, "操作按键", Rect2(54, 236, 200, 32), 20, UI.MINT)
-	var controls_lbl := UI.label(_settings_panel, "Q 河岸　E 接待　R 炼药　T 市场\nWASD 选择／拉鱼　空格 确认／抛竿\nShift 更换部件／放行　C 取消／返回\nX 收竿　P / Esc 暂停或继续", Rect2(54, 274, 572, 134), 19, UI.CREAM)
-	controls_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	var ok_btn := UI.button(_settings_panel, "确定", Rect2(210, 442, 260, 56), _close_settings, true)
-	ok_btn.add_theme_font_size_override("font_size", 23)
-	_settings_buttons.assign([_window_mode_btn, _fullscreen_mode_btn, _autopause_on_btn, _autopause_off_btn, ok_btn])
-	_settings_pointer = UI.label(_settings_panel, "▶", Rect2(0, 0, 20, 48), 18, UI.GOLD)
-	for i in _settings_buttons.size():
-		_settings_buttons[i].mouse_entered.connect(_move_settings_pointer.bind(i))
+	_settings_modal = TitleSettings.new()
+	_menu.add_child(_settings_modal)
+	_settings_modal.setup(BASE_SIZE, _set_display_mode, _set_auto_pause)
+	_settings_panel = _settings_modal.panel
 	_refresh_settings_ui()
 
 
-func _make_title_button(title: String, icon: Texture2D, rect: Rect2, callback: Callable) -> Button:
-	var shadow := ColorRect.new()
-	shadow.position = rect.position + Vector2(5, 6)
-	shadow.size = rect.size
-	shadow.color = Color(0.05, 0.04, 0.1, 0.58)
-	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_menu.add_child(shadow)
-
-	var index := _menu_buttons.size()
-	var btn := UI.button(_menu, title, rect, callback, index == _menu_cursor)
-	btn.add_theme_font_size_override("font_size", 25)
-	if icon != null:
-		UI.icon_rect(btn, icon, Rect2(26, (rect.size.y - 30.0) * 0.5, 30, 30))
-	_menu_buttons.append(btn)
-	btn.mouse_entered.connect(func() -> void:
-		if not btn.disabled:
-			_select_title_button(index)
-	)
-	return btn
-
-
 func _select_title_button(index: int) -> void:
-	if index == _menu_cursor:
-		return
-	UI.set_button_primary(_menu_buttons[_menu_cursor], false)
-	_menu_cursor = index
-	UI.set_button_primary(_menu_buttons[index], true)
-	_menu_pointer.position.y = _menu_buttons[index].position.y
-
-
-func _move_settings_pointer(index: int) -> void:
-	_settings_cursor = index
-	_settings_pointer.position = _settings_buttons[index].position + Vector2(9, 0)
+	_menu.select(index)
 
 
 func _refresh_continue_button() -> void:
-	if continue_button == null:
-		return
 	var available := has_save()
 	continue_button.disabled = not available
-	continue_button.tooltip_text = "继续上次冥河值班进度" if available else "暂无存档记录"
-	for child in continue_button.get_children():
-		if child is TextureRect:
-			child.modulate = Color(1, 1, 1, 1.0 if available else 0.4)
+	continue_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if available else Control.CURSOR_ARROW
 
 
 func _open_settings() -> void:
 	_refresh_settings_ui()
-	_move_settings_pointer(0)
-	_settings_backdrop.visible = true
-	_settings_panel.visible = true
+	_settings_modal.open()
 
 
 func _close_settings() -> void:
-	_settings_backdrop.visible = false
-	_settings_panel.visible = false
+	_settings_modal.dismiss()
 
 
 func _set_display_mode(fullscreen: bool) -> void:
@@ -405,13 +296,8 @@ func _set_auto_pause(enabled: bool) -> void:
 
 
 func _refresh_settings_ui() -> void:
-	if _window_mode_btn == null:
-		return
-	var is_fs := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
-	UI.set_tab_active(_window_mode_btn, not is_fs)
-	UI.set_tab_active(_fullscreen_mode_btn, is_fs)
-	UI.set_tab_active(_autopause_on_btn, auto_pause_on_focus_loss)
-	UI.set_tab_active(_autopause_off_btn, not auto_pause_on_focus_loss)
+	var fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+	_settings_modal.sync_options(fullscreen, auto_pause_on_focus_loss)
 
 
 func _build_hud() -> void:
@@ -419,8 +305,7 @@ func _build_hud() -> void:
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage.add_child(_hud)
 	UI.panel(_hud, Rect2(24, 18, 1572, 78), "dark_wood")
-	_place_title = UI.label(_hud, "阿刻戎河 · 钓鱼", Rect2(48, 32, 276, 48), 26, UI.CREAM)
-	_summary = UI.label(_hud, "", Rect2(328, 34, 594, 44), 20, UI.GOLD)
+	_summary = UI.label(_hud, "", Rect2(48, 34, 874, 44), 20, UI.GOLD)
 	_river_button = UI.tab_button(_hud, RIVER_TAB_TEXT, Rect2(936, 32, 122, 48), func() -> void: _show_location("River"), true)
 	_shop_button = UI.tab_button(_hud, "E 接待", Rect2(1066, 32, 122, 48), func() -> void: _show_location("Shop"), false)
 	_alchemy_button = UI.tab_button(_hud, "R 炼药", Rect2(1196, 32, 122, 48), func() -> void: _show_location("Alchemy"), false)
@@ -627,17 +512,16 @@ func _build_shop_ui() -> void:
 	_guest_state = UI.label(_shop_ui, "等待用药", Rect2(1204, 740, 220, 32), 21, UI.GOLD)
 	_service_fee = UI.label(_shop_ui, "", Rect2(1168, 778, 404, 74), 18, UI.CREAM)
 	_service_fee.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_release_button = UI.button(_shop_ui, "Shift  放行", Rect2(1168, 862, 404, 68), func() -> void: shop.begin_departure(), true)
+	_release_button = UI.button(_shop_ui, "Shift  放行", Rect2(1168, 862, 404, 68), _release_guest, true)
 	_release_button.add_theme_font_size_override("font_size", 25)
+	_story_action_button = UI.button(_shop_ui, "", Rect2(1376, 862, 196, 68), _story_action)
+	_story_action_button.add_theme_font_size_override("font_size", 22)
 
 	story_panel = StoryPanel.new()
-	story_panel.name = "StoryPanel"
-	story_panel.position = Vector2(1030, 340)
-	story_panel.size = Vector2(578, 600)
+	story_panel.name = "TrueNameChallenge"
+	story_panel.position = Vector2(500, 232)
+	story_panel.size = Vector2(562, 104)
 	_shop_ui.add_child(story_panel)
-	story_panel.advance_requested.connect(_story_advance)
-	story_panel.choice_requested.connect(_story_choice)
-	story_panel.finish_requested.connect(_story_finish)
 
 
 func _build_pause() -> void:
@@ -646,8 +530,22 @@ func _build_pause() -> void:
 	_pause_banner.size = Vector2(876, 52)
 	_pause_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(_pause_banner)
-	UI.label(_pause_banner, "已暂停　P / Esc / 空格继续", Rect2(4, 0, 580, 48), 22, UI.MINT)
-	UI.button(_pause_banner, "C 返回封面", Rect2(666, 0, 196, 48), _return_to_title)
+	UI.label(_pause_banner, "已暂停", Rect2(4, 0, 90, 48), 22, UI.MINT)
+	var labels := ["继续游戏", "保存游戏", "读取存档", "返回封面"]
+	var actions := [_set_paused.bind(false), _open_save_slots.bind(true), _open_save_slots.bind(false), _return_to_title]
+	for index in labels.size():
+		var button := UI.button(_pause_banner, labels[index], Rect2(96 + index * 142, 0, 132, 48), actions[index])
+		button.mouse_entered.connect(_select_pause_button.bind(index))
+		_pause_buttons.append(button)
+	UI.label(_pause_banner, "A / D 选择　空格 确认", Rect2(666, 0, 214, 48), 18, UI.CREAM)
+
+
+func _select_pause_button(index: int) -> void:
+	if _pause_buttons[index].disabled:
+		return
+	_pause_cursor = index
+	for i in _pause_buttons.size():
+		UI.set_button_primary(_pause_buttons[i], i == index)
 
 
 func _resize() -> void:
@@ -661,8 +559,11 @@ func _start_game() -> void:
 	started = true
 	session.start_shift()
 	_show_location("River")
-	if not has_save():
-		save_progress()
+	_title_transition.modulate.a = 1.0
+	_title_transition.show()
+	var fade := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	fade.tween_property(_title_transition, "modulate:a", 0.0, 0.26)
+	fade.tween_callback(_title_transition.hide)
 
 
 func _start_story_lab() -> void:
@@ -671,19 +572,15 @@ func _start_story_lab() -> void:
 	persist_save = false
 	started = true
 	session.start_shift()
-	session._open_day(5)
-	session.active = true
-	session.released_count = 24
+	for day in [1, 2]:
+		if day != session.day:
+			session._open_day(day)
+		session.advance(Session.GUESTS_PER_DAY * Data.ARRIVAL_MAX + 1.0)
+		for soul in session.souls.duplicate():
+			if not soul.has("story_case"):
+				soul.stats = session.requirements[0]
+				session.release_soul(int(soul.id))
 	session.coins = 200
-	for _guest in 6:
-		session.spawn_remaining = 0.0
-		session.advance(0.01)
-	# The lab only keeps the two scheduled story guests.
-	for soul in session.souls.duplicate():
-		if soul.has("story_case"):
-			continue
-		soul.stats = session.requirements[0]
-		session.release_soul(int(soul.id))
 	session.potions.clear()
 	session._add_potion("lab", "暖心药", Vector3i(0, 4, 0), -1, 0)
 	session._add_potion("lab", "极识药", Vector3i(10, 0, -4), -1, 0)
@@ -694,34 +591,70 @@ func _start_story_lab() -> void:
 			shop.select_guest(int(soul.id))
 			break
 	_refresh_shared()
-	print("Story lab: day 5, %d story guest(s), %d potion(s)" % [
+	print("Story lab: %d story guest(s), %d potion(s)" % [
 		session.souls.size(),
 		session.potions.size(),
 	])
 
 
-func _continue_game() -> void:
-	if started or not load_progress():
-		return
-	_close_settings()
-	started = true
-	session.active = true
-	_show_location(current_location)
-	save_progress()
-
 
 func _return_to_title() -> void:
-	save_progress()
-	get_tree().reload_current_scene()
+	# Keep the current viewport attached until the button input finishes dispatching.
+	get_tree().reload_current_scene.call_deferred()
 
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	if persist_save:
+		for slot in SaveSlots.COUNT:
+			if not SaveSlots.existing_path(save_directory, slot).is_empty():
+				return true
+	return false
 
 
-func save_progress() -> void:
-	if not persist_save or not started or session == null or qte == null:
+func _open_save_slots(for_save: bool) -> void:
+	_save_menu.open(for_save, _save_slot_entries())
+
+
+func _save_slot_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for slot in SaveSlots.COUNT:
+		var path := SaveSlots.existing_path(save_directory, slot) if persist_save else ""
+		var data := SaveSlots.read(path)
+		var summary := "空位" if path.is_empty() else "存档无法读取"
+		if not data.is_empty():
+			var day: Dictionary = data.get("day_schedule", {})
+			var day_number := int(day.get("number", mini(Session.DAY_COUNT, 1 + floori(float(data.released_count) / Session.GUESTS_PER_DAY))))
+			summary = "第 %d 天　渡魂币 %d" % [day_number, int(data.coins)]
+			if data.has("saved_at"):
+				summary += "　%s" % data.saved_at
+		entries.append({"summary": summary, "readable": not data.is_empty()})
+	return entries
+
+
+func _select_save_slot(slot: int) -> void:
+	if not _save_menu.saving:
+		if not load_progress(slot):
+			_save_menu.update_slots(_save_slot_entries())
+			_save_menu.show_status("读取失败，请选择其他存档。", true)
 		return
+	if persist_save and not SaveSlots.existing_path(save_directory, slot).is_empty():
+		_save_menu.ask_overwrite(slot)
+		return
+	_save_to_slot(slot)
+
+
+func _save_to_slot(slot: int) -> void:
+	if not save_progress(slot):
+		_save_menu.show_status("保存失败，请重试。", true)
+		return
+	_save_menu.update_slots(_save_slot_entries())
+	_save_menu.show_status("已保存到存档 %d。" % (slot + 1))
+	_pause_buttons[2].disabled = false
+
+
+func save_progress(slot: int) -> bool:
+	if not persist_save or not started or slot < 0 or slot >= SaveSlots.COUNT:
+		return false
 	var saved_potions: Array = []
 	for p in session.potions:
 		saved_potions.append({
@@ -735,7 +668,7 @@ func save_progress() -> void:
 			"id": int(s.id), "case_id": int(s.case_id), "name": str(s.name),
 			"stats": [s.stats.x, s.stats.y, s.stats.z],
 			"before": [s.before.x, s.before.y, s.before.z],
-			"served": bool(s.served), "fee": int(s.fee),
+			"served": bool(s.served), "doses_used": Session.doses_used(s), "fee": int(s.fee),
 		}
 		if s.has("story_case"):
 			entry["story_case"] = str(s.story_case)
@@ -743,6 +676,7 @@ func save_progress() -> void:
 			entry["story_outcome"] = str(s.get("story_outcome", ""))
 		saved_souls.append(entry)
 	var payload := {
+		"saved_at": Time.get_datetime_string_from_system(false, true).substr(0, 16),
 		"location": current_location,
 		"coins": session.coins,
 		"released_count": session.released_count,
@@ -760,11 +694,11 @@ func save_progress() -> void:
 		"souls": saved_souls,
 		"rod": qte.rod,
 		"hook": qte.hook,
-		"grip": qte.grip,
 		"bait": qte.bait,
 		"rods_owned": qte.rods_owned,
 		"hooks_owned": qte.hooks_owned,
 		"grip_durability": qte.grip_durability,
+		"quick_repair_available": qte.quick_repair_available,
 		"charms_owned": qte.charms_owned,
 		"bait_stock": qte.bait_stock,
 		"story": session.story_state.snapshot(),
@@ -774,31 +708,42 @@ func save_progress() -> void:
 			"awaiting": session.awaiting_day_report,
 		},
 		"rejected_count": session.rejected_count,
+		"fishing": qte.save_pending(),
+		"casting": river.casting,
+		"cast_elapsed": river.cast_elapsed,
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file != null:
-		file.store_string(JSON.stringify(payload))
+	return SaveSlots.write(save_directory, slot, payload)
 
 
-func load_progress() -> bool:
-	if not has_save():
+func load_progress(slot: int) -> bool:
+	if not persist_save or slot < 0 or slot >= SaveSlots.COUNT:
 		return false
-	var raw := FileAccess.get_file_as_string(SAVE_PATH)
-	var parsed: Variant = JSON.parse_string(raw)
-	if not parsed is Dictionary:
+	var data := SaveSlots.read(SaveSlots.existing_path(save_directory, slot))
+	if data.is_empty():
 		return false
-	var data: Dictionary = parsed
+	_save_menu.dismiss()
+	_close_settings()
+	_close_rig_popup()
+	_clear_pull_input()
+	session.active = false
+	session.paused = false
+	session.last_payout = 0
+	session.last_story_outcome = ""
+	shop.selected_id = -1
+	shop.departure_times.clear()
+	shop.fed_flash = 0.0
+	_selected_dose = null
+	_bone_notice_remaining = 0.0
 	session.coins = int(data.get("coins", Data.STARTING_COINS))
 	session.released_count = int(data.get("released_count", 0))
-	session.rejected_count = int(data.get("rejected_count", 0))
+	session.rejected_count = int(data.get("rejected_count", data.get("failed_count", 0)))
 	session._arrived = int(data.get("arrived", 0))
 	session._next_item_id = int(data.get("next_item_id", 1))
 	session.spawn_remaining = float(data.get("spawn_remaining", Data.ARRIVAL_MIN))
 	session.concentrate = int(data.get("concentrate", 0))
 	session.recovered_bones = int(data.get("recovered_bones", 0))
 	session.finger_bones = int(data.get("finger_bones", 0))
-	session.story_state.restore(data.get("story", {}))
-	session.story_runtimes.clear()
+	session.restore_story(data.get("story", {}))
 	session._first_services = {}
 	for k in data.get("first_services", {}).keys():
 		session._first_services[int(k)] = true
@@ -811,8 +756,8 @@ func load_progress() -> bool:
 				"finger_bones": int(c.get("finger_bones", 0)),
 			})
 	var ess: Array = data.get("essences", [])
-	for i in mini(ess.size(), session.essences.size()):
-		session.essences[i] = int(ess[i])
+	for i in session.essences.size():
+		session.essences[i] = int(ess[i]) if i < ess.size() else 0
 	session.potions.clear()
 	for p in data.get("potions", []):
 		if p is Dictionary:
@@ -823,6 +768,8 @@ func load_progress() -> bool:
 				"attribute": int(p.get("attribute", -1)), "adjustment": int(p.get("adjustment", 0)),
 			})
 	session.souls.clear()
+	var fees_to_recalculate: Array[Dictionary] = []
+	var from_v15 := int(data.get("rules_version", 0)) == 15
 	for s in data.get("souls", []):
 		if s is Dictionary:
 			var st: Array = s.get("stats", [8, 8, 8])
@@ -831,14 +778,19 @@ func load_progress() -> bool:
 				"id": int(s.get("id", 0)), "case_id": int(s.get("case_id", 0)), "name": str(s.get("name", "")),
 				"stats": Vector3i(int(st[0]), int(st[1]), int(st[2])),
 				"before": Vector3i(int(bf[0]), int(bf[1]), int(bf[2])),
-				"served": bool(s.get("served", false)), "fee": int(s.get("fee", 40)),
+				"served": bool(s.get("served", false)), "doses_used": Session.doses_used(s), "fee": int(s.get("fee", 40)),
 			}
 			if str(s.get("story_case", "")) != "":
 				soul["story_case"] = str(s.story_case)
 				soul["story_state"] = s.get("story_state", {})
 				soul["story_outcome"] = str(s.get("story_outcome", ""))
+			elif from_v15 or not s.has("doses_used") or not s.has("fee"):
+				fees_to_recalculate.append(soul)
 			session.souls.append(soul)
-	session.restore_day(data.get("day_schedule", {}))
+	var schedule: Dictionary = data.get("day_schedule", {})
+	session.restore_day(schedule)
+	for soul in fees_to_recalculate:
+		soul.fee = session.service_fee(soul.before)
 	session.story_state.run["run.day"] = session.day
 	var saved_report = data.get("day_report", {})
 	session.day_story_entries.clear()
@@ -849,30 +801,62 @@ func load_progress() -> bool:
 		var pending = saved_report.get("pending", {})
 		session.pending_day_report = pending if pending is Dictionary else {}
 		session.awaiting_day_report = bool(saved_report.get("awaiting", false))
+	if from_v15 and schedule.get("awaiting_next_day", false) and session.day < Session.DAY_COUNT and session.souls.is_empty() and not session.awaiting_day_report:
+		session._open_day(session.day + 1)
+		session.spawn_remaining = Data.ARRIVAL_MIN
 	session.story_state.run["run.released"] = session.released_count
 	session.story_state.run["run.rejected"] = session.rejected_count
 	var ro: Array = data.get("rods_owned", [true, false])
-	for i in mini(ro.size(), qte.rods_owned.size()):
-		qte.rods_owned[i] = bool(ro[i])
+	for i in qte.rods_owned.size():
+		qte.rods_owned[i] = bool(ro[i]) if i < ro.size() else i == 0
 	var ho: Array = data.get("hooks_owned", [true, false, false])
-	for i in mini(ho.size(), qte.hooks_owned.size()):
-		qte.hooks_owned[i] = bool(ho[i])
-	var gd: Array = data.get("grip_durability", [Data.GRIP_CAPACITY])
-	qte.grip_durability.clear()
-	for d in gd:
-		qte.grip_durability.append(int(d))
-	if qte.grip_durability.is_empty():
-		qte.grip_durability.append(Data.GRIP_CAPACITY)
-	qte.charms_owned = int(data.get("charms_owned", 1))
-	qte.restore_bait_inventory(data.get("bait_stock", []), int(data.get("bait", 0)))
+	for i in qte.hooks_owned.size():
+		qte.hooks_owned[i] = bool(ho[i]) if i < ho.size() else i == 0
+	_restore_grip(data)
+	qte.charms_owned = clampi(int(data.get("charms_owned", 0)), 0, Data.CHARM_LIMIT)
+	var stock: Array = data.get("bait_stock", [])
+	var equipped_bait := int(data.get("bait", 0))
+	if from_v15 and stock.size() == 8:
+		# The three retired size baits occupy the old attribute-bait slots.
+		for index in range(4, 7):
+			stock[0] = int(stock[0]) + int(stock[index])
+			stock[index] = 0
+		if equipped_bait in [4, 5, 6]:
+			equipped_bait = Data.Bait.DEFAULT
+	qte.restore_bait_inventory(stock, equipped_bait)
 	qte.rod = clampi(int(data.get("rod", 0)), 0, qte.rods_owned.size() - 1)
 	qte.hook = clampi(int(data.get("hook", 0)), 0, qte.hooks_owned.size() - 1)
-	qte.grip = clampi(int(data.get("grip", 0)), 0, qte.grip_durability.size() - 1)
+	var saved_fishing: Dictionary = data.get("fishing", {})
+	if from_v15 and saved_fishing.get("snapshot") is Dictionary:
+		saved_fishing.snapshot.bait = qte.bait
+	qte.restore_pending(saved_fishing)
+	river.casting = bool(data.get("casting", false)) and not qte.is_busy()
+	river.cast_elapsed = float(data.get("cast_elapsed", 0.0))
+	river.tension = Vector2.ZERO
+	river.hit_timer = 0.0
+	river.pulse = 0.0
 	var loc := str(data.get("location", "River"))
 	current_location = loc if loc in ["River", "Shop", "Alchemy", "Market"] else "River"
+	started = true
+	session.active = true
+	_show_location(current_location)
 	session.state_changed.emit()
 	qte.state_changed.emit()
 	return true
+
+
+func _restore_grip(data: Dictionary) -> void:
+	var remaining := Data.GRIP_CAPACITY - int(data.get("shared_wear", 0))
+	var saved: Variant = data.get("grip_durability", remaining)
+	qte.quick_repair_available = bool(data.get("quick_repair_available", true))
+	if saved is Array:
+		if saved.is_empty():
+			saved = Data.GRIP_CAPACITY
+		else:
+			var equipped := clampi(int(data.get("grip", 0)), 0, saved.size() - 1)
+			session.coins += (saved.size() - 1) * LEGACY_DUPLICATE_GRIP_PRICE
+			saved = saved[equipped]
+	qte.grip_durability = clampi(int(saved), 0, Data.GRIP_CAPACITY)
 
 
 func _show_location(value: String) -> void:
@@ -895,7 +879,6 @@ func _update_activation() -> void:
 	_shop_image.visible = started and current_location != "River"
 	_river_ui.visible = _river_image.visible
 	_shop_ui.visible = started and current_location == "Shop"
-	_story_screen.visible = _shop_ui.visible
 	alchemy.visible = started and current_location == "Alchemy"
 	market.visible = started and current_location == "Market"
 	river.active = _river_image.visible
@@ -905,7 +888,6 @@ func _update_activation() -> void:
 	_river_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if river.active else SubViewport.UPDATE_DISABLED
 	_shop_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if _shop_image.visible else SubViewport.UPDATE_DISABLED
 	_pause_banner.visible = started and session.paused
-	_place_title.visible = not session.paused
 	_summary.visible = not session.paused
 	_river_button.disabled = session.paused or current_location == "River"
 	_shop_button.disabled = session.paused or current_location == "Shop"
@@ -916,7 +898,6 @@ func _update_activation() -> void:
 	UI.set_tab_active(_alchemy_button, current_location == "Alchemy")
 	UI.set_tab_active(_market_button, current_location == "Market")
 	_pause_button.text = "P 继续" if session.paused else "P 暂停"
-	_place_title.text = {"River": "阿刻戎河 · 钓鱼", "Shop": "灵魂店铺 · 接待", "Alchemy": "炼药台 · 收纳", "Market": "市场 · 钓组整备"}[current_location]
 	_refresh_river_notice()
 
 
@@ -957,11 +938,11 @@ func _open_rig_popup(slot: int) -> void:
 	for child in _rig_popup.get_children():
 		if child is Button and child.text == "×":
 			child.position.x = popup_w - 64.0
-	var titles := ["更换竿体", "更换鱼钩", "更换握柄", "选择鱼饵"]
+	var titles := ["更换竿体", "更换鱼钩", "握柄状态", "选择鱼饵"]
 	_rig_popup_icon.texture = UI.RIG_ICONS[slot]
 	_rig_popup_title.text = titles[slot]
 	_populate_rig_popup(slot)
-	_rig_option_cursor = [qte.rod, qte.hook, qte.grip, qte.bait][slot]
+	_rig_option_cursor = [qte.rod, qte.hook, 0, qte.bait][slot]
 	_highlight_rig_option()
 	_refresh_river()
 
@@ -986,28 +967,24 @@ func _populate_rig_popup(slot: int) -> void:
 		for i in Data.RODS.size():
 			var owned: bool = qte.rods_owned[i]
 			_add_rig_option(UI.ICON_ROD, Data.RODS[i], Data.ROD_DESCS[i], "已装备" if qte.rod == i else ("未拥有" if not owned else "可装配"), qte.rod == i, not owned, Vector2(342, 68), func() -> void:
-				qte.set_rig(i, qte.hook, qte.grip, qte.bait)
+				qte.set_rig(i, qte.hook, qte.bait)
 				_close_rig_popup()
 			)
 	elif slot == 1:
 		for i in Data.HOOKS.size():
 			var owned: bool = qte.hooks_owned[i]
 			_add_rig_option(UI.ICON_HOOK, Data.HOOKS[i], Data.HOOK_DESCS[i], "已装备" if qte.hook == i else ("未拥有" if not owned else "可装配"), qte.hook == i, not owned, Vector2(342, 68), func() -> void:
-				qte.set_rig(qte.rod, i, qte.grip, qte.bait)
+				qte.set_rig(qte.rod, i, qte.bait)
 				_close_rig_popup()
 			)
 	elif slot == 2:
-		for i in qte.grip_durability.size():
-			var dur: int = qte.grip_durability[i]
-			_add_rig_option(UI.ICON_GRIP, "基础握柄 %d" % (i + 1), "耐久 %d / %d" % [dur, Data.GRIP_CAPACITY], "已装备" if qte.grip == i else "可装配", qte.grip == i, false, Vector2(342, 68), func() -> void:
-				qte.set_rig(qte.rod, qte.hook, i, qte.bait)
-				_close_rig_popup()
-			)
+		var status := "耐久 %d / %d · 归零后可到市场维修" % [qte.durability(), Data.GRIP_CAPACITY]
+		_add_rig_option(UI.ICON_GRIP, "基础握柄", status, "已装备", true, false, Vector2(342, 68), _close_rig_popup)
 	elif slot == 3:
 		for i in Data.BAITS.size():
 			var count: int = qte.bait_stock[i]
 			_add_rig_option(UI.ICON_BAIT, Data.BAITS[i], Data.bait_hint(i), "×%d" % count, qte.bait == i, false, Vector2(228, 74), func() -> void:
-				qte.set_rig(qte.rod, qte.hook, qte.grip, i)
+				qte.set_rig(qte.rod, qte.hook, i)
 				_close_rig_popup()
 			)
 
@@ -1096,6 +1073,11 @@ func _set_paused(value: bool) -> void:
 	session.paused = value
 	if value:
 		_close_rig_popup()
+		_pause_buttons[1].disabled = not persist_save
+		_pause_buttons[2].disabled = not has_save()
+		_select_pause_button(0)
+	else:
+		_save_menu.dismiss()
 	_clear_pull_input()
 	_update_activation()
 	_refresh_shared()
@@ -1113,21 +1095,28 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	var code := key.physical_keycode if key.physical_keycode != 0 else key.keycode
 	if not key.pressed:
-		_held_keys.erase(code)
+		if _held_keys.erase(code) and started and current_location == "River":
+			var direction := Fishing.DIRECTION_KEYS.find(code)
+			if direction < 0:
+				direction = Fishing.ARROW_KEYS.find(code)
+			if direction >= 0 and not _is_direction_held(direction):
+				qte.release_direction(direction)
 		if _held_keys.is_empty():
 			_requires_release = false
 		return
 	if key.echo or key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
 		return
-	if started and current_location == "Shop" and story_panel != null and story_panel.is_typing():
+	if _save_menu.is_open:
+		_save_menu.handle_key(code)
+		get_viewport().set_input_as_handled()
+		return
+	if started and not session.paused and current_location == "Shop" and story_panel != null and story_panel.is_typing():
 		if code >= KEY_A and code <= KEY_Z:
 			story_panel.submit_letter(OS.get_keycode_string(code))
-			get_viewport().set_input_as_handled()
-			return
-		if code == KEY_ESCAPE:
+		elif code == KEY_ESCAPE:
 			story_panel.cancel_callout()
-			get_viewport().set_input_as_handled()
-			return
+		get_viewport().set_input_as_handled()
+		return
 	if day_report != null and day_report.visible:
 		if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
 			_close_day_report()
@@ -1136,16 +1125,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var handled := true
 	if not started:
 		handled = _title_key(code)
+	elif session.paused:
+		handled = _pause_key(code)
 	elif code == KEY_P:
-		_set_paused(not session.paused)
+		_set_paused(true)
 	elif _rig_slot_cursor >= 0:
 		handled = _rig_key(code)
-	elif code == KEY_ESCAPE or (session.paused and code == KEY_SPACE):
-		_set_paused(not session.paused)
-	elif session.paused:
-		if code != KEY_C:
-			return
-		_return_to_title()
+	elif code == KEY_ESCAPE:
+		_set_paused(true)
 	elif code == KEY_Q:
 		_show_location("River")
 	elif code == KEY_E:
@@ -1168,22 +1155,28 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _title_key(code: Key) -> bool:
-	var in_settings := _settings_panel.visible
-	var buttons := _settings_buttons if in_settings else _menu_buttons
-	var cursor := _settings_cursor if in_settings else _menu_cursor
+	if _settings_modal.is_open:
+		return _settings_modal.handle_key(code)
 	match code:
-		KEY_W, KEY_S:
-			cursor = UI.next_button(buttons, cursor, 1 if code == KEY_S else -1)
-			if in_settings:
-				_move_settings_pointer(cursor)
-			else:
-				_select_title_button(cursor)
+		KEY_W, KEY_UP, KEY_S, KEY_DOWN:
+			var step := 1 if code in [KEY_S, KEY_DOWN] else -1
+			_select_title_button(UI.next_button(_menu_buttons, _menu.cursor, step))
 		KEY_SPACE, KEY_ENTER, KEY_KP_ENTER:
-			UI.activate(buttons[cursor])
-		KEY_C, KEY_ESCAPE:
-			if not in_settings:
-				return false
-			_close_settings()
+			UI.activate(_menu_buttons[_menu.cursor])
+		_:
+			return false
+	return true
+
+
+func _pause_key(code: Key) -> bool:
+	match code:
+		KEY_A, KEY_LEFT, KEY_W, KEY_UP, KEY_D, KEY_RIGHT, KEY_S, KEY_DOWN:
+			var step := -1 if code in [KEY_A, KEY_LEFT, KEY_W, KEY_UP] else 1
+			_select_pause_button(UI.next_button(_pause_buttons, _pause_cursor, step))
+		KEY_SPACE, KEY_ENTER, KEY_KP_ENTER:
+			UI.activate(_pause_buttons[_pause_cursor])
+		KEY_C, KEY_ESCAPE, KEY_P:
+			_set_paused(false)
 		_:
 			return false
 	return true
@@ -1209,9 +1202,6 @@ func _river_key(code: Key) -> bool:
 
 
 func _reception_key(code: Key) -> bool:
-	var story = _selected_story_runtime()
-	if story != null:
-		return _story_key(code, story)
 	match code:
 		KEY_W, KEY_S:
 			_move_dose(1 if code == KEY_S else -1)
@@ -1221,44 +1211,6 @@ func _reception_key(code: Key) -> bool:
 			UI.activate(_serve_button)
 		KEY_SHIFT:
 			UI.activate(_release_button)
-		KEY_C:
-			if _selected_dose == null:
-				return false
-			_select_dose(_selected_dose)
-		_:
-			return false
-	return true
-
-
-func _story_key(code: Key, story) -> bool:
-	if code >= KEY_1 and code <= KEY_7:
-		var choices: Array = story.visible_choices()
-		var index := int(code) - int(KEY_1)
-		if index >= 0 and index < choices.size() and not bool(choices[index].get("locked", false)):
-			if story_panel.blocks_advance():
-				return false
-			story.choose(str(choices[index].get("id", "")))
-			return true
-		return false
-	match code:
-		KEY_W, KEY_S:
-			_move_dose(1 if code == KEY_S else -1)
-		KEY_A, KEY_D:
-			_switch_guest(1 if code == KEY_D else -1)
-		KEY_SPACE:
-			if story_panel.blocks_advance():
-				story_panel.skip_cues()
-				return true
-			if story.is_closed() or not story.visible_choices().is_empty():
-				return false
-			story.advance()
-		KEY_F:
-			UI.activate(_serve_button)
-		KEY_SHIFT:
-			if story.is_closed():
-				_story_finish()
-			else:
-				return false
 		KEY_C:
 			if _selected_dose == null:
 				return false
@@ -1279,12 +1231,13 @@ func _switch_guest(direction: int) -> void:
 
 func _queue_pull(code: int, direction: int) -> void:
 	_held_keys[code] = true
-	if river.casting or qte.phase != Fishing.Phase.REELING or _requires_release:
+	if river.casting or not qte.is_line_action() or (qte.phase == Fishing.Phase.REELING and _requires_release):
 		_requires_release = true
 		return
 	if _pending_directions.is_empty():
 		_submit_pending_pull.call_deferred()
-	_pending_directions.append(direction)
+	if direction not in _pending_directions:
+		_pending_directions.append(direction)
 
 
 func _submit_pending_pull() -> void:
@@ -1294,9 +1247,18 @@ func _submit_pending_pull() -> void:
 	_pending_directions.clear()
 	_requires_release = not _held_keys.is_empty()
 	qte.submit_direction(direction)
+	# A tap released before deferred input is delivered cannot silently hold a long note.
+	if direction >= 0 and not _is_direction_held(direction):
+		qte.release_direction(direction)
+
+
+func _is_direction_held(direction: int) -> bool:
+	return _held_keys.has(Fishing.DIRECTION_KEYS[direction]) or _held_keys.has(Fishing.ARROW_KEYS[direction])
 
 
 func _clear_pull_input() -> void:
+	if qte != null:
+		qte.suspend_pull()
 	_pending_directions.clear()
 	_held_keys.clear()
 	_requires_release = false
@@ -1343,46 +1305,51 @@ func _refresh_shared() -> void:
 
 	var selected := session.get_soul(shop.selected_id)
 	var story = _selected_story_runtime()
-	var story_visible: bool = story != null and current_location == "Shop"
-	session.set_story_open(story_visible)
+	if story == null or current_location != "Shop" or session.paused:
+		story_panel.cancel_callout()
+	var typing := story_panel.is_typing()
+	session.set_story_open(typing)
+	_story_action_button.visible = story != null and not story.is_closed()
+	_story_action_button.disabled = session.paused
+	_release_button.size.x = 196 if _story_action_button.visible else 404
 	if story != null:
-		_dialog.visible = false
-		_release_button.visible = false
-		soul_hud.visible = false
-		story_panel.visible = story_visible
-		if story_visible:
-			shop.clear_departures()
-			story_panel.render(story)
-		_serve_button.text = "F  请他喝下"
-		if story.is_closed():
-			_guest_state.text = "审查结束 · 可以送客"
-			_guest_state.add_theme_color_override("font_color", UI.GOOD)
+		var revealed: bool = story.is_identity_revealed()
+		var portrait: String = story.get_portrait_id()
+		if portrait.is_empty():
+			shop.clear_story_sprite()
 		else:
-			_guest_state.text = "剧情审查中"
-			_guest_state.add_theme_color_override("font_color", UI.GOLD)
-		_service_fee.text = "特殊来客　结果记入账本"
+			shop.set_story_sprite(portrait)
+		_dialog.text = story.get_greeting()
+		_guest_state.text = "真名已解放" if revealed else "特殊来客"
+		_guest_state.add_theme_color_override("font_color", UI.GOOD if revealed else UI.GOLD)
+		_service_fee.text = "结果记入账本"
+		_release_button.text = "Shift  结束接待" if story.is_closed() else "Shift  放行"
+		_release_button.disabled = session.paused or typing
+		_story_action_button.text = "取消（Esc）" if typing else ("拒绝入境" if revealed else story.get_callout_button_text())
 	else:
-		_dialog.visible = true
-		_release_button.visible = true
-		soul_hud.visible = true
-		story_panel.visible = false
-		story_panel.reset()
-		_serve_button.text = "空格  端上所选药剂"
+		shop.clear_story_sprite()
 		var ready := session.can_release(shop.selected_id)
 		_guest_state.text = "达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂")
 		_guest_state.add_theme_color_override("font_color", UI.GOOD if ready else UI.GOLD)
 		_release_button.disabled = session.paused or not ready
+		_release_button.text = "Shift  放行"
 
 		_service_fee.text = ""
 		if not selected.is_empty():
 			_service_fee.text = "基础服务费 %d 枚" % selected.fee
+			var bonus := session.service_bonus(selected)
 			if session.first_service(selected):
-				_service_fee.text += "　首次 +%d 枚" % int(selected.fee * 0.20)
-			if selected.case_id == 2 and session.requirements[1].z >= 9:
-				_service_fee.text += "\n特殊委托：意志达到 9　+%d 枚" % int(selected.fee * 0.20)
+				_service_fee.text += "　首次 +%d 枚" % bonus
+			if session.has_commission(selected):
+				_service_fee.text += "\n个人委托：意志达到 %d　+%d 枚" % [Session.BOATMAN_COMMISSION_WILL, bonus]
+			var dose_count := Session.doses_used(selected)
+			if ready and dose_count > 1:
+				_service_fee.text = "已用 %d 剂　放行奖金 %d 枚" % [dose_count, session.release_reward(selected, selected.stats, dose_count)]
+			elif dose_count > 0 and not ready:
+				_service_fee.text += "\n已用 %d 剂　再次用药奖金减半" % dose_count
 
 	if not shop.departure_times.is_empty():
-		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome != "release" else "放行成功　渡魂币 +%d" % session.last_payout
+		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome in ["reject", "leave"] else "放行成功　渡魂币 +%d" % session.last_payout
 	else:
 		_payout_notice.text = ""
 	if session.is_complete():
@@ -1409,7 +1376,7 @@ func _rebuild_queue() -> void:
 		var is_sel := sid == shop.selected_id
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(224, 30)
-		btn.disabled = session.paused
+		btn.disabled = session.paused or story_panel.is_typing()
 		UI.style_slot_button(btn, is_sel, false)
 		btn.pressed.connect(func() -> void: shop.select_guest(sid))
 		_queue_box.add_child(btn)
@@ -1487,17 +1454,15 @@ func _refresh_dose() -> void:
 	var selected := session.get_soul(shop.selected_id)
 	var story = _selected_story_runtime()
 	if story != null:
-		if story_panel != null and story_panel.is_typing():
+		soul_hud.set_state(selected, {}, session.day, session.requirements)
+		if story_panel.is_typing():
 			_serve_button.disabled = true
 			_dose_preview.text = "正在输入真名……"
 			_dose_preview.add_theme_color_override("font_color", UI.MUTED)
 			return
 		if story.can_feed_potion():
 			_serve_button.disabled = session.paused or _selected_dose == null
-			if _selected_dose == null:
-				_dose_preview.text = "按 W / S 选药，再按 F 请他喝下"
-			else:
-				_dose_preview.text = "按 F 请他喝下这碗药"
+			_dose_preview.text = "按 W / S 选择药剂，再按空格给药" if _selected_dose == null else "按空格端上所选药剂"
 			_dose_preview.add_theme_color_override("font_color", UI.GOLD)
 		elif story.has_fed_potion():
 			_serve_button.disabled = true
@@ -1520,7 +1485,7 @@ func _refresh_dose() -> void:
 	else:
 		var after: Vector3i = preview.after
 		var ok := session.is_eligible(after)
-		_dose_preview.text = "预览饮后：%d / %d / %d　%s" % [after.x, after.y, after.z, "✓ 全部达标" if ok else "仍需继续调整"]
+		_dose_preview.text = "预览饮后：%d / %d / %d　%s" % [after.x, after.y, after.z, "放行 %d 枚" % int(preview.reward) if ok else "仍需继续调整"]
 		_dose_preview.add_theme_color_override("font_color", UI.GOOD if ok else UI.GOLD)
 
 
@@ -1531,7 +1496,8 @@ func _serve_dose() -> void:
 	_selected_dose = null
 	var story = _selected_story_runtime()
 	if story != null:
-		session.feed_story_potion(shop.selected_id, chosen[0], chosen[1])
+		if session.feed_story_potion(shop.selected_id, chosen[0], chosen[1]):
+			story.skip_dialogue()
 	else:
 		session.serve(shop.selected_id, chosen[0], chosen[1])
 
@@ -1543,34 +1509,33 @@ func _selected_story_runtime():
 	return session.get_story_runtime(shop.selected_id)
 
 
-func _story_advance() -> void:
-	if session.paused:
+func _release_guest() -> void:
+	if session.paused or story_panel.is_typing():
 		return
 	var story = _selected_story_runtime()
-	if story != null and not story.is_closed():
-		if story_panel.blocks_advance():
-			story_panel.skip_cues()
-			return
-		story.advance()
+	if story == null:
+		shop.begin_departure()
+		return
+	story.skip_dialogue()
+	if story.is_closed() or story.choose("admit"):
+		shop.begin_story_departure()
 
 
-func _story_choice(choice_id: String) -> void:
+func _story_action() -> void:
 	if session.paused:
 		return
-	var story = _selected_story_runtime()
-	if story != null:
-		story.choose(choice_id)
-
-
-func _story_finish() -> void:
-	if session.paused:
+	if story_panel.is_typing():
+		story_panel.cancel_callout()
 		return
 	var story = _selected_story_runtime()
-	if story == null or not story.is_closed():
+	if story == null or story.is_closed():
 		return
-	if story_panel.blocks_advance():
-		story_panel.skip_cues()
-	shop.begin_story_departure()
+	story.skip_dialogue()
+	if story.is_identity_revealed():
+		if story.choose("refuse"):
+			shop.begin_story_departure()
+	else:
+		story_panel.start_callout(story)
 
 
 func _close_day_report() -> void:
@@ -1584,7 +1549,7 @@ func _refresh_rig_slots() -> void:
 	var values := [
 		Data.RODS[qte.rod],
 		Data.HOOKS[qte.hook],
-		"基础握柄 %d" % (qte.grip + 1),
+		"基础握柄",
 		Data.BAITS[qte.bait],
 	]
 	var badges := [
@@ -1667,13 +1632,13 @@ func _refresh_river() -> void:
 		_rig_hint.text = "提示：巨刺入口仅在深水开放。"
 		_rig_hint.add_theme_color_override("font_color", UI.WARN)
 
-	_beat_panel.visible = qte.phase in [Fishing.Phase.REELING, Fishing.Phase.FEEDBACK, Fishing.Phase.TRUE_NAME] and not river.casting
+	_beat_panel.visible = qte.phase in [Fishing.Phase.REELING, Fishing.Phase.HOLDING, Fishing.Phase.RELEASE_WAIT, Fishing.Phase.FEEDBACK, Fishing.Phase.TRUE_NAME] and not river.casting
 	_beat_info.visible = _beat_panel.visible
 	_beat_info.text = "进度 %d / %d　失误 %d / %d　剩余 %.1f 秒" % [qte.progress, qte.target, qte.mistakes, Data.MISTAKE_LIMIT, qte.get_capture_time()]
 	if qte.phase == Fishing.Phase.TRUE_NAME:
 		_beat_info.text = "%s　　%.1f 秒" % [qte.true_name_hint(), qte.remaining]
 	_hit.text = ""
-	if river.hit_timer > 0.0 and not river.casting and qte.phase in [Fishing.Phase.REELING, Fishing.Phase.FEEDBACK, Fishing.Phase.CAUGHT, Fishing.Phase.ESCAPED]:
+	if river.hit_timer > 0.0 and not river.casting and qte.phase in [Fishing.Phase.REELING, Fishing.Phase.HOLDING, Fishing.Phase.RELEASE_WAIT, Fishing.Phase.FEEDBACK, Fishing.Phase.CAUGHT, Fishing.Phase.ESCAPED]:
 		_hit.text = "完美 +%d" % qte.last_progress_gain if qte.last_judgement == Fishing.Judgement.PERFECT else ("+%d" % qte.last_progress_gain if qte.last_success else "失误")
 	if _rig_slot_cursor >= 0:
 		_river_status.text = "更换钓组部件"
@@ -1694,11 +1659,14 @@ func _refresh_river() -> void:
 		Fishing.Phase.WAITING:
 			_river_status.text = "候鱼中…"
 			_river_hint.text = "按 X 收竿。离开河岸后看到上钩气泡，请在 3 秒内按 Q 返回。"
-		Fishing.Phase.PREPARING, Fishing.Phase.REELING, Fishing.Phase.FEEDBACK:
-			_river_status.text = "有鱼上钩了！"
-			_river_hint.text = "入水点靠近虚线时，按箭头对应的 WASD 或方向键。"
-			if qte.phase == Fishing.Phase.FEEDBACK and not qte.last_message.is_empty():
-				_river_hint.text = "%s，进度 %d。" % [qte.last_message, qte.last_progress_gain] if qte.last_progress_gain < 0 else "%s，进度已为 0。" % qte.last_message
+		Fishing.Phase.PREPARING, Fishing.Phase.REELING, Fishing.Phase.HOLDING, Fishing.Phase.RELEASE_WAIT, Fishing.Phase.FEEDBACK:
+			_river_status.text = "四向绷线 · " + ["点拉", "持续绷线", "绷住后松线"][qte.round_action]
+			_river_hint.text = qte.get_action_prompt()
+			if qte.phase == Fishing.Phase.PREPARING:
+				_river_status.text = "有鱼上钩了！"
+				_river_hint.text = "读方向后逆向拉鱼：点拉 / 按住绷线 / 金环亮时松手。"
+			elif qte.phase == Fishing.Phase.FEEDBACK:
+				_river_hint.text = "%s · 进度 %d / %d，松开按键准备下一轮。" % [qte.last_message, qte.progress, qte.target]
 		Fishing.Phase.TRUE_NAME:
 			_river_status.text = "神秘鱼影 · 真名捕获"
 			_river_hint.text = "依次输入出现的字母，输错后从头开始。"

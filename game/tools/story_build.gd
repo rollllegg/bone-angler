@@ -221,7 +221,7 @@ func _validate_portrait(graph_data: Dictionary, case_flags: Dictionary, world_de
 		_error("%s: portrait must be an object" % case_id)
 		return
 	var default_id := str(portrait.get("default", ""))
-	if not CueCatalog.has_sprite(default_id):
+	if not default_id.is_empty() and not CueCatalog.has_sprite(default_id):
 		_error("%s: portrait default '%s' has no asset" % [case_id, default_id])
 	for rule in portrait.get("rules", []):
 		if typeof(rule) != TYPE_DICTIONARY:

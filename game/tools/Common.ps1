@@ -25,3 +25,7 @@ function Invoke-GodotChecked {
         throw "Godot command failed (exit $exitCode)."
     }
 }
+
+function Import-GodotAssets {
+    Invoke-GodotChecked -GodotArguments @('--headless','--path',$script:ProjectRoot,'--import')
+}

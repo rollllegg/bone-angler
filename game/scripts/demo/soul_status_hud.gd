@@ -79,13 +79,18 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 	preview = dose_preview
 	requirements = limits
 	var has_soul := not soul.is_empty()
-	var has_preview := has_soul and not preview.is_empty()
+	var hidden := soul.has("story_case")
+	var has_preview := has_soul and not hidden and not preview.is_empty()
 	var legend := PackedStringArray(["第 %d 天" % day])
 
 	if not has_soul:
 		_name_label.text = "等待来客"
 		_state_label.text = "窗口空闲"
 		_state_label.add_theme_color_override("font_color", UI.MUTED)
+	elif hidden:
+		_name_label.text = str(soul.name)
+		_state_label.text = "特殊来客"
+		_state_label.add_theme_color_override("font_color", UI.GOLD)
 	else:
 		_name_label.text = str(soul.name)
 		var ready := Session.meets_requirements(soul.stats, requirements)
@@ -101,6 +106,10 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 			_state_label.add_theme_color_override("font_color", UI.GOLD)
 
 	for index in 3:
+		if hidden:
+			_bar_labels[index].text = "%s ?" % Data.STAT_NAMES[index]
+			_status_labels[index].text = ""
+			continue
 		var lower := requirements[0][index]
 		var upper := requirements[1][index]
 		var checked := lower > 0 or upper < MAX_STAT
@@ -152,6 +161,7 @@ func _draw_bars() -> void:
 	var w := _bars_canvas.size.x
 	var row_h := 46.0
 	var has_soul := not soul.is_empty()
+	var hidden := soul.has("story_case")
 	var has_preview := has_soul and not preview.is_empty()
 	var bar_x := 48.0
 	var status_w := 88.0
@@ -168,6 +178,8 @@ func _draw_bars() -> void:
 		_bars_canvas.draw_rect(bar_rect.grow(2.0), Color("241518"))
 		_bars_canvas.draw_rect(bar_rect, Color("2e2028"))
 		_bars_canvas.draw_rect(Rect2(bar_rect.position, Vector2(bar_rect.size.x, 3)), Color("1d141a"))
+		if hidden:
+			continue
 
 		var lower := requirements[0][index]
 		var upper := requirements[1][index]

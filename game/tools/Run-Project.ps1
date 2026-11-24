@@ -3,4 +3,5 @@ param([switch]$Headless, [int]$QuitAfter=0)
 $arguments = @('--path', $script:ProjectRoot)
 if ($Headless) { $arguments += '--headless' }
 if ($QuitAfter -gt 0) { $arguments += @('--quit-after', "$QuitAfter") }
+Import-GodotAssets
 Invoke-GodotChecked -GodotArguments $arguments

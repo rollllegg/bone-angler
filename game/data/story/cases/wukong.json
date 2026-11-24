@@ -36,19 +36,8 @@
               "type": "wait"
             }
           ],
+          "speaker": "孙",
           "text": "wukong.arrival.1"
-        },
-        {
-          "speaker": "孙",
-          "text": "wukong.arrival.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "wukong.arrival.3"
-        },
-        {
-          "speaker": "孙",
-          "text": "wukong.arrival.4"
         }
       ]
     },

@@ -274,3 +274,76 @@ static func style(fill: Color, border: Color) -> StyleBoxFlat:
 	result.set_border_width_all(3)
 	result.set_content_margin_all(10)
 	return result
+
+
+static func pixel_panel(parent: Node, rect: Rect2, fill: Color, edge: Color, base: Color) -> Panel:
+	var control := Panel.new()
+	control.position = rect.position
+	control.size = rect.size
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	control.add_theme_stylebox_override("panel", _pixel_box(fill, edge, base))
+	parent.add_child(control)
+	return control
+
+
+
+static func modal_panel(parent: Node, rect: Rect2) -> Panel:
+	var control := pixel_panel(parent, rect, Color("221c31"), Color("76614f"), Color("100e1a"))
+	control.mouse_filter = Control.MOUSE_FILTER_STOP
+	var rule := ColorRect.new()
+	rule.position = Vector2(24, 70)
+	rule.size = Vector2(rect.size.x - 48, 2)
+	rule.color = Color("42605f")
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	control.add_child(rule)
+	return control
+
+
+static func modal_button(parent: Node, text: String, rect: Rect2, callback: Callable) -> Button:
+	var control := button(parent, text, rect, callback)
+	control.add_theme_font_size_override("font_size", 20)
+	control.add_theme_color_override("font_pressed_color", Color("fff8dc"))
+	control.add_theme_color_override("font_disabled_color", Color("8d96b2"))
+	control.add_theme_stylebox_override("disabled", _pixel_box(Color("241f32"), Color("3d374b"), INK))
+	set_modal_button(control, false)
+	return control
+
+
+static func set_modal_button(control: Button, focused: bool, selected: bool = false) -> void:
+	var fill := Color("43303a") if focused else (Color("263e43") if selected else Color("2b263c"))
+	var edge := Color("bb8f56") if focused else (Color("548a7c") if selected else Color("4e465f"))
+	control.add_theme_stylebox_override("normal", _pixel_box(fill, edge, INK))
+	control.add_theme_stylebox_override("hover", _pixel_box(fill.lightened(0.06), edge.lightened(0.18), INK))
+	control.add_theme_stylebox_override("pressed", _pixel_box(fill.lightened(0.13), GOLD, INK))
+	control.add_theme_color_override("font_color", Color("fff8dc") if focused else (MINT if selected else CREAM))
+
+
+static func key_hint(parent: Control, keys: Array[String], caption: String, origin: Vector2) -> float:
+	var font := parent.get_theme_default_font()
+	var x := origin.x
+	for key in keys:
+		var width := maxf(25, ceilf(font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x) + 12)
+		var cap := pixel_panel(parent, Rect2(x, origin.y, width, 25), Color("2a263a"), Color("766858"), Color("110e1c"))
+		var key_label := label(cap, key, Rect2(0, 0, width, 23), 15, GOLD, false)
+		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		x += width + 4
+	x += 4
+	var caption_width := ceilf(font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x)
+	label(parent, caption, Rect2(x, origin.y, caption_width, 25), 17, CREAM)
+	return x + caption_width - origin.x
+
+
+static func _pixel_box(fill: Color, edge: Color, base: Color) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = fill
+	box.border_color = edge
+	box.set_border_width_all(1)
+	box.border_width_bottom = 3
+	box.border_blend = false
+	box.anti_aliasing = false
+	box.content_margin_left = 12.0
+	box.content_margin_right = 12.0
+	box.shadow_color = base
+	box.shadow_size = 2
+	box.shadow_offset = Vector2(0, 2)
+	return box

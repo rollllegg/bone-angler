@@ -22,10 +22,6 @@
         {
           "cues": [
             {
-              "id": "orpheus_front",
-              "type": "sprite"
-            },
-            {
               "alpha": 0.22,
               "color": "#cdbdf0",
               "duration": 0.25,
@@ -36,19 +32,8 @@
               "type": "wait"
             }
           ],
+          "speaker": "俄",
           "text": "orpheus.arrival.1"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.arrival.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.arrival.3"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.arrival.4"
         }
       ]
     },
@@ -233,6 +218,10 @@
         {
           "cues": [
             {
+              "id": "orpheus_front",
+              "type": "sprite"
+            },
+            {
               "duration": 0.35,
               "strength": 4.0,
               "type": "shake"
@@ -373,7 +362,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ]
       },
@@ -396,7 +385,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ]
       },
@@ -419,7 +408,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ]
       },
@@ -442,7 +431,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳普斯"
+            "who": "俄耳甫斯"
           }
         ]
       },
@@ -451,7 +440,12 @@
     }
   },
   "portrait": {
-    "default": "orpheus_front"
+    "rules": [
+      {
+        "id": "orpheus_front",
+        "if": "named"
+      }
+    ]
   },
   "potion": {
     "node": "potion.react",
@@ -470,7 +464,7 @@
       "name_if": [
         {
           "if": "named",
-          "name": "俄耳普斯"
+          "name": "俄耳甫斯"
         }
       ]
     },
@@ -518,5 +512,5 @@
       }
     }
   },
-  "title": "俄耳普斯"
+  "title": "俄耳甫斯"
 }

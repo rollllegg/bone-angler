@@ -2,12 +2,12 @@
   "slots": [
     {
       "case": "wukong",
-      "day": 5.0,
-      "slot": 4.0
+      "day": 1.0,
+      "slot": 5.0
     },
     {
       "case": "orpheus",
-      "day": 5.0,
+      "day": 2.0,
       "slot": 5.0
     }
   ]

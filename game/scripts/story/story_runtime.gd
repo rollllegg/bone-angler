@@ -86,6 +86,22 @@ func advance() -> bool:
 	return _resolve_exit()
 
 
+func skip_dialogue() -> void:
+	for _step in 64:
+		if not advance():
+			return
+
+
+func get_greeting() -> String:
+	var entry := _node(str(case_data.get("entry", "")))
+	var lines: Array = entry.get("steps", [])
+	return "" if lines.is_empty() else _text(str(lines[0].get("text", "")))
+
+
+func is_identity_revealed() -> bool:
+	return bool(flags.get("named", false))
+
+
 func visible_choices() -> Array:
 	var result: Array = []
 	var node := _node(node_id)
@@ -217,7 +233,7 @@ func can_callout() -> bool:
 func get_callout_button_text() -> String:
 	var config: Dictionary = case_data.get("callout", {})
 	var key := str(config.get("button", ""))
-	return _text(key) if key != "" else "叫破（输入真名）"
+	return _text(key) if key != "" else "真名解放"
 
 
 func start_callout() -> Dictionary:

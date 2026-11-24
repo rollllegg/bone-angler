@@ -1,7 +1,7 @@
 extends SceneTree
-## Saves and reloads a story guest, then restores the previous user save.
+## Saves and reloads a story guest in an isolated save directory.
 
-const SAVE_PATH := "user://bone_angler_save.json"
+const SaveSlots := preload("res://scripts/demo/save_slots.gd")
 
 var _checks := 0
 var _failures := 0
@@ -12,10 +12,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var backup: PackedByteArray = PackedByteArray()
-	var had_save := FileAccess.file_exists(SAVE_PATH)
-	if had_save:
-		backup = FileAccess.get_file_as_bytes(SAVE_PATH)
+	var directory := "res://build/validation/story-save-test-%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
 
 	var demo = load("res://scenes/demo/demo.tscn").instantiate()
 	root.add_child(demo)
@@ -23,7 +20,6 @@ func _run() -> void:
 	demo.persist_save = false
 	demo.started = true
 	demo.session.start_shift()
-	demo.session._open_day(5)
 	demo.session.active = true
 	for _guest in 6:
 		demo.session.spawn_remaining = 0.0
@@ -46,12 +42,16 @@ func _run() -> void:
 	_advance_until_choices(runtime)
 	_check(int(runtime.flags["clue.photo"]) == 1, "clue set before save")
 	_check(int(runtime.flags["dose.score"]) == 4, "dose score set before save")
+	runtime.start_callout()
+	runtime.resolve_callout(true)
+	_advance_until_choices(runtime)
 
 	demo.persist_save = true
-	demo.save_progress()
-	_check(FileAccess.file_exists(SAVE_PATH), "save file written")
-	var payload: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
-	_check(payload is Dictionary, "save payload parses")
+	demo.save_directory = directory
+	_check(demo.save_progress(0), "save file written")
+	var save_path := SaveSlots.existing_path(directory, 0)
+	var payload := SaveSlots.read(save_path)
+	_check(not payload.is_empty(), "save payload parses")
 	var saved_story: Dictionary = payload.get("story", {})
 	_check(saved_story.has("world"), "save contains story world state")
 	var saved_souls: Array = payload.get("souls", [])
@@ -63,7 +63,7 @@ func _run() -> void:
 	_check(not saved_soul.is_empty(), "save contains the story soul")
 	_check(saved_soul.get("story_state", {}).has("flags"), "save contains the runtime snapshot")
 
-	demo.load_progress()
+	_check(demo.load_progress(0), "saved slot loads")
 	await process_frame
 	var restored_id := -1
 	for soul in demo.session.souls:
@@ -77,15 +77,13 @@ func _run() -> void:
 	_check(int(restored.flags["dose.score"]) == 4, "load restores the potion result")
 	_check(restored.has_fed_potion(), "load restores the fed potion")
 	_check(restored.get_node_id() == "inspect" and not restored.visible_choices().is_empty(), "load restores the choice hub")
+	demo.shop.select_guest(restored_id)
+	_check(demo.shop.story_sprite == "wukong_monkey" and demo._story_action_button.text == "拒绝入境", "load restores the revealed portrait and refusal action")
 
 	demo.persist_save = false
 	demo.free()
-	if had_save:
-		var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-		if file != null:
-			file.store_buffer(backup)
-	else:
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(directory))
 
 	if _failures == 0:
 		print("StorySave: %d checks, 0 failures" % _checks)

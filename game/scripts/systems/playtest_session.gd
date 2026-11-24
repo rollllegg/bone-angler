@@ -19,6 +19,8 @@ const LEGACY_REQUIREMENTS: Array[Vector3i] = [Vector3i(7, 7, 7), Vector3i(9, 9, 
 const STARTER_RAISE_FISH := [0, 1, Data.LANTERN]
 const STARTER_LOWER_FISH := [5, 6, Data.STILLFIN]
 const HIGH_STAT_GUESTS := [4, 3, 7]
+const BOATMAN_CASE := 2
+const BOATMAN_COMMISSION_WILL := 9
 
 var catches: Array[Dictionary] = []
 var essences: Array[int] = []
@@ -59,10 +61,16 @@ func _ready() -> void:
 	spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
 	story_db = StoryDB.new()
 	story_db.load_all()
-	story_state = StoryState.new()
-	story_state.init_defaults(story_db.world_decl)
+	restore_story({})
 	story_state.run["run.day"] = day
 	story_state.run["run.released"] = released_count
+
+
+func restore_story(saved: Dictionary) -> void:
+	story_state = StoryState.new()
+	story_state.init_defaults(story_db.world_decl)
+	story_state.restore(saved)
+	story_runtimes.clear()
 
 
 func _process(delta: float) -> void:
@@ -112,7 +120,7 @@ func advance(delta: float) -> void:
 			stats = _starter_stats(stats, guest.y)
 		var soul := {
 			"id": _arrived + 1, "case_id": guest.x, "name": entry[0], "stats": stats,
-			"before": stats, "served": false, "fee": service_fee(stats),
+			"before": stats, "served": false, "doses_used": 0, "fee": service_fee(stats),
 		}
 		var story_case := ""
 		if story_db != null:
@@ -244,12 +252,20 @@ func restore_day(saved: Dictionary) -> void:
 		_day_arrived = _day_guests.size()
 		return
 	day = int(saved.number)
-	var low: Array = saved.bounds[0]
-	var high: Array = saved.bounds[1]
-	requirements = [Vector3i(int(low[0]), int(low[1]), int(low[2])), Vector3i(int(high[0]), int(high[1]), int(high[2]))]
+	if saved.has("bounds"):
+		var low: Array = saved.bounds[0]
+		var high: Array = saved.bounds[1]
+		requirements = [Vector3i(int(low[0]), int(low[1]), int(low[2])), Vector3i(int(high[0]), int(high[1]), int(high[2]))]
+	else:
+		# Slots written during the v1.5 trial omitted bounds and stored guest records.
+		requirements = LEGACY_REQUIREMENTS.duplicate()
 	_day_guests.clear()
 	for guest in saved.guests:
-		_day_guests.append(Vector2i(int(guest[0]), int(guest[1])))
+		if guest is Dictionary:
+			var case_id := clampi(int(guest.get("case_id", 0)), 0, Data.SOULS.size() - 1)
+			_day_guests.append(Vector2i(case_id, -1))
+		else:
+			_day_guests.append(Vector2i(int(guest[0]), int(guest[1])))
 	_day_arrived = int(saved.arrivals)
 	if int(saved.get("daily_quota", 0)) < GUESTS_PER_DAY and not is_complete():
 		_fill_day_roster()
@@ -281,16 +297,36 @@ func service_fee(stats: Vector3i) -> int:
 	var adjustment := (stats - stats.clamp(requirements[0], requirements[1])).abs()
 	var total := adjustment.x + adjustment.y + adjustment.z
 	if total >= 8:
-		return 120
+		return 50
 	if total >= 5:
-		return 90
+		return 40
 	if total >= 3:
-		return 60
-	return 40 if total > 0 else 0
+		return 30
+	return 20 if total > 0 else 0
 
 
 func first_service(soul: Dictionary) -> bool:
 	return not _first_services.has(soul.case_id)
+
+
+func has_commission(soul: Dictionary) -> bool:
+	return soul.case_id == BOATMAN_CASE and requirements[0].z <= BOATMAN_COMMISSION_WILL and requirements[1].z >= BOATMAN_COMMISSION_WILL
+
+
+func service_bonus(soul: Dictionary) -> int:
+	return int(soul.fee * 0.10)
+
+
+static func doses_used(soul: Dictionary) -> int:
+	return maxi(0, int(soul.get("doses_used", int(soul.get("served", false)))))
+
+
+func release_reward(soul: Dictionary, stats: Vector3i, dose_count: int) -> int:
+	var bonuses := int(first_service(soul))
+	if has_commission(soul) and stats.z == BOATMAN_COMMISSION_WILL:
+		bonuses += 1
+	var full_reward := int(soul.fee) + service_bonus(soul) * bonuses
+	return floori(full_reward * pow(0.5, maxi(0, dose_count - 1)))
 
 
 func spend(cost: int) -> bool:
@@ -304,13 +340,8 @@ func release_soul(id: int) -> bool:
 	if not active or paused or not can_release(id):
 		return false
 	var soul := get_soul(id)
-	var extra := int(first_service(soul))
-	# The economy sheet supplies the boatman as the first commission example.
-	var stats: Vector3i = soul.stats
-	if int(soul.case_id) == 2 and stats.z == 9:
-		extra += 1
 	last_story_outcome = ""
-	last_payout = int(soul.fee) + int(soul.fee * 0.20) * extra
+	last_payout = release_reward(soul, soul.stats, doses_used(soul))
 	coins += last_payout
 	_first_services[soul.case_id] = true
 	souls.erase(soul)
@@ -391,12 +422,17 @@ func dose(essence: bool, id: int) -> Dictionary:
 func preview(id: int, essence: bool, item: int) -> Dictionary:
 	var soul := get_soul(id)
 	var medicine := dose(essence, item)
-	if soul.is_empty() or medicine.is_empty():
+	if soul.is_empty() or soul.has("story_case") or medicine.is_empty():
 		return {}
 	var before: Vector3i = soul.stats
 	var effect: Vector3i = medicine.effect
 	var after := (before + effect).clamp(Vector3i.ZERO, STAT_CEILING)
-	return {"name": medicine.name, "before": before, "after": after, "effect": effect}
+	var dose_count := doses_used(soul) + 1
+	return {
+		"name": medicine.name, "before": before, "after": after, "effect": effect,
+		"doses_used": dose_count,
+		"reward": release_reward(soul, after, dose_count) if is_eligible(after) else 0,
+	}
 
 
 func serve(id: int, essence: bool, item: int) -> bool:
@@ -413,6 +449,7 @@ func serve(id: int, essence: bool, item: int) -> bool:
 	soul.before = change.before
 	soul.stats = change.after
 	soul.served = true
+	soul["doses_used"] = change.doses_used
 	soul_served.emit(id)
 	state_changed.emit()
 	return true
@@ -471,7 +508,7 @@ func get_story_runtime(id: int):
 
 func feed_story_potion(id: int, essence: bool, item: int) -> bool:
 	var soul := get_soul(id)
-	if soul.is_empty() or not soul.has("story_case"):
+	if not active or paused or soul.is_empty() or not soul.has("story_case"):
 		return false
 	var runtime = get_story_runtime(id)
 	if runtime == null or not runtime.can_feed_potion():
@@ -485,6 +522,7 @@ func feed_story_potion(id: int, essence: bool, item: int) -> bool:
 		potions.erase(get_potion(item))
 	if not runtime.feed_potion(medicine.effect, str(medicine.name)):
 		return false
+	soul_served.emit(id)
 	state_changed.emit()
 	return true
 
@@ -597,6 +635,8 @@ func _sync_story_snapshot(id: int, emit_change: bool) -> void:
 	if runtime == null or soul.is_empty():
 		return
 	soul["story_state"] = runtime.snapshot()
+	if runtime.is_identity_revealed():
+		soul.name = story_db.get_title(str(soul.story_case))
 	if emit_change:
 		state_changed.emit()
 

@@ -1,6 +1,7 @@
 extends SceneTree
 ## Verifies that PlaytestSession attaches the scheduled story case and resolves it.
 
+const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 
 var _checks := 0
@@ -15,14 +16,13 @@ func _run() -> void:
 	var session := Session.new()
 	root.add_child(session)
 	session.set_process(false)
-	session._open_day(5)
-	session.active = true
+	session.start_shift()
 	_check(session.story_db != null and session.story_db.loaded, "session loads story DB")
 
 	for _guest in 6:
 		session.spawn_remaining = 0.0
 		session.advance(0.01)
-	_check(session.souls.size() == 6, "six guests arrived on day 5")
+	_check(session.souls.size() == 6 and str(session.souls[5].get("story_case", "")) == "wukong", "Wukong is the sixth guest on day one")
 	var story_soul: Dictionary = {}
 	for soul in session.souls:
 		if soul.has("story_case"):
@@ -68,7 +68,7 @@ func _run() -> void:
 	_check(session.finish_story(soul_id), "session finishes the story")
 	_check(session.get_soul(soul_id).is_empty(), "story soul leaves the queue")
 	_check(session.released_count == 0 and session.rejected_count == 1, "refusal counts as processed")
-	_check(session.coins == 40, "refusal pays nothing")
+	_check(session.coins == Data.STARTING_COINS, "refusal pays nothing")
 	_check(session.story_state.ledger.size() == 1, "ledger gets one entry")
 	_check(str(session.story_state.ledger[0].get("result", "")) == "未入境", "ledger records refusal")
 	_check(str(session.story_state.ledger[0].get("who", "")) == "孙悟空", "ledger records the called-out name")
@@ -76,6 +76,17 @@ func _run() -> void:
 	_check(session.get_ending_lines().size() > 0, "ending lines resolve")
 
 	# Orpheus follows Wukong and uses the rampage flag.
+	for soul in session.souls.duplicate():
+		soul.stats = session.requirements[0]
+		session.release_soul(int(soul.id))
+	_check(session.get_day_report().day == 1, "Wukong's report belongs to day one")
+	session.close_day_report()
+	_check(session.day == 2 and not session.awaiting_day_report, "the next shift opens after the report")
+	for _guest in 6:
+		session.spawn_remaining = 0.0
+		session.advance(0.01)
+	_check(session.souls.size() == 6 and str(session.souls[5].get("story_case", "")) == "orpheus", "Orpheus is the sixth guest on day two")
+	var coins_before_orpheus := session.coins
 	var orpheus_soul: Dictionary = {}
 	for soul in session.souls:
 		if str(soul.get("story_case", "")) == "orpheus":
@@ -98,8 +109,8 @@ func _run() -> void:
 	_check(orpheus.is_closed(), "orpheus story closes")
 	_check(orpheus.get_outcome_id() == "accepted.reunion", "orpheus reunion with wukong rampage")
 	_check(session.finish_story(orpheus_id), "session finishes orpheus")
-	_check(session.released_count == 1 and session.rejected_count == 1, "orpheus release counts")
-	_check(session.coins == 100, "orpheus pays the fee")
+	_check(session.released_count == 6 and session.rejected_count == 1, "orpheus release counts")
+	_check(session.coins == coins_before_orpheus + 60, "orpheus pays the fee")
 	_check(session.story_state.ledger.size() == 2, "ledger gets two entries")
 	_check(str(session.story_state.ledger[1].get("who", "")) == "亚历克斯", "orpheus ledger keeps the alias")
 	_check(str(session.story_state.ledger[1].get("result", "")) == "已入境", "orpheus ledger records admission")

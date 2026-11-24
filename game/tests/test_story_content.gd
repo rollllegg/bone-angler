@@ -20,8 +20,9 @@ func _run() -> void:
 	_check(_db.load_all(), "story DB loads")
 	_check(_db.cases.has("wukong"), "wukong case exists")
 	_check(_db.cases.has("orpheus"), "orpheus case exists")
-	_check(_db.get_scheduled_case(5, 4) == "wukong", "wukong is scheduled for day 5 slot 4")
-	_check(_db.get_scheduled_case(5, 5) == "orpheus", "orpheus is scheduled for day 5 slot 5")
+	_check(_db.get_scheduled_case(1, 5) == "wukong", "wukong is the sixth guest on day 1")
+	_check(_db.get_scheduled_case(2, 5) == "orpheus", "orpheus is the sixth guest on day 2")
+	_check(_db.get_scheduled_case(5, 5) == "", "the old day 5 story slot is gone")
 	_check(_db.get_scheduled_case(2, 1) == "", "day 2 slot 1 is not a story slot")
 	_check_cues("wukong")
 	_check_cues("orpheus")
@@ -159,7 +160,7 @@ func _check_orpheus_data() -> void:
 	_check(str(data.get("callout", {}).get("answer", "")) == "ORPHEUS", "orpheus callout answer is ORPHEUS")
 	_check(str(data.get("callout", {}).get("success", "")) == "identify", "orpheus callout success goes to identify")
 	_check(str(data.get("callout", {}).get("failure", "")) == "inspect", "orpheus callout failure returns to the hub")
-	_check(str(data.get("portrait", {}).get("default", "")) == "orpheus_front", "orpheus default portrait is the front view")
+	_check(str(data.get("portrait", {}).get("default", "")).is_empty(), "orpheus initially uses the ordinary guest portrait")
 	_check_all_text_keys(data)
 	_check_potion_scores(data, -1, 1, -1, "迷茫")
 	_check(int(data.state.flags["confused"].get("default", -1)) == 1, "orpheus starts confused")
@@ -176,7 +177,7 @@ func _check_orpheus_paths() -> void:
 	_check(_choice_kind(orpheus_choices, "registry") == "", "orpheus clues stay normal choices")
 	_choose(path1["runtime"], "admit")
 	_check(_aftermath_text(path1["runtime"]).contains("伪装成亡灵"), "orpheus unnamed aftermath hides the real name")
-	_check(not _aftermath_text(path1["runtime"]).contains("俄耳普斯转世"), "orpheus unnamed aftermath omits the bracket text")
+	_check(not _aftermath_text(path1["runtime"]).contains("俄耳甫斯转世"), "orpheus unnamed aftermath omits the bracket text")
 	_check(not _aftermath_text(path1["runtime"]).contains("{{"), "orpheus inline tags are rendered away")
 	_settle(path1["runtime"])
 	_check(path1["runtime"].is_closed(), "orpheus default accept closes")
@@ -229,7 +230,7 @@ func _check_orpheus_paths() -> void:
 	_check(path4["runtime"].get_outcome_id() == "refused", "orpheus refusal outcome")
 	_check(not bool(path4["state"].world["world.orpheus_admitted"]), "orpheus refusal does not admit")
 	_check(not bool(path4["state"].world["world.orpheus_reunion"]), "orpheus refusal has no reunion")
-	_check(str(path4["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳普斯", "orpheus named ledger records the real name")
+	_check(str(path4["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳甫斯", "orpheus named ledger records the real name")
 	_check(str(path4["runtime"].get_outcome().get("ledger", {}).get("result", "")) == "未入境", "orpheus refusal ledger result")
 
 	# 5. A zero score is non-positive.
@@ -250,9 +251,9 @@ func _check_orpheus_paths() -> void:
 	path6["runtime"].resolve_callout(true)
 	_settle(path6["runtime"])
 	_choose(path6["runtime"], "admit")
-	_check(_aftermath_text(path6["runtime"]).contains("俄耳普斯转世"), "orpheus named aftermath shows the real name")
+	_check(_aftermath_text(path6["runtime"]).contains("俄耳甫斯转世"), "orpheus named aftermath shows the real name")
 	_settle(path6["runtime"])
-	_check(str(path6["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳普斯", "orpheus named accept ledger")
+	_check(str(path6["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳甫斯", "orpheus named accept ledger")
 
 	# 7. The registry look is a one-time charmed action.
 	var path7 = _new_path("orpheus")
@@ -288,8 +289,8 @@ func _check_orpheus_paths() -> void:
 
 func _check_speaker_aliases() -> void:
 	var wukong = _new_path("wukong")
-	_check(wukong["runtime"].advance(), "wukong arrival advances to the speaker")
 	_check(str(wukong["runtime"].current_step().get("speaker_name", "")) == "史密斯", "wukong speaks as the alias before the callout")
+	_check(wukong["runtime"].steps.size() == 1, "wukong arrival contains one greeting")
 	_settle(wukong["runtime"])
 	wukong["runtime"].start_callout()
 	wukong["runtime"].resolve_callout(true)
@@ -299,14 +300,15 @@ func _check_speaker_aliases() -> void:
 	_check(str(wukong["runtime"].current_step().get("speaker_name", "")) == "孙悟空", "wukong speaks as the real name after the callout")
 
 	var orpheus = _new_path("orpheus")
-	_check(orpheus["runtime"].advance(), "orpheus arrival advances to the speaker")
 	_check(str(orpheus["runtime"].current_step().get("speaker_name", "")) == "亚历克斯", "orpheus speaks as the alias before the callout")
+	_check(orpheus["runtime"].steps.size() == 1, "orpheus arrival contains one greeting")
 	_settle(orpheus["runtime"])
 	orpheus["runtime"].start_callout()
 	orpheus["runtime"].resolve_callout(true)
+	_check(orpheus["runtime"].get_portrait_id() == "orpheus_front", "orpheus's true name reveals the front portrait")
 	_settle(orpheus["runtime"])
 	_choose(orpheus["runtime"], "eurydice")
-	_check(str(orpheus["runtime"].current_step().get("speaker_name", "")) == "俄耳普斯", "orpheus speaks as the real name after the callout")
+	_check(str(orpheus["runtime"].current_step().get("speaker_name", "")) == "俄耳甫斯", "orpheus speaks as the real name after the callout")
 
 
 func _check_cues(case_id: String) -> void:
