@@ -304,11 +304,22 @@ static func size_label(catch: Dictionary) -> String:
 
 
 static func recipe(first: int, second: int) -> Dictionary:
+	return RECIPES.get(recipe_key(first, second), {})
+
+
+static func recipe_key(first: int, second: int) -> String:
 	if first < 0 or second < 0 or first >= FISH.size() or second >= FISH.size():
-		return {}
+		return ""
 	var ids := [FISH[first]["id"], FISH[second]["id"]]
 	ids.sort()
-	return RECIPES.get("+".join(ids), {})
+	return "+".join(ids)
+
+
+static func fish_index(id: String) -> int:
+	for index in FISH.size():
+		if FISH[index].id == id:
+			return index
+	return -1
 
 
 static func effect_text(effect: Vector3i) -> String:

@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 	_day_clock.text = "距下一天 %d 秒 · 每天重新审定标准" % ceili(session.day_remaining)
 	_arrival_clock.text = "%.1f 秒后有新灵魂到来" % session.spawn_remaining
 	if session.paused:
-		_arrival_clock.text = "已暂停 · 按 P 或空格继续"
+		_arrival_clock.text = "已暂停 · 按 Esc 或空格继续"
 	queue_redraw()
 
 

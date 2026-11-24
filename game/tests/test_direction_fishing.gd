@@ -81,7 +81,7 @@ func _run() -> void:
 	_check(not screen.is_pull_arrow_visible(), "Pause hides the actionable arrow")
 	qte.advance(10.0)
 	_check(qte.phase == DirectionFishing.Phase.FEEDBACK, "Pause freezes feedback as well as reaction timing")
-	_send_key(KEY_P)
+	_send_key(KEY_ESCAPE)
 	qte.advance(qte.remaining)
 	_check(qte.phase == DirectionFishing.Phase.REELING and is_equal_approx(qte.remaining, initial_time), "Resuming gives the next prompt its full window")
 	main._set_paused(true)

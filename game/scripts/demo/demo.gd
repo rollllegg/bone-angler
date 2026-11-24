@@ -12,6 +12,7 @@ const Alchemy := preload("res://scripts/demo/alchemy_panel.gd")
 const Market := preload("res://scripts/demo/market_panel.gd")
 const StoryPanel := preload("res://scripts/demo/story_panel.gd")
 const DayReportPanel := preload("res://scripts/demo/day_report_panel.gd")
+const CodexPanel := preload("res://scripts/demo/codex_panel.gd")
 const SaveMenu := preload("res://scripts/demo/save_menu.gd")
 const SaveSlots := preload("res://scripts/demo/save_slots.gd")
 const Data := preload("res://scripts/systems/playtest_data.gd")
@@ -84,7 +85,10 @@ var _river_viewport: SubViewport
 var _shop_viewport: SubViewport
 var _pause_banner: Control
 var _pause_buttons: Array[Button] = []
-var _pause_cursor := 0
+var _pause_button_animation: Tween
+var _pause_bar_animation: Tween
+var _codex: CodexPanel
+var _paused_from_codex := false
 var _save_menu: SaveMenu
 var _summary: Label
 var _river_button: Button
@@ -197,11 +201,6 @@ func _ready() -> void:
 	_build_shop_ui()
 
 
-	day_report = DayReportPanel.new()
-	day_report.name = "DayReport"
-	_stage.add_child(day_report)
-	day_report.closed.connect(_close_day_report)
-
 	alchemy = Alchemy.new()
 	alchemy.name = "Alchemy"
 	_stage.add_child(alchemy)
@@ -214,6 +213,18 @@ func _ready() -> void:
 
 	_build_pause()
 	_build_river_notice()
+	_codex = CodexPanel.new()
+	_codex.name = "Codex"
+	_stage.add_child(_codex)
+	_codex.setup(BASE_SIZE, session, _audio)
+	_codex.toggle_requested.connect(_toggle_codex_bookmark)
+	_codex.close_requested.connect(_set_codex_open.bind(false))
+
+	day_report = DayReportPanel.new()
+	day_report.name = "DayReport"
+	_stage.add_child(day_report)
+	day_report.closed.connect(_close_day_report)
+
 	_save_menu = SaveMenu.new()
 	_stage.add_child(_save_menu)
 	_save_menu.setup(BASE_SIZE, _audio)
@@ -323,16 +334,16 @@ func _build_hud() -> void:
 	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage.add_child(_hud)
 	UI.panel(_hud, Rect2(24, 18, 1572, 78), "dark_wood")
-	_summary = UI.label(_hud, "", Rect2(48, 34, 874, 44), 20, UI.GOLD)
-	_previous_location_button = UI.button(_hud, "< Q", Rect2(936, 32, 54, 48), _cycle_location.bind(-1))
+	_summary = UI.label(_hud, "", Rect2(103, 34, 874, 44), 20, UI.GOLD)
+	_previous_location_button = UI.button(_hud, "< Q", Rect2(1012, 32, 54, 48), _cycle_location.bind(-1))
 	_previous_location_button.accessibility_name = "上一个地点"
-	_next_location_button = UI.button(_hud, "E >", Rect2(1446, 32, 54, 48), _cycle_location.bind(1))
+	_next_location_button = UI.button(_hud, "E >", Rect2(1522, 32, 54, 48), _cycle_location.bind(1))
 	_next_location_button.accessibility_name = "下一个地点"
 	_next_location_button.tooltip_text = "下一个地点（E）"
-	_river_button = UI.tab_button(_hud, "河岸", Rect2(998, 32, 104, 48), _show_location.bind("River", true), true)
-	_shop_button = UI.tab_button(_hud, "接待", Rect2(1110, 32, 104, 48), _show_location.bind("Shop", true))
-	_alchemy_button = UI.tab_button(_hud, "炼药", Rect2(1222, 32, 104, 48), _show_location.bind("Alchemy", true))
-	_market_button = UI.tab_button(_hud, "市场", Rect2(1334, 32, 104, 48), _show_location.bind("Market", true))
+	_river_button = UI.tab_button(_hud, "河岸", Rect2(1074, 32, 104, 48), _show_location.bind("River", true), true)
+	_shop_button = UI.tab_button(_hud, "接待", Rect2(1186, 32, 104, 48), _show_location.bind("Shop", true))
+	_alchemy_button = UI.tab_button(_hud, "炼药", Rect2(1298, 32, 104, 48), _show_location.bind("Alchemy", true))
+	_market_button = UI.tab_button(_hud, "市场", Rect2(1410, 32, 104, 48), _show_location.bind("Market", true))
 	for b in [_river_button, _shop_button, _alchemy_button, _market_button]:
 		b.add_theme_font_size_override("font_size", 24)
 	_river_bite_alert = UI.label(_river_button, "!", Rect2(8, 0, 18, 48), 24, RIVER_ALERT_COLOR)
@@ -342,10 +353,18 @@ func _build_hud() -> void:
 	_river_bite_alert.add_theme_font_override("font", alert_font)
 	_river_bite_alert.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_river_bite_alert.hide()
-	_pause_button = UI.button(_hud, "", Rect2(1520, 29, 54, 54), func() -> void: _set_paused(not session.paused))
+	_pause_button = UI.button(_hud, "", Rect2(36, 29, 54, 54), func() -> void: _set_paused(not session.paused))
+	_pause_button.pressed.connect(_audio.play.bind(Audio.Cue.UI_CLICK))
+	_pause_button.pivot_offset = _pause_button.size * 0.5
 	var icon_style := StyleBoxEmpty.new()
 	for state in ["normal", "hover", "pressed"]:
 		_pause_button.add_theme_stylebox_override(state, icon_style)
+	var focus_style := UI.style(Color.TRANSPARENT, UI.MINT.darkened(0.35))
+	focus_style.draw_center = false
+	focus_style.set_border_width_all(2)
+	focus_style.anti_aliasing = false
+	_pause_button.add_theme_stylebox_override("focus", focus_style)
+	_pause_button.add_theme_color_override("icon_focus_color", UI.MINT)
 	_pause_button.add_theme_color_override("icon_hover_color", UI.GOLD)
 	_pause_button.add_theme_color_override("icon_pressed_color", UI.GOLD.darkened(0.22))
 
@@ -545,27 +564,19 @@ func _build_shop_ui() -> void:
 
 func _build_pause() -> void:
 	_pause_banner = Control.new()
-	_pause_banner.position = Vector2(46, 32)
-	_pause_banner.size = Vector2(876, 52)
+	_pause_banner.position = Vector2(100, 32)
+	_pause_banner.size = Vector2(900, 52)
 	_pause_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(_pause_banner)
-	UI.label(_pause_banner, "已暂停", Rect2(4, 0, 90, 48), 22, UI.MINT)
-	var labels := ["继续游戏", "保存游戏", "读取存档", "返回封面"]
-	var actions := [_set_paused.bind(false), _open_save_slots.bind(true), _open_save_slots.bind(false), _return_to_title]
+	UI.label(_pause_banner, "已暂停", Rect2(4, 0, 88, 48), 22, UI.MINT)
+	var labels := ["F  保存游戏", "R  读取存档", "T  返回封面"]
+	var actions := [_open_save_slots.bind(true), _open_save_slots.bind(false), _return_to_title]
 	for index in labels.size():
-		var button := UI.button(_pause_banner, labels[index], Rect2(96 + index * 142, 0, 132, 48), actions[index])
+		var button := UI.button(_pause_banner, labels[index], Rect2(96 + index * 166, 0, 154, 48), actions[index])
+		button.add_theme_font_size_override("font_size", 20)
 		button.pressed.connect(_audio.play.bind(Audio.Cue.UI_CLICK))
-		button.mouse_entered.connect(_select_pause_button.bind(index))
 		_pause_buttons.append(button)
-	UI.label(_pause_banner, "A / D 选择　空格 确认", Rect2(666, 0, 214, 48), 18, UI.CREAM)
-
-
-func _select_pause_button(index: int) -> void:
-	if _pause_buttons[index].disabled:
-		return
-	_pause_cursor = index
-	for i in _pause_buttons.size():
-		UI.set_button_primary(_pause_buttons[i], i == index)
+	UI.label(_pause_banner, "Esc 继续　　Tab 图鉴", Rect2(606, 0, 260, 48), 17, UI.CREAM)
 
 
 func _resize() -> void:
@@ -682,16 +693,14 @@ func _save_to_slot(slot: int) -> void:
 	_save_menu.update_slots(_save_slot_entries())
 	_save_menu.show_status("已保存到存档 %d。" % (slot + 1))
 	_refresh_continue_button()
-	_pause_buttons[2].disabled = false
+	_pause_buttons[1].disabled = false
 
 
 func _delete_save_slot(slot: int) -> void:
 	var removed := persist_save and SaveSlots.remove(save_directory, slot)
 	_save_menu.update_slots(_save_slot_entries())
 	_refresh_continue_button()
-	_pause_buttons[2].disabled = continue_button.disabled
-	if _pause_buttons[_pause_cursor].disabled:
-		_select_pause_button(0)
+	_pause_buttons[1].disabled = continue_button.disabled
 	if removed:
 		_audio.play(Audio.Cue.UI_CONFIRM)
 		_save_menu.show_status("已删除存档 %d。" % (slot + 1))
@@ -738,6 +747,8 @@ func save_progress(slot: int) -> bool:
 		"catches": session.catches,
 		"essences": session.essences,
 		"potions": saved_potions,
+		"codex_fish": session.codex_fish,
+		"codex_recipes": session.codex_recipes,
 		"souls": saved_souls,
 		"rod": qte.rod,
 		"hook": qte.hook,
@@ -778,6 +789,8 @@ func load_progress(slot: int) -> bool:
 	_bobber_sound_in = BOBBER_WAIT_INTERVAL
 	session.active = false
 	session.paused = false
+	_paused_from_codex = false
+	_codex.present(false, false)
 	session.last_payout = 0
 	session.last_story_outcome = ""
 	shop.selected_id = -1
@@ -818,6 +831,7 @@ func load_progress(slot: int) -> bool:
 				"effect": Vector3i(int(e[0]), int(e[1]), int(e[2])),
 				"attribute": int(p.get("attribute", -1)), "adjustment": int(p.get("adjustment", 0)),
 			})
+	session.restore_codex(data)
 	session.souls.clear()
 	var fees_to_recalculate: Array[Dictionary] = []
 	var from_v15 := int(data.get("rules_version", 0)) == 15
@@ -961,8 +975,9 @@ func _update_activation() -> void:
 	UI.set_tab_active(_alchemy_button, current_location == "Alchemy")
 	UI.set_tab_active(_market_button, current_location == "Market")
 	_pause_button.icon = RESUME_ICON if session.paused else PAUSE_ICON
+	_pause_button.focus_mode = Control.FOCUS_ALL if session.paused else Control.FOCUS_NONE
 	_pause_button.accessibility_name = "继续游戏" if session.paused else "暂停游戏"
-	_pause_button.tooltip_text = "%s（P / Esc）" % _pause_button.accessibility_name
+	_pause_button.tooltip_text = "%s（Esc）" % _pause_button.accessibility_name
 	_pause_button.add_theme_color_override("icon_normal_color", UI.MINT if session.paused else UI.CREAM)
 	_refresh_river_notice()
 	_update_scene_audio(0.0)
@@ -1100,8 +1115,6 @@ func _rig_key(code: Key) -> bool:
 	match code:
 		KEY_C:
 			_close_rig_popup(_rig_open_slot >= 0)
-		KEY_ESCAPE:
-			_close_rig_popup()
 		KEY_W, KEY_A, KEY_S, KEY_D:
 			if _rig_open_slot >= 0 and _rig_popup_grid.columns > 1:
 				_move_rig_grid_cursor(code)
@@ -1147,26 +1160,97 @@ func _move_rig_grid_cursor(code: Key) -> void:
 		_highlight_rig_option()
 
 
-func _set_paused(value: bool) -> void:
+func _set_paused(value: bool, open_codex: bool = false) -> void:
 	if not started or session.paused == value:
 		return
 	session.paused = value
+	_paused_from_codex = value and open_codex
 	if value:
 		_close_rig_popup()
-		_pause_buttons[1].disabled = not persist_save
-		_pause_buttons[2].disabled = not has_save()
-		_select_pause_button(0)
+		_pause_buttons[0].disabled = not persist_save
+		_pause_buttons[1].disabled = not has_save()
 	else:
 		_save_menu.dismiss()
 	_clear_pull_input()
 	_update_activation()
 	_refresh_shared()
 	_refresh_river()
+	_set_codex_open(value and open_codex)
+	_animate_pause_bar()
+
+
+func _animate_pause_bar() -> void:
+	if _pause_button_animation:
+		_pause_button_animation.kill()
+	if _pause_bar_animation:
+		_pause_bar_animation.kill()
+	_pause_button.scale = Vector2.ONE
+	_pause_button_animation = create_tween().set_trans(Tween.TRANS_QUAD)
+	_pause_button_animation.tween_property(_pause_button, "scale", Vector2.ONE * 0.90, 0.05).set_ease(Tween.EASE_IN)
+	_pause_button_animation.tween_property(_pause_button, "scale", Vector2.ONE, 0.09).set_ease(Tween.EASE_OUT)
+	_summary.modulate.a = 1.0
+	_pause_banner.modulate.a = 1.0
+	var incoming: Control = _pause_banner if session.paused else _summary
+	incoming.modulate.a = 0.0
+	_pause_bar_animation = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_pause_bar_animation.tween_property(incoming, "modulate:a", 1.0, 0.12)
+
+
+func _can_open_codex() -> bool:
+	return started and not day_report.visible and not _save_menu.is_open and not story_panel.is_typing() and qte.phase != Fishing.Phase.TRUE_NAME
+
+
+func _set_codex_open(expanded: bool) -> void:
+	if expanded:
+		_refresh_codex_guest()
+	_codex.present(session.paused, expanded)
+	if session.paused and not expanded:
+		_pause_button.grab_focus()
+
+
+func _refresh_codex_guest() -> void:
+	var guest := session.get_soul(shop.selected_id) if current_location == "Shop" else {}
+	_codex.set_guest(guest, session.requirements)
+
+
+func _toggle_codex_bookmark() -> void:
+	if session.paused and (_codex.is_open or _can_open_codex()):
+		_set_codex_open(not _codex.is_open)
+
+
+func _codex_tab() -> void:
+	if not _can_open_codex():
+		return
+	if not session.paused:
+		_set_paused(true, true)
+	elif _codex.is_open and _paused_from_codex:
+		_set_paused(false)
+	else:
+		_set_codex_open(not _codex.is_open)
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and auto_pause_on_focus_loss and started:
 		_set_paused(true)
+
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventKey:
+		return
+	var key := event as InputEventKey
+	if key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
+		return
+	var code := key.physical_keycode if key.physical_keycode != 0 else key.keycode
+	# Reserve Tab before Godot's GUI focus navigation, even when a modal blocks the shortcut.
+	if code == KEY_TAB:
+		get_viewport().set_input_as_handled()
+		if key.pressed and not key.echo:
+			_codex_tab()
+	elif started and session.paused and key.pressed:
+		# While paused, the active menu owns keyboard confirmation instead of the focused Button.
+		get_viewport().set_input_as_handled()
+		if not key.echo:
+			_handle_game_key(code)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -1186,46 +1270,50 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key.echo or key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
 		return
-	if _save_menu.is_open:
-		_save_menu.handle_key(code)
+	if _handle_game_key(code):
 		get_viewport().set_input_as_handled()
-		return
+
+
+func _handle_game_key(code: Key) -> bool:
+	if _save_menu.is_open:
+		if code == KEY_ESCAPE and _codex.is_open:
+			_audio.play(Audio.Cue.UI_CLICK)
+			_save_menu.dismiss()
+		else:
+			_save_menu.handle_key(code)
+		return true
 	if started and not session.paused and current_location == "Shop" and story_panel != null and story_panel.is_typing():
 		if code >= KEY_A and code <= KEY_Z:
 			story_panel.submit_letter(OS.get_keycode_string(code))
 		elif code == KEY_ESCAPE:
 			story_panel.cancel_callout()
-		get_viewport().set_input_as_handled()
-		return
+		return true
 	if day_report != null and day_report.visible:
 		if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
 			_close_day_report()
-			get_viewport().set_input_as_handled()
-		return
-	var handled := true
+		return true
 	if not started:
-		handled = _title_key(code)
-	elif session.paused:
-		handled = _pause_key(code)
-	elif code == KEY_P:
+		return _title_key(code)
+	if session.paused:
+		return _pause_key(code)
+	if code == KEY_ESCAPE:
 		_set_paused(true)
-	elif _rig_slot_cursor >= 0:
-		handled = _rig_key(code)
-	elif code == KEY_ESCAPE:
-		_set_paused(true)
-	elif code in [KEY_Q, KEY_E]:
+		return true
+	if _rig_slot_cursor >= 0:
+		return _rig_key(code)
+	if code in [KEY_Q, KEY_E]:
 		_cycle_location(-1 if code == KEY_Q else 1)
-	else:
-		match current_location:
-			"River": handled = _river_key(code)
-			"Shop": handled = _reception_key(code)
-			"Alchemy": handled = alchemy.handle_key(code)
-			"Market": handled = market.handle_key(code)
-		if not handled and code == KEY_C and current_location != "River":
-			_show_location("River", true)
-			handled = true
-	if handled:
-		get_viewport().set_input_as_handled()
+		return true
+	var handled := false
+	match current_location:
+		"River": handled = _river_key(code)
+		"Shop": handled = _reception_key(code)
+		"Alchemy": handled = alchemy.handle_key(code)
+		"Market": handled = market.handle_key(code)
+	if not handled and code == KEY_C and current_location != "River":
+		_show_location("River", true)
+		return true
+	return handled
 
 
 func _title_key(code: Key) -> bool:
@@ -1244,19 +1332,21 @@ func _title_key(code: Key) -> bool:
 
 func _pause_key(code: Key) -> bool:
 	match code:
-		KEY_A, KEY_LEFT, KEY_W, KEY_UP, KEY_D, KEY_RIGHT, KEY_S, KEY_DOWN:
-			var step := -1 if code in [KEY_A, KEY_LEFT, KEY_W, KEY_UP] else 1
-			var next := UI.next_button(_pause_buttons, _pause_cursor, step)
-			if next != _pause_cursor:
-				_audio.play(Audio.Cue.UI_CLICK)
-			_select_pause_button(next)
-		KEY_SPACE, KEY_ENTER, KEY_KP_ENTER:
-			UI.activate(_pause_buttons[_pause_cursor])
-		KEY_C, KEY_ESCAPE, KEY_P:
+		KEY_ESCAPE, KEY_C:
 			_set_paused(false)
-		_:
-			return false
-	return true
+			return true
+		KEY_F:
+			UI.activate(_pause_buttons[0])
+			return true
+		KEY_R:
+			UI.activate(_pause_buttons[1])
+			return true
+		KEY_T:
+			UI.activate(_pause_buttons[2])
+			return true
+	if _codex.is_open:
+		return _codex.handle_key(code)
+	return false
 
 
 func _river_key(code: Key) -> bool:
@@ -1383,6 +1473,8 @@ func _refresh_shared() -> void:
 			day_report.render(report)
 
 	var selected := session.get_soul(shop.selected_id)
+	if _codex.is_open:
+		_refresh_codex_guest()
 	var story = _selected_story_runtime()
 	if story == null or current_location != "Shop" or session.paused:
 		story_panel.cancel_callout()

@@ -110,7 +110,7 @@ func _run() -> void:
 	_check(not demo.river.get_ferry_rect().has_area(), "The ferry is gone once its soul joins the queue")
 	demo.river.advance_cast(0.01)
 	_check(demo.river.get_cast_frame() == 1, "Second pose starts after 0.25 seconds")
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	demo.river.advance_cast(10.0)
 	_check(demo.river.get_cast_frame() == 1 and demo._pause_banner.visible and demo._pause_banner.get_rect().end.y < 96.0, "Manual pause suspends casting and fits within the top bar")
 	_check(demo._pause_button.icon == demo.RESUME_ICON and demo._pause_button.text.is_empty(), "The paused HUD shows the pixel play icon")
@@ -123,8 +123,8 @@ func _run() -> void:
 	_check(demo._pause_button.icon == demo.PAUSE_ICON and demo._pause_button.text.is_empty(), "The running HUD shows the pixel pause icon")
 	_click(demo._pause_button)
 	_check(demo.session.paused, "Clicking the running icon pauses gameplay")
-	_key(KEY_SPACE)
-	_check(not demo.session.paused and demo.river.casting, "Space resumes without another cast")
+	_key(KEY_ESCAPE)
+	_check(not demo.session.paused and demo.river.casting, "Escape resumes without another cast")
 	demo.river.advance_cast(0.25)
 	_check(demo.river.get_cast_frame() == 2, "Third pose starts after 0.5 seconds")
 	demo.river.advance_cast(0.25)
@@ -456,13 +456,12 @@ func _check_return_to_title() -> void:
 		demo.auto_pause_on_focus_loss = false
 		_click(demo.start_button)
 		demo.session.coins = 99
-		_key(KEY_P)
+		_key(KEY_ESCAPE)
 		_check(demo._pause_banner.visible, "The active game can open the pause menu before returning to the title")
 		if use_keyboard:
-			_key(KEY_A)
-			_key(KEY_SPACE)
+			_key(KEY_T)
 		else:
-			_click(demo._pause_buttons[3])
+			_click(demo._pause_buttons[2])
 		_check(current_scene == demo and demo.is_inside_tree(), "Return to Title keeps the viewport attached until input dispatch finishes")
 		await process_frame
 		await process_frame
@@ -487,16 +486,15 @@ func _check_save_slots() -> void:
 	_move_mouse(Vector2(24, 24))
 	_check(demo.continue_button.disabled, "A fresh profile has no saved game to continue")
 	_key(KEY_SPACE)
-	_check(demo._summary.position.x == 48 and not demo.has_save(), "The summary starts at the left and a new game leaves all save slots empty")
+	_check(demo._pause_button.position.x == 36 and demo._summary.position.x > demo._pause_button.get_rect().end.x and not demo.has_save(), "The summary follows the top-left pause button and a new game leaves all save slots empty")
 	demo.session.coins = 91
 	demo.qte.cast()
 	demo.qte.advance(0.5)
 	_key(KEY_E)
 	_key(KEY_E)
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	var wait: float = demo.qte.remaining
-	_key(KEY_D)
-	_key(KEY_SPACE)
+	_key(KEY_F)
 	var menu = demo._save_menu
 	_check(menu.visible and menu.saving and menu.slot_buttons.size() == 5
 		and menu.slot_buttons[4].text.contains("空位") and menu.delete_buttons[4].disabled,
@@ -553,9 +551,8 @@ func _check_save_slots() -> void:
 	demo.session.coins = 999
 	demo.session.essences[0] = 12
 	demo.qte.phase = Fishing.Phase.READY
-	_key(KEY_D)
-	_key(KEY_SPACE)
-	_check(menu.visible and not menu.saving, "Load is available alongside Save and Return to Title")
+	_key(KEY_R)
+	_check(menu.visible and not menu.saving, "R opens Load directly alongside Save and Return to Title")
 	_key(KEY_S)
 	_key(KEY_SPACE)
 	_check(not menu.is_open and not demo.session.paused and demo.current_location == "Alchemy" and demo.session.coins == 205 and demo.session.essences[0] == 0, "Reading the second slot restores its wallet, inventory and location")
@@ -749,11 +746,11 @@ func _check_keyboard_workflows() -> void:
 	_check(demo.shop.departure_times.size() == 2 and demo.shop.departure_times[1] > 0.0, "Both departure animations are playing at the same time")
 	await _capture("09-overlapping-departures")
 	var balance := session.coins
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	var paused_times: Array[float] = demo.shop.departure_times.duplicate()
 	demo.shop.advance_presentation(10.0)
 	_check(demo.shop.departure_times == paused_times, "Pause freezes every departure")
-	_key(KEY_SPACE)
+	_key(KEY_ESCAPE)
 	demo.shop.advance_presentation(10.0)
 	_check(demo.shop.departure_times.is_empty() and session.coins == balance, "All animations finish with no extra payouts")
 
@@ -1027,10 +1024,10 @@ func _check_ferry_crossing() -> void:
 	var crossing: Rect2 = demo.river.get_ferry_rect()
 	_check(crossing.position.x < distant.position.x and crossing.end.y > distant.end.y, "The ferry crosses the river down and left")
 	await _capture("02e-ferry-crossing")
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	session.advance(1.0)
 	_check(demo.river.get_ferry_rect() == crossing, "The ferry freezes with the arrival clock during pause")
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	_key(KEY_E)
 	_check(not demo.river.get_ferry_rect().has_area(), "The ferry only draws in the fishing view")
 	session.advance(1.0)
@@ -1087,9 +1084,9 @@ func _check_rig_picker() -> void:
 	_check(demo._rig_slot_cursor == 3 and not demo._rig_popup.visible and demo.qte.bait == Data.Bait.WISDOM, "C returns to the bait slot without equipping the highlighted bait")
 	_click(rig_slot)
 	await process_frame
-	_key(KEY_P)
-	_check(demo.session.paused and not demo._rig_popup.visible and demo._rig_slot_cursor == -1, "P still pauses the game from the picker")
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
+	_check(demo.session.paused and not demo._rig_popup.visible and demo._rig_slot_cursor == -1, "Escape pauses the game from the picker")
+	_key(KEY_ESCAPE)
 	_click(rig_slot)
 	await process_frame
 	_click(demo._rig_option_buttons[0])
@@ -1213,10 +1210,10 @@ func _check_missed_bite(fishing: Fishing, session: Session) -> void:
 	_key(KEY_Q)
 	_hook_fish(fishing, 1, 1)
 	fishing._process(2.75)
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	fishing._process(10.0)
 	_check(fishing.phase == Fishing.Phase.AWAITING_RETURN and is_equal_approx(fishing.remaining, 0.25), "Pausing freezes the bite alert countdown")
-	_key(KEY_P)
+	_key(KEY_ESCAPE)
 	fishing._process(0.25)
 	_check(fishing.phase == Fishing.Phase.ESCAPED and not demo._river_bite_alert.visible and not demo._river_notice.visible, "At three seconds the fish escapes and the bite bubble closes")
 	_key(KEY_E)

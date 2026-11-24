@@ -129,7 +129,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			qte.set_paused(false)
 		else:
 			_cast_line()
-	elif code == KEY_P:
+	elif code == KEY_ESCAPE:
 		_toggle_pause()
 	elif code in [KEY_W, KEY_A, KEY_S, KEY_D]:
 		qte.submit_key(OS.get_keycode_string(code))
@@ -199,7 +199,7 @@ func _refresh() -> void:
 			_instruction.text = "按空格重新抛竿。"
 	if paused:
 		_prompt.text = "已暂停"
-		_prompt_note.text = "按 P、空格或点击继续，回到当前这一步。"
+		_prompt_note.text = "按 Esc、空格或点击继续，回到当前这一步。"
 		_status.text = "慢慢来，鱼也在等你。"
 		_instruction.text = "节奏已暂停。"
 	queue_redraw()

@@ -177,7 +177,7 @@ func _test_live_loop() -> void:
 	for index in 3:
 		_check(str(state.get_requirements()[index]) in gate._requirements[index].text, "Day transition updates displayed admission requirements")
 	await _capture("08-next-day")
-	_send_key(KEY_P)
+	_send_key(KEY_ESCAPE)
 	var clock := state.spawn_remaining
 	state.advance(30.0)
 	_check(state.paused and state.spawn_remaining == clock, "Gate pause freezes the whole shared session")

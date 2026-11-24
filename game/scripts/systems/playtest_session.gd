@@ -25,6 +25,8 @@ const BOATMAN_COMMISSION_WILL := 9
 var catches: Array[Dictionary] = []
 var essences: Array[int] = []
 var potions: Array[Dictionary] = []
+var codex_fish: Dictionary = {}
+var codex_recipes: Dictionary = {}
 var souls: Array[Dictionary] = []
 var concentrate := 0
 var recovered_bones := 0
@@ -359,8 +361,92 @@ func record_catch(result: Dictionary) -> void:
 	var catch := result.duplicate()
 	catch["id"] = _allocate_item()
 	catches.append(catch)
+	_record_codex_catch(catch)
 	finger_bones += int(catch.get("finger_bones", 0))
 	state_changed.emit()
+
+
+func _record_codex_catch(catch: Dictionary) -> void:
+	var species := int(catch.species)
+	if species < 0 or species >= Data.FISH.size():
+		return
+	var progress := _codex_fish_entry(Data.FISH[species].id)
+	progress.caught += 1
+	progress.max_cm = maxf(progress.max_cm, float(catch.cm))
+	if species == Data.LANTERN and int(catch.size) == 0:
+		progress.is_new = progress.is_new or not progress.condensed
+		progress.condensed = true
+
+
+func _codex_fish_entry(id: String) -> Dictionary:
+	if not codex_fish.has(id):
+		codex_fish[id] = {"caught": 0, "max_cm": 0.0, "condensed": false, "is_new": true}
+	return codex_fish[id]
+
+
+func has_unseen_codex() -> bool:
+	for entries in [codex_fish, codex_recipes]:
+		for entry in entries.values():
+			if entry.is_new:
+				return true
+	return false
+
+
+func restore_codex(saved: Dictionary) -> void:
+	codex_fish.clear()
+	codex_recipes.clear()
+	var saved_fish: Variant = saved.get("codex_fish")
+	var saved_recipes: Variant = saved.get("codex_recipes")
+	if saved_fish is Dictionary:
+		for fish in Data.FISH:
+			var entry: Variant = saved_fish.get(fish.id)
+			if entry is Dictionary and int(entry.get("caught", 0)) > 0:
+				codex_fish[fish.id] = {
+					"caught": int(entry.caught), "max_cm": maxf(0.0, float(entry.get("max_cm", 0.0))),
+					"condensed": bool(entry.get("condensed", false)), "is_new": bool(entry.get("is_new", false)),
+				}
+	if saved_recipes is Dictionary:
+		for key in Data.RECIPES:
+			var entry: Variant = saved_recipes.get(key)
+			if entry is Dictionary:
+				codex_recipes[key] = {"is_new": bool(entry.get("is_new", false))}
+	if not saved_fish is Dictionary or not saved_recipes is Dictionary:
+		_backfill_codex(not saved_fish is Dictionary, not saved_recipes is Dictionary)
+
+
+func _backfill_codex(restore_fish: bool, restore_recipes: bool) -> void:
+	var refined := {}
+	var had_condensed := concentrate > 0
+	if restore_fish:
+		for catch in catches:
+			_record_codex_catch(catch)
+		for species in essences.size():
+			if essences[species] > 0:
+				refined[Data.FISH[species].id] = true
+
+	var keys_by_result := {}
+	for key in Data.RECIPES:
+		keys_by_result[Data.RECIPES[key].id] = key
+	for potion in potions:
+		var kind: String = potion.kind
+		var key: String = keys_by_result.get(kind, "")
+		if not key.is_empty():
+			if restore_recipes:
+				codex_recipes[key] = {"is_new": true}
+			for id in key.split("+"):
+				refined[id] = true
+		elif Data.fish_index(kind) >= 0:
+			refined[kind] = true
+		had_condensed = had_condensed or int(potion.attribute) >= 0
+
+	if restore_fish:
+		if had_condensed:
+			var lantern_id: String = Data.FISH[Data.LANTERN].id
+			refined[lantern_id] = true
+			_codex_fish_entry(lantern_id).condensed = true
+		# Inventory proves at least one past catch per refined species, with no length data.
+		for id in refined:
+			_codex_fish_entry(id).caught += 1
 
 
 func record_bone() -> void:
@@ -397,10 +483,13 @@ func can_mix(first: int, second: int) -> bool:
 func mix(first: int, second: int) -> bool:
 	if not active or paused or not can_mix(first, second):
 		return false
-	var recipe := Data.recipe(first, second)
+	var key := Data.recipe_key(first, second)
+	var recipe: Dictionary = Data.RECIPES[key]
 	essences[first] -= 1
 	essences[second] -= 1
 	_add_potion(recipe.id, recipe.name, recipe.effect, -1, 0)
+	if not codex_recipes.has(key):
+		codex_recipes[key] = {"is_new": true}
 	state_changed.emit()
 	return true
 

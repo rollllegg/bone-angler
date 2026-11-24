@@ -195,12 +195,12 @@ func _live_checks() -> void:
 	await process_frame
 	_check(demo.qte.is_holding() and demo.qte.progress == 0, "Live physical key-down starts a hold")
 	demo.qte.advance(0.20)
-	_key(KEY_P, true)
-	_key(KEY_P, false)
+	_key(KEY_ESCAPE, true)
+	_key(KEY_ESCAPE, false)
 	_key(KEY_W, false)
 	_check(demo.session.paused and demo.qte.needs_rehold and demo.qte.mistakes == 0, "Live pause does not turn key release into an error")
-	_key(KEY_P, true)
-	_key(KEY_P, false)
+	_key(KEY_ESCAPE, true)
+	_key(KEY_ESCAPE, false)
 	var held_clock: float = demo.qte._hold_elapsed
 	demo.qte.advance(2.0)
 	_check(demo.qte._hold_elapsed == held_clock and "重新按住" in demo.qte.get_action_prompt(), "Resume waits for a physical rehold")

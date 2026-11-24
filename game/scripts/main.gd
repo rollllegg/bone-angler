@@ -54,7 +54,7 @@ func _input(event: InputEvent) -> void:
 		_show_module("Direction")
 	elif code == KEY_E:
 		_show_module("Gate")
-	elif code == KEY_P or (code == KEY_SPACE and session.paused):
+	elif code == KEY_ESCAPE or (code == KEY_SPACE and session.paused):
 		_toggle_pause()
 	else:
 		return
@@ -103,5 +103,5 @@ func _resize_footer() -> void:
 
 
 func _refresh_footer() -> void:
-	_shortcuts.text = "Q 冥河岸    E 冥府大门    P 暂停" if not session.paused else "已暂停    P / 空格继续    Q 冥河岸    E 冥府大门"
+	_shortcuts.text = "Q 冥河岸    E 冥府大门    Esc 暂停" if not session.paused else "已暂停    Esc / 空格继续    Q 冥河岸    E 冥府大门"
 	_summary.text = "第 %d 天    等候 %d 魂    鱼篓 %d 条    已放行 %d 魂    金币 %d" % [session.day, session.souls.size(), session.get_inventory_total(), session.released_count, session.coins]
