@@ -7,11 +7,15 @@ const River := preload("res://scripts/demo/pixel_river.gd")
 const Shop := preload("res://scripts/demo/pixel_shop.gd")
 const Alchemy := preload("res://scripts/demo/alchemy_panel.gd")
 const Market := preload("res://scripts/demo/market_panel.gd")
+const StoryPanel := preload("res://scripts/demo/story_panel.gd")
+const DayReportPanel := preload("res://scripts/demo/day_report_panel.gd")
+const StoryStage := preload("res://scripts/story/story_stage.gd")
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
 const BASE_SIZE := Vector2(1620, 972)
 const SAVE_PATH := "user://bone_angler_save.json"
+const STORY_LAB_ARG := "--story-lab"
 const RIVER_TAB_TEXT := "Q 河岸"
 const RIVER_ALERT_COLOR := Color("ff5353")
 const BONE_NOTICE_DURATION := 4.0
@@ -43,6 +47,9 @@ var shop: Shop
 var alchemy: Alchemy
 var market: Market
 var soul_hud: SoulHUD
+var story_panel: StoryPanel
+var day_report: DayReportPanel
+var story_stage: StoryStage
 
 var started: bool = false
 var current_location: String = "River"
@@ -74,6 +81,7 @@ var _river_image: TextureRect
 var _shop_image: TextureRect
 var _river_viewport: SubViewport
 var _shop_viewport: SubViewport
+var _story_screen: Control
 var _pause_banner: Control
 var _summary: Label
 var _place_title: Label
@@ -172,10 +180,27 @@ func _ready() -> void:
 	_shop_viewport = shop_display["viewport"]
 	shop.bind(session)
 
+	_story_screen = Control.new()
+	_story_screen.name = "StoryScreen"
+	_story_screen.size = BASE_SIZE
+	_story_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(_story_screen)
+
 	_build_menu()
 	_build_hud()
 	_build_river_ui()
 	_build_shop_ui()
+
+	story_stage = StoryStage.new()
+	story_stage.name = "StoryStage"
+	_stage.add_child(story_stage)
+	story_stage.bind(shop, _story_screen)
+	story_panel.set_stage(story_stage)
+
+	day_report = DayReportPanel.new()
+	day_report.name = "DayReport"
+	_stage.add_child(day_report)
+	day_report.closed.connect(_close_day_report)
 
 	alchemy = Alchemy.new()
 	alchemy.name = "Alchemy"
@@ -202,6 +227,8 @@ func _ready() -> void:
 	_update_activation()
 	_refresh_shared()
 	_refresh_river()
+	if STORY_LAB_ARG in OS.get_cmdline_user_args():
+		_start_story_lab.call_deferred()
 
 
 func _pixel_display(world_script: Script) -> Dictionary:
@@ -603,6 +630,15 @@ func _build_shop_ui() -> void:
 	_release_button = UI.button(_shop_ui, "Shift  放行", Rect2(1168, 862, 404, 68), func() -> void: shop.begin_departure(), true)
 	_release_button.add_theme_font_size_override("font_size", 25)
 
+	story_panel = StoryPanel.new()
+	story_panel.name = "StoryPanel"
+	story_panel.position = Vector2(1030, 340)
+	story_panel.size = Vector2(578, 600)
+	_shop_ui.add_child(story_panel)
+	story_panel.advance_requested.connect(_story_advance)
+	story_panel.choice_requested.connect(_story_choice)
+	story_panel.finish_requested.connect(_story_finish)
+
 
 func _build_pause() -> void:
 	_pause_banner = Control.new()
@@ -627,6 +663,41 @@ func _start_game() -> void:
 	_show_location("River")
 	if not has_save():
 		save_progress()
+
+
+func _start_story_lab() -> void:
+	if started:
+		return
+	persist_save = false
+	started = true
+	session.start_shift()
+	session._open_day(5)
+	session.active = true
+	session.released_count = 24
+	session.coins = 200
+	for _guest in 6:
+		session.spawn_remaining = 0.0
+		session.advance(0.01)
+	# The lab only keeps the two scheduled story guests.
+	for soul in session.souls.duplicate():
+		if soul.has("story_case"):
+			continue
+		soul.stats = session.requirements[0]
+		session.release_soul(int(soul.id))
+	session.potions.clear()
+	session._add_potion("lab", "暖心药", Vector3i(0, 4, 0), -1, 0)
+	session._add_potion("lab", "极识药", Vector3i(10, 0, -4), -1, 0)
+	session._add_potion("lab", "零值药", Vector3i(1, 0, -1), -1, 0)
+	_show_location("Shop")
+	for soul in session.souls:
+		if soul.has("story_case"):
+			shop.select_guest(int(soul.id))
+			break
+	_refresh_shared()
+	print("Story lab: day 5, %d story guest(s), %d potion(s)" % [
+		session.souls.size(),
+		session.potions.size(),
+	])
 
 
 func _continue_game() -> void:
@@ -660,12 +731,17 @@ func save_progress() -> void:
 		})
 	var saved_souls: Array = []
 	for s in session.souls:
-		saved_souls.append({
+		var entry := {
 			"id": int(s.id), "case_id": int(s.case_id), "name": str(s.name),
 			"stats": [s.stats.x, s.stats.y, s.stats.z],
 			"before": [s.before.x, s.before.y, s.before.z],
 			"served": bool(s.served), "fee": int(s.fee),
-		})
+		}
+		if s.has("story_case"):
+			entry["story_case"] = str(s.story_case)
+			entry["story_state"] = s.get("story_state", {})
+			entry["story_outcome"] = str(s.get("story_outcome", ""))
+		saved_souls.append(entry)
 	var payload := {
 		"location": current_location,
 		"coins": session.coins,
@@ -691,6 +767,13 @@ func save_progress() -> void:
 		"grip_durability": qte.grip_durability,
 		"charms_owned": qte.charms_owned,
 		"bait_stock": qte.bait_stock,
+		"story": session.story_state.snapshot(),
+		"day_report": {
+			"entries": session.day_story_entries,
+			"pending": session.pending_day_report,
+			"awaiting": session.awaiting_day_report,
+		},
+		"rejected_count": session.rejected_count,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file != null:
@@ -707,12 +790,15 @@ func load_progress() -> bool:
 	var data: Dictionary = parsed
 	session.coins = int(data.get("coins", Data.STARTING_COINS))
 	session.released_count = int(data.get("released_count", 0))
+	session.rejected_count = int(data.get("rejected_count", 0))
 	session._arrived = int(data.get("arrived", 0))
 	session._next_item_id = int(data.get("next_item_id", 1))
 	session.spawn_remaining = float(data.get("spawn_remaining", Data.ARRIVAL_MIN))
 	session.concentrate = int(data.get("concentrate", 0))
 	session.recovered_bones = int(data.get("recovered_bones", 0))
 	session.finger_bones = int(data.get("finger_bones", 0))
+	session.story_state.restore(data.get("story", {}))
+	session.story_runtimes.clear()
 	session._first_services = {}
 	for k in data.get("first_services", {}).keys():
 		session._first_services[int(k)] = true
@@ -741,13 +827,30 @@ func load_progress() -> bool:
 		if s is Dictionary:
 			var st: Array = s.get("stats", [8, 8, 8])
 			var bf: Array = s.get("before", st)
-			session.souls.append({
+			var soul := {
 				"id": int(s.get("id", 0)), "case_id": int(s.get("case_id", 0)), "name": str(s.get("name", "")),
 				"stats": Vector3i(int(st[0]), int(st[1]), int(st[2])),
 				"before": Vector3i(int(bf[0]), int(bf[1]), int(bf[2])),
 				"served": bool(s.get("served", false)), "fee": int(s.get("fee", 40)),
-			})
+			}
+			if str(s.get("story_case", "")) != "":
+				soul["story_case"] = str(s.story_case)
+				soul["story_state"] = s.get("story_state", {})
+				soul["story_outcome"] = str(s.get("story_outcome", ""))
+			session.souls.append(soul)
 	session.restore_day(data.get("day_schedule", {}))
+	session.story_state.run["run.day"] = session.day
+	var saved_report = data.get("day_report", {})
+	session.day_story_entries.clear()
+	if saved_report is Dictionary:
+		for entry in saved_report.get("entries", []):
+			if entry is Dictionary:
+				session.day_story_entries.append(entry)
+		var pending = saved_report.get("pending", {})
+		session.pending_day_report = pending if pending is Dictionary else {}
+		session.awaiting_day_report = bool(saved_report.get("awaiting", false))
+	session.story_state.run["run.released"] = session.released_count
+	session.story_state.run["run.rejected"] = session.rejected_count
 	var ro: Array = data.get("rods_owned", [true, false])
 	for i in mini(ro.size(), qte.rods_owned.size()):
 		qte.rods_owned[i] = bool(ro[i])
@@ -792,6 +895,7 @@ func _update_activation() -> void:
 	_shop_image.visible = started and current_location != "River"
 	_river_ui.visible = _river_image.visible
 	_shop_ui.visible = started and current_location == "Shop"
+	_story_screen.visible = _shop_ui.visible
 	alchemy.visible = started and current_location == "Alchemy"
 	market.visible = started and current_location == "Market"
 	river.active = _river_image.visible
@@ -1015,6 +1119,20 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if key.echo or key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
 		return
+	if started and current_location == "Shop" and story_panel != null and story_panel.is_typing():
+		if code >= KEY_A and code <= KEY_Z:
+			story_panel.submit_letter(OS.get_keycode_string(code))
+			get_viewport().set_input_as_handled()
+			return
+		if code == KEY_ESCAPE:
+			story_panel.cancel_callout()
+			get_viewport().set_input_as_handled()
+			return
+	if day_report != null and day_report.visible:
+		if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
+			_close_day_report()
+			get_viewport().set_input_as_handled()
+		return
 	var handled := true
 	if not started:
 		handled = _title_key(code)
@@ -1091,16 +1209,14 @@ func _river_key(code: Key) -> bool:
 
 
 func _reception_key(code: Key) -> bool:
+	var story = _selected_story_runtime()
+	if story != null:
+		return _story_key(code, story)
 	match code:
 		KEY_W, KEY_S:
 			_move_dose(1 if code == KEY_S else -1)
 		KEY_A, KEY_D:
-			for i in session.souls.size():
-				if session.souls[i].id == shop.selected_id:
-					var index := posmod(i + (1 if code == KEY_D else -1), session.souls.size())
-					shop.select_guest(session.souls[index].id)
-					UI.reveal(_queue_box.get_parent() as ScrollContainer, _queue_buttons[index])
-					break
+			_switch_guest(1 if code == KEY_D else -1)
 		KEY_SPACE:
 			UI.activate(_serve_button)
 		KEY_SHIFT:
@@ -1112,6 +1228,53 @@ func _reception_key(code: Key) -> bool:
 		_:
 			return false
 	return true
+
+
+func _story_key(code: Key, story) -> bool:
+	if code >= KEY_1 and code <= KEY_7:
+		var choices: Array = story.visible_choices()
+		var index := int(code) - int(KEY_1)
+		if index >= 0 and index < choices.size() and not bool(choices[index].get("locked", false)):
+			if story_panel.blocks_advance():
+				return false
+			story.choose(str(choices[index].get("id", "")))
+			return true
+		return false
+	match code:
+		KEY_W, KEY_S:
+			_move_dose(1 if code == KEY_S else -1)
+		KEY_A, KEY_D:
+			_switch_guest(1 if code == KEY_D else -1)
+		KEY_SPACE:
+			if story_panel.blocks_advance():
+				story_panel.skip_cues()
+				return true
+			if story.is_closed() or not story.visible_choices().is_empty():
+				return false
+			story.advance()
+		KEY_F:
+			UI.activate(_serve_button)
+		KEY_SHIFT:
+			if story.is_closed():
+				_story_finish()
+			else:
+				return false
+		KEY_C:
+			if _selected_dose == null:
+				return false
+			_select_dose(_selected_dose)
+		_:
+			return false
+	return true
+
+
+func _switch_guest(direction: int) -> void:
+	for i in session.souls.size():
+		if session.souls[i].id == shop.selected_id:
+			var index := posmod(i + direction, session.souls.size())
+			shop.select_guest(session.souls[index].id)
+			UI.reveal(_queue_box.get_parent() as ScrollContainer, _queue_buttons[index])
+			return
 
 
 func _queue_pull(code: int, direction: int) -> void:
@@ -1171,29 +1334,67 @@ func _refresh_shared() -> void:
 	_rebuild_queue()
 	_rebuild_dose_list()
 
+	var report: Dictionary = session.get_day_report()
+	var report_visible := not report.is_empty()
+	if day_report != null:
+		day_report.visible = report_visible
+		if report_visible:
+			day_report.render(report)
+
 	var selected := session.get_soul(shop.selected_id)
-	var ready := session.can_release(shop.selected_id)
-	_guest_state.text = "达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂")
-	_guest_state.add_theme_color_override("font_color", UI.GOOD if ready else UI.GOLD)
-	_release_button.disabled = session.paused or not ready
-
-	_service_fee.text = ""
-	if not selected.is_empty():
-		_service_fee.text = "基础服务费 %d 枚" % selected.fee
-		if session.first_service(selected):
-			_service_fee.text += "　首次 +%d 枚" % int(selected.fee * 0.20)
-		if selected.case_id == 2 and session.requirements[1].z >= 9:
-			_service_fee.text += "\n特殊委托：意志达到 9　+%d 枚" % int(selected.fee * 0.20)
-
-	_payout_notice.text = "放行成功　渡魂币 +%d" % session.last_payout if not shop.departure_times.is_empty() else ""
-	if session.is_complete():
-		_dialog.text = "五天的灵魂都已放行。"
-	elif selected.is_empty():
-		_dialog.text = "还没有来客，可以先去冥河备料。"
-	elif selected.served:
-		_dialog.text = "饮药后感觉变化明显：\n%s" % Data.effect_text(selected.stats - selected.before)
+	var story = _selected_story_runtime()
+	var story_visible: bool = story != null and current_location == "Shop"
+	session.set_story_open(story_visible)
+	if story != null:
+		_dialog.visible = false
+		_release_button.visible = false
+		soul_hud.visible = false
+		story_panel.visible = story_visible
+		if story_visible:
+			shop.clear_departures()
+			story_panel.render(story)
+		_serve_button.text = "F  请他喝下"
+		if story.is_closed():
+			_guest_state.text = "审查结束 · 可以送客"
+			_guest_state.add_theme_color_override("font_color", UI.GOOD)
+		else:
+			_guest_state.text = "剧情审查中"
+			_guest_state.add_theme_color_override("font_color", UI.GOLD)
+		_service_fee.text = "特殊来客　结果记入账本"
 	else:
-		_dialog.text = "请帮我补全灵魂，让我能通过冥府之门。"
+		_dialog.visible = true
+		_release_button.visible = true
+		soul_hud.visible = true
+		story_panel.visible = false
+		story_panel.reset()
+		_serve_button.text = "空格  端上所选药剂"
+		var ready := session.can_release(shop.selected_id)
+		_guest_state.text = "达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂")
+		_guest_state.add_theme_color_override("font_color", UI.GOOD if ready else UI.GOLD)
+		_release_button.disabled = session.paused or not ready
+
+		_service_fee.text = ""
+		if not selected.is_empty():
+			_service_fee.text = "基础服务费 %d 枚" % selected.fee
+			if session.first_service(selected):
+				_service_fee.text += "　首次 +%d 枚" % int(selected.fee * 0.20)
+			if selected.case_id == 2 and session.requirements[1].z >= 9:
+				_service_fee.text += "\n特殊委托：意志达到 9　+%d 枚" % int(selected.fee * 0.20)
+
+	if not shop.departure_times.is_empty():
+		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome != "release" else "放行成功　渡魂币 +%d" % session.last_payout
+	else:
+		_payout_notice.text = ""
+	if session.is_complete():
+		var ending_lines := session.get_ending_lines()
+		_dialog.text = "\n".join(ending_lines) if not ending_lines.is_empty() else "五天的灵魂都已放行。"
+	elif story == null:
+		if selected.is_empty():
+			_dialog.text = "还没有来客，可以先去冥河备料。"
+		elif selected.served:
+			_dialog.text = "饮药后感觉变化明显：\n%s" % Data.effect_text(selected.stats - selected.before)
+		else:
+			_dialog.text = "请帮我补全灵魂，让我能通过冥府之门。"
 
 	_refresh_dose()
 	alchemy.refresh()
@@ -1213,7 +1414,7 @@ func _rebuild_queue() -> void:
 		btn.pressed.connect(func() -> void: shop.select_guest(sid))
 		_queue_box.add_child(btn)
 		_queue_buttons.append(btn)
-		var eligible := session.is_eligible(soul.stats)
+		var eligible := not soul.has("story_case") and session.is_eligible(soul.stats)
 		var dot_col := UI.GOOD if eligible else UI.GOLD
 		var lbl := UI.label(btn, ("● " if eligible else "") + str(soul.name), Rect2(10, 2, 204, 26), 15, dot_col if is_sel else UI.CREAM)
 		lbl.clip_text = true
@@ -1284,6 +1485,30 @@ func _move_dose(step: int) -> void:
 
 func _refresh_dose() -> void:
 	var selected := session.get_soul(shop.selected_id)
+	var story = _selected_story_runtime()
+	if story != null:
+		if story_panel != null and story_panel.is_typing():
+			_serve_button.disabled = true
+			_dose_preview.text = "正在输入真名……"
+			_dose_preview.add_theme_color_override("font_color", UI.MUTED)
+			return
+		if story.can_feed_potion():
+			_serve_button.disabled = session.paused or _selected_dose == null
+			if _selected_dose == null:
+				_dose_preview.text = "按 W / S 选药，再按 F 请他喝下"
+			else:
+				_dose_preview.text = "按 F 请他喝下这碗药"
+			_dose_preview.add_theme_color_override("font_color", UI.GOLD)
+		elif story.has_fed_potion():
+			_serve_button.disabled = true
+			_dose_preview.text = "他喝过了：%s　%s %+d" % [story.get_dose_label(), story.get_score_name(), story.get_dose_score()]
+			_dose_preview.add_theme_color_override("font_color", UI.MINT)
+		else:
+			_serve_button.disabled = true
+			_dose_preview.text = "审查结束"
+			_dose_preview.add_theme_color_override("font_color", UI.MUTED)
+		return
+
 	var preview := {}
 	if _selected_dose != null:
 		preview = session.preview(shop.selected_id, _selected_dose[0], _selected_dose[1])
@@ -1300,10 +1525,58 @@ func _refresh_dose() -> void:
 
 
 func _serve_dose() -> void:
-	if not _serve_button.disabled:
-		var chosen: Array = _selected_dose
-		_selected_dose = null
+	if _serve_button.disabled or _selected_dose == null:
+		return
+	var chosen: Array = _selected_dose
+	_selected_dose = null
+	var story = _selected_story_runtime()
+	if story != null:
+		session.feed_story_potion(shop.selected_id, chosen[0], chosen[1])
+	else:
 		session.serve(shop.selected_id, chosen[0], chosen[1])
+
+
+func _selected_story_runtime():
+	var soul := session.get_soul(shop.selected_id)
+	if soul.is_empty() or not soul.has("story_case"):
+		return null
+	return session.get_story_runtime(shop.selected_id)
+
+
+func _story_advance() -> void:
+	if session.paused:
+		return
+	var story = _selected_story_runtime()
+	if story != null and not story.is_closed():
+		if story_panel.blocks_advance():
+			story_panel.skip_cues()
+			return
+		story.advance()
+
+
+func _story_choice(choice_id: String) -> void:
+	if session.paused:
+		return
+	var story = _selected_story_runtime()
+	if story != null:
+		story.choose(choice_id)
+
+
+func _story_finish() -> void:
+	if session.paused:
+		return
+	var story = _selected_story_runtime()
+	if story == null or not story.is_closed():
+		return
+	if story_panel.blocks_advance():
+		story_panel.skip_cues()
+	shop.begin_story_departure()
+
+
+func _close_day_report() -> void:
+	if session.awaiting_day_report:
+		session.close_day_report()
+		_refresh_shared()
 
 
 func _refresh_rig_slots() -> void:

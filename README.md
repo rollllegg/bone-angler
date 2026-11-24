@@ -62,6 +62,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\game\tools\Install-Env
 
 - `启动/启动编辑器.cmd`：打开 Godot 工程。
 - `启动/运行游戏.cmd`：运行游戏。
+- `启动/剧情测试.cmd`：从第 5 天开始，只留下两位剧情来客，并附带测试药剂。
 - `启动/检查环境.cmd`：检查开发环境。
 - `启动/打开代码.cmd`：在 VS Code 中打开工程。
 
@@ -101,3 +102,11 @@ python .\game\tools\serve_web.py
 导出文件分别位于 `game/build/windows/` 和 `game/build/web/`；本地预览地址为 <http://127.0.0.1:8060>。
 
 试玩界面使用缝合像素字体 12 px 简体比例版，Noto Sans SC 用于缺字回退和旧练习场景。两款字体的来源和 SIL Open Font License 1.1 许可位于 `game/assets/fonts/`。工具安装目录、Godot 缓存和导出文件不纳入版本管理。
+
+## 剧情系统
+
+特殊 NPC 的故事种子、分支图和正文在 `narrative/`，编译后进入 `game/data/story/`。第 5 天最后两位是剧情来客：孙悟空（slot 4，输入真名 `SUNWUKONG` 叫破）和俄耳普斯（slot 5，输入 `ORPHEUS` 叫破）。剧情来客走审查和剧情分支，不套用普通灵魂的属性门槛；两个人的结局会互相影响。
+
+双击 `启动/剧情测试.cmd` 可以直接进入第 5 天剧情测试场：只保留两位剧情来客，附带三瓶测试药剂，并关闭存档。正常试玩仍用 `启动/运行游戏.cmd`。
+
+编译、模拟和测试命令见 `docs/剧情系统使用说明.md`，结构设计见 `docs/剧情系统设计.md`，动作旁白的演出与特效见 `docs/剧情演出与特效方案.md`。演出 cue 在 `narrative/derived/cues/`，当前包含屏幕震动/闪色/缩放、8 个道具和 5 张特殊立绘；素材来源与后处理见 `game/assets/SOURCES.md`。

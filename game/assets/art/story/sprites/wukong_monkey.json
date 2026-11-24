@@ -1,0 +1,42 @@
+{
+  "id": "wukong_monkey",
+  "kind": "sprite",
+  "prompt": "16-bit 像素风游戏角色立绘，孙悟空猴子本相，正面全身站立，穿着红色袈裟，双手自然垂下，没有武器，没有金箍棒，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/wukong_monkey_raw.png",
+  "source_sha256": "c6e47ab2216ebd29696f65c7a42d223eca741b3ebda2064fecb67d3276f62db3",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/sprites/wukong_monkey.png",
+  "output_sha256": "0bc16f1fed92f6a5d24084090a5a2be3d2a0d93dfb7c7b94c955ef049839224a",
+  "output_size": [
+    64,
+    96
+  ],
+  "pixel_grid": [
+    99,
+    105
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 1,
+  "outline": 1,
+  "white_specks": 24,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    29,
+    6,
+    68,
+    96
+  ],
+  "processed_at_utc": "2026-11-23T18:33:04.964595+00:00"
+}

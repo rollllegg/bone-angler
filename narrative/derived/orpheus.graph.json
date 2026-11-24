@@ -1,0 +1,411 @@
+{
+  "id": "orpheus",
+  "title": "俄耳普斯",
+  "queue_name": "亚历克斯",
+  "portrait": {
+    "default": "orpheus_front"
+  },
+  "entry": "arrival",
+  "requires_stats": false,
+  "fee": 60,
+  "speakers": {
+    "俄": {
+      "name": "亚历克斯",
+      "name_if": [
+        {
+          "if": "named",
+          "name": "俄耳普斯"
+        }
+      ]
+    },
+    "圣": {
+      "name": "圣地亚哥"
+    }
+  },
+  "potion": {
+    "score": {
+      "wisdom": -1,
+      "emotion": 1,
+      "will": -1
+    },
+    "score_name": "迷茫",
+    "node": "potion.react"
+  },
+  "callout": {
+    "answer": "ORPHEUS",
+    "button": "orpheus.callout.button.1",
+    "success": "identify",
+    "failure": "inspect",
+    "time_limit": 20.0,
+    "case_sensitive": false,
+    "once": false
+  },
+  "state": {
+    "flags": {
+      "clue.registry": {
+        "type": "int",
+        "default": 0
+      },
+      "clue.eurydice": {
+        "type": "bool",
+        "default": false
+      },
+      "clue.lyre": {
+        "type": "bool",
+        "default": false
+      },
+      "named": {
+        "type": "bool",
+        "default": false
+      },
+      "confused": {
+        "type": "bool",
+        "default": true
+      },
+      "dose.fed": {
+        "type": "bool",
+        "default": false
+      },
+      "dose.score": {
+        "type": "int",
+        "default": 1
+      },
+      "dose.label": {
+        "type": "string",
+        "default": ""
+      },
+      "callout.done": {
+        "type": "bool",
+        "default": false
+      }
+    }
+  },
+  "nodes": [
+    {
+      "id": "arrival",
+      "steps": [
+        {
+          "text": "orpheus.arrival.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.arrival.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.arrival.3"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.arrival.4"
+        }
+      ],
+      "next": "inspect"
+    },
+    {
+      "id": "inspect",
+      "steps": [],
+      "choices": [
+        {
+          "id": "registry",
+          "text": "orpheus.choice.registry",
+          "locked_if": "clue.registry != 0",
+          "locked_text": "orpheus.choice.registry.locked",
+          "set": [
+            "clue.registry = 1"
+          ],
+          "next": "inspect.registry"
+        },
+        {
+          "id": "eurydice",
+          "text": "orpheus.choice.eurydice",
+          "locked_if": "clue.eurydice",
+          "locked_text": "orpheus.choice.eurydice.locked",
+          "set": [
+            "clue.eurydice = true"
+          ],
+          "next": "inspect.eurydice"
+        },
+        {
+          "id": "lyre",
+          "text": "orpheus.choice.lyre",
+          "locked_if": "clue.lyre",
+          "locked_text": "orpheus.choice.lyre.locked",
+          "set": [
+            "clue.lyre = true"
+          ],
+          "next": "inspect.lyre"
+        },
+        {
+          "id": "admit",
+          "kind": "accept",
+          "text": "orpheus.choice.admit",
+          "next": "end.accepted"
+        },
+        {
+          "id": "refuse",
+          "kind": "refuse",
+          "text": "orpheus.choice.refuse",
+          "next": "end.refused"
+        }
+      ]
+    },
+    {
+      "id": "inspect.registry",
+      "steps": [
+        {
+          "text": "orpheus.inspect.registry.1"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.registry.2"
+        }
+      ],
+      "next": "inspect"
+    },
+    {
+      "id": "inspect.eurydice",
+      "steps": [
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.eurydice.1"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.eurydice.2"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.eurydice.3"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.eurydice.4"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.eurydice.5"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.eurydice.6"
+        }
+      ],
+      "next": "inspect"
+    },
+    {
+      "id": "inspect.lyre",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.lyre.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.lyre.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.lyre.3"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.inspect.lyre.4"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.inspect.lyre.5"
+        }
+      ],
+      "next": "inspect"
+    },
+    {
+      "id": "identify",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "orpheus.identify.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.identify.2"
+        }
+      ],
+      "set": [
+        "named = true"
+      ],
+      "next": "inspect"
+    },
+    {
+      "id": "potion.react",
+      "steps": [
+        {
+          "speaker": "圣",
+          "text": "orpheus.potion.react.1"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.potion.react.2"
+        },
+        {
+          "speaker": "圣",
+          "text": "orpheus.potion.react.3"
+        },
+        {
+          "speaker": "俄",
+          "text": "orpheus.potion.react.4"
+        }
+      ],
+      "branch": [
+        {
+          "if": "dose.score > 0",
+          "set": [
+            "confused = true"
+          ],
+          "next": "inspect"
+        },
+        {
+          "if": "dose.score <= 0",
+          "set": [
+            "confused = false"
+          ],
+          "next": "inspect"
+        }
+      ],
+      "next": "inspect"
+    },
+    {
+      "id": "end.accepted",
+      "branch": [
+        {
+          "if": "confused",
+          "next": "end.accepted.confused"
+        },
+        {
+          "if": "world.hades_rampage",
+          "next": "end.accepted.reunion"
+        },
+        {
+          "next": "end.accepted.clear"
+        }
+      ]
+    },
+    {
+      "id": "end.accepted.confused",
+      "steps": [],
+      "outcome": "accepted.confused"
+    },
+    {
+      "id": "end.accepted.clear",
+      "steps": [],
+      "outcome": "accepted.clear"
+    },
+    {
+      "id": "end.accepted.reunion",
+      "steps": [],
+      "outcome": "accepted.reunion"
+    },
+    {
+      "id": "end.refused",
+      "steps": [],
+      "outcome": "refused"
+    }
+  ],
+  "canon": [
+    "world.orpheus_case_seen = true"
+  ],
+  "outcomes": {
+    "accepted.confused": {
+      "result": "release",
+      "payout": 60,
+      "ledger": {
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ],
+        "result": "已入境",
+        "note": "orpheus.ledger.accepted.confused.1"
+      },
+      "effects": [
+        "world.orpheus_admitted = true",
+        "world.orpheus_reunion = false",
+        "world.orpheus_lost = true"
+      ],
+      "aftermath": [
+        "orpheus.end.accepted.confused.1"
+      ]
+    },
+    "accepted.clear": {
+      "result": "release",
+      "payout": 60,
+      "ledger": {
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ],
+        "result": "已入境",
+        "note": "orpheus.ledger.accepted.clear.1"
+      },
+      "effects": [
+        "world.orpheus_admitted = true",
+        "world.orpheus_reunion = false",
+        "world.orpheus_lost = true"
+      ],
+      "aftermath": [
+        "orpheus.end.accepted.clear.1"
+      ]
+    },
+    "accepted.reunion": {
+      "result": "release",
+      "payout": 60,
+      "ledger": {
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ],
+        "result": "已入境",
+        "note": "orpheus.ledger.accepted.reunion.1"
+      },
+      "effects": [
+        "world.orpheus_admitted = true",
+        "world.orpheus_reunion = true",
+        "world.orpheus_lost = false"
+      ],
+      "aftermath": [
+        "orpheus.end.accepted.reunion.1"
+      ]
+    },
+    "refused": {
+      "result": "reject",
+      "payout": 0,
+      "ledger": {
+        "who": "亚历克斯",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "俄耳普斯"
+          }
+        ],
+        "result": "未入境",
+        "note": "orpheus.ledger.refused.1"
+      },
+      "effects": [
+        "world.orpheus_admitted = false",
+        "world.orpheus_reunion = false",
+        "world.orpheus_lost = true"
+      ],
+      "aftermath": [
+        "orpheus.end.refused.1"
+      ]
+    }
+  }
+}

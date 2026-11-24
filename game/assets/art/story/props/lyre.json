@@ -1,0 +1,40 @@
+{
+  "id": "lyre",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一把小型金色里拉琴，正面，居中，纯白背景，无阴影，无文字，轮廓清晰，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/lyre_raw.png",
+  "source_sha256": "4b23dbd047a4630582bac56dea05a8215f9eb5541c55631d0275dfdffa31e26c",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/lyre.png",
+  "output_sha256": "39d82688f17b59f555849f0cd7888cc88770403cb414ac776f4e848e3bf99baa",
+  "output_size": [
+    40,
+    40
+  ],
+  "pixel_grid": [
+    74,
+    76
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    15,
+    9,
+    58,
+    69
+  ],
+  "processed_at_utc": "2026-11-23T18:08:48.138844+00:00"
+}

@@ -1,0 +1,40 @@
+{
+  "id": "tail",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一条棕色猴子尾巴，弯曲，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/tail_raw.png",
+  "source_sha256": "68b1c858dff50f37e8b6ff711fc0812225448042291edbc0ad68ac5d97ff63b4",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/tail.png",
+  "output_sha256": "57e9390a24d2308410df3b5a48391580c49d70a9e396aa1b3145bc0da20f596c",
+  "output_size": [
+    48,
+    32
+  ],
+  "pixel_grid": [
+    61,
+    60
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    20,
+    18,
+    42,
+    42
+  ],
+  "processed_at_utc": "2026-11-23T18:08:49.064174+00:00"
+}

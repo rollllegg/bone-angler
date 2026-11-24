@@ -1,0 +1,155 @@
+{
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "pixelate": true,
+  "threshold": 245,
+  "min_component": 12,
+  "assets": [
+    {
+      "id": "lyre",
+      "kind": "prop",
+      "input": "game/art/source/story/lyre_raw.png",
+      "output": "game/assets/art/story/props/lyre.png",
+      "width": 40,
+      "height": 40,
+      "prompt": "16-bit 像素风游戏道具图标，一把小型金色里拉琴，正面，居中，纯白背景，无阴影，无文字，轮廓清晰，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "staff",
+      "kind": "prop",
+      "input": "game/art/source/story/staff_raw.png",
+      "output": "game/assets/art/story/props/staff.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "16-bit 像素风游戏道具图标，一根金色金箍棒，两端红色，斜放，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "tail",
+      "kind": "prop",
+      "input": "game/art/source/story/tail_raw.png",
+      "output": "game/assets/art/story/props/tail.png",
+      "width": 48,
+      "height": 32,
+      "prompt": "16-bit 像素风游戏道具图标，一条棕色猴子尾巴，弯曲，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "coins",
+      "kind": "prop",
+      "input": "game/art/source/story/coins_raw.png",
+      "output": "game/assets/art/story/props/coins.png",
+      "width": 40,
+      "height": 40,
+      "prompt": "16-bit 像素风游戏道具图标，一小堆古代金币，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "bowl",
+      "kind": "prop",
+      "input": "game/art/source/story/bowl_raw.png",
+      "output": "game/assets/art/story/props/bowl.png",
+      "width": 40,
+      "height": 40,
+      "prompt": "16-bit 像素风游戏道具图标，一只简单的陶碗，碗里装着深色魔药，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "gray_hand",
+      "kind": "prop",
+      "input": "game/art/source/story/gray_hand_raw.png",
+      "output": "game/assets/art/story/props/gray_hand.png",
+      "width": 56,
+      "height": 56,
+      "prompt": "16-bit 像素风游戏道具图标，一只腐败灰暗的亡灵之手，从画面下方伸出，手指张开，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "peach",
+      "kind": "prop",
+      "input": "game/art/source/story/peach_raw.png",
+      "output": "game/assets/art/story/props/peach.png",
+      "width": 40,
+      "height": 40,
+      "prompt": "16-bit 像素风游戏道具图标，一颗粉红色桃子，带一片绿叶，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "cloud",
+      "kind": "prop",
+      "input": "game/art/source/story/cloud_raw.png",
+      "output": "game/assets/art/story/props/cloud.png",
+      "width": 64,
+      "height": 32,
+      "prompt": "16-bit 像素风游戏道具图标，一朵小型白色云朵，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+    },
+    {
+      "id": "wukong_disguise",
+      "kind": "sprite",
+      "input": "game/art/source/story/wukong_disguise_raw.png",
+      "output": "game/assets/art/story/sprites/wukong_disguise.png",
+      "width": 64,
+      "height": 96,
+      "prompt": "16-bit 像素风游戏角色立绘，一个苍白的白人男性亡灵，穿维多利亚时代白衬衫和深色外套，正面全身站立，神情紧张，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+      "erode": 1,
+      "outline": 1,
+      "white_specks": 24,
+      "shadow": true
+    },
+    {
+      "id": "wukong_monkey",
+      "kind": "sprite",
+      "input": "game/art/source/story/wukong_monkey_raw.png",
+      "output": "game/assets/art/story/sprites/wukong_monkey.png",
+      "width": 64,
+      "height": 96,
+      "prompt": "16-bit 像素风游戏角色立绘，孙悟空猴子本相，正面全身站立，穿着红色袈裟，双手自然垂下，没有武器，没有金箍棒，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+      "erode": 1,
+      "outline": 1,
+      "white_specks": 24,
+      "shadow": true
+    },
+    {
+      "id": "wukong_turn",
+      "kind": "sprite",
+      "input": "game/art/source/story/wukong_turn_raw.png",
+      "output": "game/assets/art/story/sprites/wukong_turn.png",
+      "width": 64,
+      "height": 96,
+      "prompt": "保持同一个孙悟空角色、同一套红色袈裟和金箍；让他转身背对镜头，展示背影，正面全身构图；纯白背景，无阴影，无文字，16-bit 像素风",
+      "erode": 1,
+      "outline": 1,
+      "white_specks": 24,
+      "shadow": true
+    },
+    {
+      "id": "orpheus_front",
+      "kind": "sprite",
+      "input": "game/art/source/story/orpheus_edit_raw.png",
+      "output": "game/assets/art/story/sprites/orpheus_front.png",
+      "width": 64,
+      "height": 96,
+      "prompt": "保持正面全身、连帽斗篷和手里的里拉琴不变；把斗篷提亮成深蓝灰色，增加浅金色边缘光，让轮廓在深色背景上清楚；纯白背景，无阴影，无文字，16-bit 像素风",
+      "erode": 1,
+      "outline": 1,
+      "white_specks": 24,
+      "shadow": true
+    },
+    {
+      "id": "orpheus_turn",
+      "kind": "sprite",
+      "input": "game/art/source/story/orpheus_turn_raw.png",
+      "output": "game/assets/art/story/sprites/orpheus_turn.png",
+      "width": 64,
+      "height": 96,
+      "prompt": "保持同一个角色、同一套深蓝斗篷和金色里拉琴；让他转身背对镜头，展示斗篷背面和兜帽，正面全身构图；纯白背景，无阴影，无文字，16-bit 像素风",
+      "erode": 1,
+      "outline": 1,
+      "white_specks": 24,
+      "shadow": true
+    }
+  ],
+  "outline": 0,
+  "outline_color": "#17121f",
+  "white_specks": 0,
+  "shadow": false
+}

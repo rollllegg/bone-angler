@@ -1,0 +1,42 @@
+{
+  "id": "wukong_disguise",
+  "kind": "sprite",
+  "prompt": "16-bit 像素风游戏角色立绘，一个苍白的白人男性亡灵，穿维多利亚时代白衬衫和深色外套，正面全身站立，神情紧张，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/wukong_disguise_raw.png",
+  "source_sha256": "4e4e6c88ce50ddcafa562b4c585dd489af2d24f0edc2fc7c4ccea79acf3259e4",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/sprites/wukong_disguise.png",
+  "output_sha256": "c1913cfb63907f2fd1260bea22c72425e63eb7f76df5d9193918a98b75919da1",
+  "output_size": [
+    64,
+    96
+  ],
+  "pixel_grid": [
+    77,
+    83
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 1,
+  "outline": 1,
+  "white_specks": 24,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    24,
+    3,
+    51,
+    80
+  ],
+  "processed_at_utc": "2026-11-23T18:33:04.469968+00:00"
+}

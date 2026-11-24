@@ -1,0 +1,40 @@
+{
+  "id": "bowl",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一只简单的陶碗，碗里装着深色魔药，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/bowl_raw.png",
+  "source_sha256": "88cc8cc7463c7046c8d6b7d40e8b90dd28f956804e685b0d509fde4fe57f30d7",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/bowl.png",
+  "output_sha256": "0729aab93a12273d142ec69eb324e5a61ed5622f3d7c9d133f9667b40c1d62e2",
+  "output_size": [
+    40,
+    40
+  ],
+  "pixel_grid": [
+    80,
+    77
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    13,
+    23,
+    67,
+    55
+  ],
+  "processed_at_utc": "2026-11-23T18:08:49.956967+00:00"
+}

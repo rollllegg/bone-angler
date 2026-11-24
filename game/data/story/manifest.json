@@ -1,0 +1,10 @@
+{
+  "cases": [
+    "orpheus",
+    "wukong"
+  ],
+  "endings": "res://data/story/endings.json",
+  "schedule": "res://data/story/schedule.json",
+  "text": "res://data/story/text/zh.json",
+  "world": "res://data/story/world.json"
+}

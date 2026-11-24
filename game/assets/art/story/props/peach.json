@@ -1,0 +1,40 @@
+{
+  "id": "peach",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一颗粉红色桃子，带一片绿叶，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/peach_raw.png",
+  "source_sha256": "8f58a4ea2b8c403c50a3a4c238ed5df7fa90f5972fb5429ce4d52e76a405e086",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/peach.png",
+  "output_sha256": "228a1152b3bf9686c31c9e07345068a996b8a969ccca448ec054371a6cae52a0",
+  "output_size": [
+    40,
+    40
+  ],
+  "pixel_grid": [
+    65,
+    67
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    18,
+    18,
+    46,
+    49
+  ],
+  "processed_at_utc": "2026-11-23T18:08:50.996488+00:00"
+}

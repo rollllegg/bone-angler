@@ -1,0 +1,40 @@
+{
+  "id": "coins",
+  "kind": "prop",
+  "prompt": "16-bit 像素风游戏道具图标，一小堆古代金币，正面，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
+  "source": "game/art/source/story/coins_raw.png",
+  "source_sha256": "993d039a0917e9b8d1116f5699e9c692c6ac8e0f8db08f56a9f7975024cdd10e",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/coins.png",
+  "output_sha256": "ce2afe4f4273481bcb2a7a24cb3bdf3a2753cab21393e6853c21f0eb3fcc8d6e",
+  "output_size": [
+    40,
+    40
+  ],
+  "pixel_grid": [
+    80,
+    77
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "palette": 0,
+  "bbox": [
+    13,
+    24,
+    63,
+    52
+  ],
+  "processed_at_utc": "2026-11-23T18:08:49.521548+00:00"
+}
