@@ -1,0 +1,42 @@
+{
+  "id": "anubis",
+  "kind": "sprite",
+  "prompt": "古埃及胡狼头神阿努比斯，二头身正面，黑色胡狼头、尖耳、金色眼睛，深蓝黑长袍、金色宽领和腰带。",
+  "source": "game/art/source/story/anubis_raw.png",
+  "source_sha256": "543ea06f1aa5d52a3cc676ae6832b5de9b71600a1c634ab20fe933d968a3dd6e",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/sprites/anubis.png",
+  "output_sha256": "5bd02355e98b771c1f7b24106a96b6c2f816a91e8dcd98341286e33e9ffd67c6",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": [
+    79,
+    81
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 1,
+  "white_specks": 8,
+  "shadow": true,
+  "palette": 32,
+  "bbox": [
+    23,
+    3,
+    56,
+    75
+  ],
+  "processed_at_utc": "2026-11-25T15:57:50.115908+00:00"
+}

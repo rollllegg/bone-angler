@@ -927,7 +927,13 @@ func _resolve_story(session, id: int) -> bool:
 	if runtime == null:
 		return false
 	var guard := 0
-	while not runtime.is_closed() and guard < 50:
+	while not runtime.is_closed() and guard < 80:
+		if runtime.is_awaiting_judgment():
+			var config: Dictionary = runtime.start_judgment(session.coins)
+			if config.is_empty():
+				break
+			runtime.resolve_judgment(int(config.get("max", 0)) / 2)
+			continue
 		var choices: Array = runtime.visible_choices()
 		if choices.is_empty():
 			if not runtime.advance():
@@ -963,6 +969,9 @@ func _check_starter_cases() -> void:
 			for soul in model.souls.duplicate():
 				if soul.has("story_case"):
 					single_dose_for_all = _resolve_story(model, soul.id) and single_dose_for_all
+					continue
+				if bool(soul.get("fixed_stats", false)):
+					model.release_soul(soul.id)
 					continue
 				var stats: Vector3i = soul.stats
 				var violations := 0

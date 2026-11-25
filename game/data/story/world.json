@@ -1,5 +1,13 @@
 {
   "flags": {
+    "world.anubis_case_seen": {
+      "default": false,
+      "type": "bool"
+    },
+    "world.anubis_result": {
+      "default": "",
+      "type": "string"
+    },
     "world.hades_rampage": {
       "default": false,
       "type": "bool"
@@ -11,6 +19,14 @@
     "world.orpheus_case_seen": {
       "default": false,
       "type": "bool"
+    },
+    "world.orpheus_confused": {
+      "default": false,
+      "type": "bool"
+    },
+    "world.orpheus_echo": {
+      "default": "",
+      "type": "string"
     },
     "world.orpheus_lost": {
       "default": false,

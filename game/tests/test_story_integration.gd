@@ -22,7 +22,17 @@ func _run() -> void:
 	for _guest in 6:
 		session.spawn_remaining = 0.0
 		session.advance(0.01)
-	_check(session.souls.size() == 6 and str(session.souls[5].get("story_case", "")) == "wukong", "Wukong is the sixth guest on day one")
+	_check(session.souls.size() == 6 and str(session.souls[4].get("story_case", "")) == "wukong", "Wukong is the fifth guest on day one")
+	var observer: Dictionary = session.souls[5]
+	_check(not observer.name.is_empty() and observer.stats == Vector3i(10, 10, 10) and bool(observer.get("fixed_stats", false)), "The last guest is the disguised observer")
+	_check(session.can_release(int(observer.id)), "The disguised observer has no stat requirement")
+	session._add_potion("test", "劣药", Vector3i(-5, -5, -5), -1, 0)
+	var bad_dose := int(session.potions[0]["id"])
+	_check(session.preview(int(observer.id), false, bad_dose).after == Vector3i(10, 10, 10), "Medicine cannot move the observer's attributes")
+	_check(session.serve(int(observer.id), false, bad_dose) and observer.stats == Vector3i(10, 10, 10), "The observer drinks without changing")
+	session.release_soul(int(observer.id))
+	_check(session.get_soul(int(observer.id)).is_empty(), "The observer leaves after a normal reception")
+	var coins_before_story := session.coins
 	var story_soul: Dictionary = {}
 	for soul in session.souls:
 		if soul.has("story_case"):
@@ -67,8 +77,8 @@ func _run() -> void:
 	_check(restored.get_outcome_id() == "refused", "named refusal outcome")
 	_check(session.finish_story(soul_id), "session finishes the story")
 	_check(session.get_soul(soul_id).is_empty(), "story soul leaves the queue")
-	_check(session.released_count == 0 and session.rejected_count == 1, "refusal counts as processed")
-	_check(session.coins == Data.STARTING_COINS, "refusal pays nothing")
+	_check(session.released_count == 1 and session.rejected_count == 1, "refusal counts as processed")
+	_check(session.coins == coins_before_story, "refusal pays nothing")
 	_check(session.story_state.ledger.size() == 1, "ledger gets one entry")
 	_check(str(session.story_state.ledger[0].get("result", "")) == "未入境", "ledger records refusal")
 	_check(str(session.story_state.ledger[0].get("who", "")) == "孙悟空", "ledger records the called-out name")
@@ -160,11 +170,13 @@ func _check_orpheus_loss(choice: String, clear_head: bool, outcome: String) -> v
 	_check(runtime.choose(choice), "Orpheus choice is available")
 	_settle(runtime)
 	_check(runtime.get_outcome_id() == outcome and session.finish_story(int(soul.id)), "Orpheus reaches %s" % outcome)
+	_check(session.day_story_entries[0].aftermath.is_empty() and str(session.story_state.world.get("world.orpheus_echo", "")) == outcome, "Orpheus' loss waits for the drowned lyre")
 	_open_day_three(session)
 	# Save and restore the day and story before the conditional guest arrives.
 	session.restore_story(session.story_state.snapshot())
 	session.restore_day(session.save_day())
 	_check_day_three_guests(session, true)
+	_check_lyre_echo(session)
 	session.free()
 
 
@@ -174,6 +186,17 @@ func _open_day_three(session: Session) -> void:
 		_check(session.release_soul(int(soul.id)), "Day two ordinary guest can be released")
 	session.close_day_report()
 	_check(session.day == 3, "Closing the day two report opens day three")
+
+
+func _check_lyre_echo(session: Session) -> void:
+	for soul in session.souls.duplicate():
+		soul.stats = session.requirements[0]
+		_check(session.release_soul(int(soul.id)), "Day three guests can be released")
+	_check(session.get_day_report().entries.size() == 1, "The drowned lyre carries the only closing report")
+	var entry: Dictionary = session.get_day_report().entries[0]
+	_check(entry.who == "殉情的琴手" and entry.aftermath.size() == 1, "The drowned lyre carries Orpheus' deferred epilogue")
+	_check(str(entry.aftermath[0]).contains("琴手"), "The deferred epilogue reaches the report")
+	_check(str(session.story_state.world.get("world.orpheus_echo", "")) == "", "The deferred epilogue is consumed once")
 
 
 func _check_day_three_guests(session: Session, expect_lyre_player: bool) -> void:

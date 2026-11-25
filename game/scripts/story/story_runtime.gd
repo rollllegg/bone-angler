@@ -24,6 +24,7 @@ var dose_label := ""
 var last_step: Dictionary = {}
 var last_error := ""
 var callout_active := false
+var judgment_active := false
 
 var _nodes: Dictionary = {}
 var _enter_guard := 0
@@ -71,11 +72,11 @@ func current_step() -> Dictionary:
 
 
 func advance() -> bool:
-	if closed or callout_active:
+	if closed or callout_active or judgment_active or is_awaiting_judgment():
 		return false
 	if steps.is_empty():
 		var node := _node(node_id)
-		if node.has("choices"):
+		if node.has("choices") or node.has("judgment"):
 			return false
 		return _resolve_exit()
 	if step_index < steps.size() - 1:
@@ -120,6 +121,7 @@ func visible_choices() -> Array:
 			"text": _text(str(choice.get("text", ""))),
 			"locked": locked,
 			"reason": reason,
+			"hotspot": choice.get("hotspot", {}),
 		})
 	return result
 
@@ -142,8 +144,72 @@ func choose(choice_id: String) -> bool:
 	return false
 
 
+func is_awaiting_choice() -> bool:
+	if closed or callout_active or judgment_active or is_awaiting_judgment():
+		return false
+	return _node(node_id).has("choices") and step_index >= steps.size()
+
+
+func has_pending_steps() -> bool:
+	return not closed and not callout_active and not judgment_active and not is_awaiting_judgment() and step_index < steps.size()
+
+
 func can_feed_potion() -> bool:
-	return not closed and not callout_active and not dose_fed and case_data.has("potion")
+	return not closed and not callout_active and not judgment_active and not is_awaiting_judgment() and not dose_fed and case_data.has("potion")
+
+
+func is_awaiting_judgment() -> bool:
+	if closed or callout_active:
+		return false
+	if bool(flags.get("judgment.done", false)):
+		return false
+	return _node(node_id).has("judgment") and step_index >= steps.size()
+
+
+func get_judgment_config(max_value: int) -> Dictionary:
+	var raw = _node(node_id).get("judgment", {})
+	if typeof(raw) != TYPE_DICTIONARY:
+		return {}
+	var config: Dictionary = raw.duplicate(true)
+	var min_value := maxi(0, int(config.get("min", 0)))
+	config["min"] = min_value
+	config["max"] = maxi(min_value, max_value)
+	config["prompt_text"] = _text(str(config.get("prompt", ""))) if str(config.get("prompt", "")) != "" else ""
+	return config
+
+
+func start_judgment(max_value: int) -> Dictionary:
+	if not is_awaiting_judgment():
+		return {}
+	var config := get_judgment_config(max_value)
+	if config.is_empty():
+		return {}
+	flags["offering_max"] = int(config.get("max", 0))
+	judgment_active = true
+	return config
+
+
+func resolve_judgment(amount: int) -> bool:
+	if not judgment_active:
+		return false
+	judgment_active = false
+	var config := get_judgment_config(int(flags.get("offering_max", 0)))
+	var min_value := int(config.get("min", 0))
+	var max_value := int(config.get("max", min_value))
+	var value := clampi(amount, min_value, max_value)
+	flags["offering"] = value
+	flags["offering_max"] = max_value
+	flags["judgment.done"] = true
+	_resolve_exit()
+	changed.emit()
+	return last_error == ""
+
+
+func cancel_judgment() -> void:
+	if not judgment_active:
+		return
+	judgment_active = false
+	changed.emit()
 
 
 func feed_potion(effect: Vector3i, label: String) -> bool:
@@ -331,6 +397,7 @@ func restore(data: Dictionary) -> bool:
 	dose_label = str(data.get("dose_label", ""))
 	started = true
 	callout_active = false
+	judgment_active = false
 	var node := _node(node_id)
 	if node.is_empty():
 		_fail("restore: missing node '%s'" % node_id)
@@ -367,6 +434,8 @@ func _enter(id: String) -> void:
 func _resolve_exit() -> bool:
 	var node := _node(node_id)
 	if node.has("choices"):
+		return false
+	if node.has("judgment") and not bool(flags.get("judgment.done", false)):
 		return false
 	if node.has("branch"):
 		for entry in node.get("branch", []):

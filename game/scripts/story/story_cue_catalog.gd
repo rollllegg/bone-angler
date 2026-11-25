@@ -5,10 +5,11 @@ extends RefCounted
 
 const TYPES := ["shake", "flash", "fade", "zoom", "sprite", "prop", "wait", "sound"]
 const PROP_ACTIONS := ["show", "hide", "move"]
-const PROP_IDS := ["lyre", "staff", "tail", "coins", "bowl", "gray_hand", "peach", "cloud"]
+const PROP_IDS := ["lyre", "staff", "tail", "coins", "bowl", "gray_hand", "peach", "cloud", "scale"]
 const SPRITE_IDS := [
 	"wukong_disguise", "wukong_disguise_turn", "wukong_monkey", "wukong_turn",
 	"orpheus_front", "orpheus_revealed", "orpheus_turn",
+	"anubis", "anubis_turn",
 ]
 const SOUND_IDS := []  # P4 audio arrives with the sound assets.
 const MAX_DURATION := 3.0
@@ -34,6 +35,7 @@ const PROP_DEFAULT_POSITIONS := {
 	"gray_hand": [222, 160],
 	"peach": [214, 160],
 	"cloud": [201, 190],
+	"scale": [220, 160],
 }
 
 

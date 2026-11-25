@@ -11,6 +11,7 @@ const TEXTURES := {
 	"gray_hand": preload("res://assets/art/story/props/gray_hand.png"),
 	"peach": preload("res://assets/art/story/props/peach.png"),
 	"cloud": preload("res://assets/art/story/props/cloud.png"),
+	"scale": preload("res://assets/art/story/props/scale.png"),
 }
 
 const BEHIND := ["staff", "tail", "cloud"]

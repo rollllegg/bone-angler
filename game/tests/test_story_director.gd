@@ -13,7 +13,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	_check(Catalog.PROP_IDS.size() == 8, "eight placeholder props are declared")
+	_check(Catalog.PROP_IDS.size() == 9, "nine placeholder props are declared")
 	_check(Catalog.has_prop("lyre") and Catalog.has_prop("gray_hand"), "prop catalog contains the story props")
 	_check(not Catalog.has_prop("dragon"), "unknown props are rejected")
 

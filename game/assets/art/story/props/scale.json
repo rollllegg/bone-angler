@@ -1,0 +1,42 @@
+{
+  "id": "scale",
+  "kind": "prop",
+  "prompt": "金色古埃及天平，左盘幽绿火焰，右盘金币，正面。",
+  "source": "game/art/source/story/scale_raw.png",
+  "source_sha256": "cd75d06279b44447a520e67e9b2788f7b18d9b27342a4ef8b16c0e263f159910",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/props/scale.png",
+  "output_sha256": "2cb2ec723245bd6c1dcd669ec31118cfb0cbd07f21da7fc1ddb3ac099d2ebdf8",
+  "output_size": [
+    64,
+    64
+  ],
+  "pixel_grid": [
+    105,
+    104
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 1,
+  "white_specks": 8,
+  "shadow": false,
+  "palette": 32,
+  "bbox": [
+    8,
+    9,
+    97,
+    92
+  ],
+  "processed_at_utc": "2026-11-25T15:57:51.197662+00:00"
+}

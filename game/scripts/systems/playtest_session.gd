@@ -129,7 +129,7 @@ func advance(delta: float) -> void:
 func _arrive_next_guest() -> void:
 	var slot := _day_arrived
 	var guest := _day_guests[slot]
-	if day == 3 and slot == GUESTS_PER_DAY - 1 and story_state != null and bool(story_state.world.get("world.orpheus_lost", false)):
+	if day == 3 and slot == GUESTS_PER_DAY - 1 and story_state != null and str(story_state.world.get("world.orpheus_echo", "")) != "":
 		guest = Vector2i(Data.DROWNED_LYRE_PLAYER, -1)
 	var entry: Array = Data.SOULS[guest.x]
 	var stats: Vector3i = entry[1] if guest.y < 0 else _starter_stats(entry[1], guest.y)
@@ -137,6 +137,14 @@ func _arrive_next_guest() -> void:
 		"id": _arrived + 1, "case_id": guest.x, "name": entry[0], "stats": stats,
 		"before": stats, "served": false, "doses_used": 0, "fee": service_fee(stats),
 	}
+	if day == 1 and slot == GUESTS_PER_DAY - 1:
+		# Anubis observes the first shift in an ordinary disguise: full stats,
+		# no requirement check, and medicine cannot move his attributes.
+		soul["stats"] = STAT_CEILING
+		soul["before"] = STAT_CEILING
+		soul["fee"] = 40
+		soul["fixed_stats"] = true
+		soul["anubis_disguise"] = true
 	var story_case := ""
 	if story_db != null:
 		story_case = story_db.get_scheduled_case(day, slot)
@@ -148,6 +156,8 @@ func _arrive_next_guest() -> void:
 		soul["stats"] = Vector3i(8, 8, 8)
 		soul["before"] = soul["stats"]
 		soul["fee"] = story_db.get_fee(story_case)
+	if guest.x == Data.DROWNED_LYRE_PLAYER:
+		soul["story_echo"] = "orpheus"
 	_day_arrived += 1
 	_arrived += 1
 	souls.append(soul)
@@ -311,6 +321,8 @@ func can_release(id: int) -> bool:
 	var soul := get_soul(id)
 	if soul.is_empty() or soul.has("story_case"):
 		return false
+	if bool(soul.get("fixed_stats", false)):
+		return true
 	return is_eligible(soul.stats)
 
 
@@ -377,6 +389,8 @@ func release_soul(id: int) -> bool:
 	released_count += 1
 	if story_state != null:
 		story_state.run["run.released"] = released_count
+	if str(soul.get("story_echo", "")) == "orpheus":
+		_append_orpheus_echo()
 	_advance_day_if_ready()
 	state_changed.emit()
 	return true
@@ -543,11 +557,15 @@ func preview(id: int, essence: bool, item: int) -> Dictionary:
 	var before: Vector3i = soul.stats
 	var effect: Vector3i = medicine.effect
 	var after := (before + effect).clamp(Vector3i.ZERO, STAT_CEILING)
+	if bool(soul.get("fixed_stats", false)):
+		after = before
+		effect = Vector3i.ZERO
 	var dose_count := doses_used(soul) + 1
+	var eligible := bool(soul.get("fixed_stats", false)) or is_eligible(after)
 	return {
 		"name": medicine.name, "before": before, "after": after, "effect": effect,
 		"doses_used": dose_count,
-		"reward": release_reward(soul, after, dose_count) if is_eligible(after) else 0,
+		"reward": release_reward(soul, after, dose_count) if eligible else 0,
 	}
 
 
@@ -654,11 +672,14 @@ func finish_story(id: int) -> bool:
 		return false
 	last_payout = 0
 	last_story_outcome = result
-	if result == "release":
-		last_payout = int(outcome.get("payout", soul.fee))
-		coins += last_payout
-		released_count += 1
-	else:
+	var tally := bool(outcome.get("tally", true))
+	if result == "release" or result == "judged":
+		if result == "release":
+			last_payout = int(outcome.get("payout", soul.fee))
+			coins += last_payout
+		if tally:
+			released_count += 1
+	elif tally:
 		rejected_count += 1
 	var ledger: Dictionary = outcome.get("ledger", {})
 	var ledger_entry: Dictionary = {}
@@ -676,20 +697,56 @@ func finish_story(id: int) -> bool:
 	if story_state != null:
 		story_state.run["run.released"] = released_count
 		story_state.run["run.rejected"] = rejected_count
+	var aftermath: Array = runtime.get_aftermath_lines()
+	if str(soul.story_case) == "orpheus" and bool(story_state.world.get("world.orpheus_lost", false)):
+		# The loss is not told at Orpheus' window; the drowned lyre player
+		# returns on the next day and carries the deferred epilogue.
+		story_state.world["world.orpheus_echo"] = runtime.get_outcome_id()
+		aftermath = []
 	var report_entry := {
 		"case": str(soul.story_case),
 		"who": str(ledger.get("who", soul.name)),
 		"result": str(ledger.get("result", "")),
 		"note": str(ledger_entry.get("note", "")),
-		"aftermath": runtime.get_aftermath_lines(),
+		"aftermath": aftermath,
 	}
-	day_story_entries.append(report_entry)
+	if bool(outcome.get("report", true)):
+		day_story_entries.append(report_entry)
 	_first_services[soul.case_id] = true
 	souls.erase(soul)
 	story_runtimes.erase(id)
 	_advance_day_if_ready()
 	state_changed.emit()
 	return true
+
+
+func _append_orpheus_echo() -> void:
+	if story_state == null or story_db == null:
+		return
+	var echo := str(story_state.world.get("world.orpheus_echo", ""))
+	if echo == "":
+		return
+	var data: Dictionary = story_db.get_case("orpheus")
+	var outcome: Dictionary = data.get("outcomes", {}).get(echo, {})
+	if outcome.is_empty():
+		story_state.world["world.orpheus_echo"] = ""
+		return
+	var lines: Array = []
+	for key in outcome.get("aftermath", []):
+		lines.append(story_db.text.render(story_db.text.get_text(str(key)), story_state.context({})))
+	var ledger: Dictionary = outcome.get("ledger", {})
+	var note := ""
+	var note_key := str(ledger.get("note", ""))
+	if note_key != "":
+		note = story_db.text.render(story_db.text.get_text(note_key), story_state.context({}))
+	day_story_entries.append({
+		"case": "orpheus",
+		"who": "殉情的琴手",
+		"result": "已放行",
+		"note": note,
+		"aftermath": lines,
+	})
+	story_state.world["world.orpheus_echo"] = ""
 
 
 func _advance_day_if_ready() -> void:

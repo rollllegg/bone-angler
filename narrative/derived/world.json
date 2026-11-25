@@ -1,11 +1,48 @@
 {
   "flags": {
-    "world.hades_rampage": {"type": "bool", "default": false},
-    "world.wukong_admitted": {"type": "bool", "default": false},
-    "world.wukong_case_seen": {"type": "bool", "default": false},
-    "world.orpheus_case_seen": {"type": "bool", "default": false},
-    "world.orpheus_admitted": {"type": "bool", "default": false},
-    "world.orpheus_reunion": {"type": "bool", "default": false},
-    "world.orpheus_lost": {"type": "bool", "default": false}
+    "world.hades_rampage": {
+      "type": "bool",
+      "default": false
+    },
+    "world.wukong_admitted": {
+      "type": "bool",
+      "default": false
+    },
+    "world.wukong_case_seen": {
+      "type": "bool",
+      "default": false
+    },
+    "world.orpheus_case_seen": {
+      "type": "bool",
+      "default": false
+    },
+    "world.orpheus_admitted": {
+      "type": "bool",
+      "default": false
+    },
+    "world.orpheus_reunion": {
+      "type": "bool",
+      "default": false
+    },
+    "world.orpheus_lost": {
+      "type": "bool",
+      "default": false
+    },
+    "world.orpheus_confused": {
+      "type": "bool",
+      "default": false
+    },
+    "world.orpheus_echo": {
+      "type": "string",
+      "default": ""
+    },
+    "world.anubis_result": {
+      "type": "string",
+      "default": ""
+    },
+    "world.anubis_case_seen": {
+      "type": "bool",
+      "default": false
+    }
   }
 }

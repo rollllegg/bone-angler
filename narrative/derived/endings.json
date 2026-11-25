@@ -1,12 +1,22 @@
 {
   "endings": [
     {
+      "id": "anubis",
+      "priority": 30,
+      "if": "world.anubis_result != \"\"",
+      "text": "ending.anubis.1",
+      "epilogue": []
+    },
+    {
       "id": "hades_rampage",
       "priority": 10,
       "if": "world.hades_rampage",
       "text": "ending.rampage.1",
       "epilogue": [
-        {"if": "case.wukong.named", "text": "ending.rampage.named.1"}
+        {
+          "if": "case.wukong.named",
+          "text": "ending.rampage.named.1"
+        }
       ]
     },
     {

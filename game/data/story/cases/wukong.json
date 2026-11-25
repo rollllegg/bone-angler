@@ -44,6 +44,16 @@
     {
       "choices": [
         {
+          "hotspot": {
+            "rects": [
+              [
+                15.0,
+                22.0,
+                18.0,
+                15.0
+              ]
+            ]
+          },
           "id": "photo",
           "locked_if": "clue.photo != 0",
           "locked_text": "wukong.choice.photo.locked",
@@ -54,6 +64,26 @@
           "text": "wukong.choice.photo"
         },
         {
+          "hotspot": {
+            "rects": [
+              [
+                26.0,
+                37.0,
+                10.0,
+                8.0
+              ]
+            ],
+            "variants": {
+              "wukong_monkey": [
+                [
+                  22.0,
+                  48.0,
+                  8.0,
+                  8.0
+                ]
+              ]
+            }
+          },
           "id": "tail",
           "locked_if": "clue.tail != 0",
           "locked_text": "wukong.choice.tail.locked",
@@ -64,6 +94,32 @@
           "text": "wukong.choice.tail"
         },
         {
+          "hotspot": {
+            "rects": [
+              [
+                36.0,
+                28.0,
+                8.0,
+                8.0
+              ],
+              [
+                6.0,
+                48.0,
+                12.0,
+                10.0
+              ]
+            ],
+            "variants": {
+              "wukong_monkey": [
+                [
+                  6.0,
+                  48.0,
+                  13.0,
+                  11.0
+                ]
+              ]
+            }
+          },
           "id": "staff",
           "locked_if": "clue.staff != 0",
           "locked_text": "wukong.choice.staff.locked",
@@ -72,16 +128,6 @@
             "clue.staff = 1"
           ],
           "text": "wukong.choice.staff"
-        },
-        {
-          "id": "coin",
-          "locked_if": "clue.coin != 0",
-          "locked_text": "wukong.choice.coin.locked",
-          "next": "inspect.coin",
-          "set": [
-            "clue.coin = 1"
-          ],
-          "text": "wukong.choice.coin"
         },
         {
           "id": "admit",
@@ -112,12 +158,8 @@
               "type": "flash"
             }
           ],
-          "speaker": "圣",
-          "text": "wukong.inspect.photo.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.inspect.photo.2"
+          "text": "wukong.inspect.photo.1"
         }
       ]
     },
@@ -131,18 +173,6 @@
               "action": "show",
               "id": "tail",
               "type": "prop"
-            }
-          ],
-          "speaker": "圣",
-          "text": "wukong.inspect.tail.1"
-        },
-        {
-          "cues": [
-            {
-              "action": "hide",
-              "delay": 0.4,
-              "id": "tail",
-              "type": "prop"
             },
             {
               "duration": 0.3,
@@ -150,12 +180,18 @@
               "type": "shake"
             },
             {
+              "action": "hide",
+              "delay": 0.8,
+              "id": "tail",
+              "type": "prop"
+            },
+            {
               "duration": 0.5,
               "type": "wait"
             }
           ],
           "speaker": "孙",
-          "text": "wukong.inspect.tail.2"
+          "text": "wukong.inspect.tail.1"
         }
       ]
     },
@@ -171,12 +207,8 @@
               "type": "zoom"
             }
           ],
-          "speaker": "圣",
-          "text": "wukong.inspect.staff.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.inspect.staff.2"
+          "text": "wukong.inspect.staff.1"
         },
         {
           "cues": [
@@ -185,13 +217,7 @@
               "color": "#e7cf8a",
               "duration": 0.18,
               "type": "flash"
-            }
-          ],
-          "speaker": "圣",
-          "text": "wukong.inspect.staff.3"
-        },
-        {
-          "cues": [
+            },
             {
               "duration": 0.3,
               "scale": 1.0,
@@ -199,47 +225,7 @@
             }
           ],
           "speaker": "孙",
-          "text": "wukong.inspect.staff.4"
-        }
-      ]
-    },
-    {
-      "id": "inspect.coin",
-      "next": "inspect",
-      "steps": [
-        {
-          "cues": [
-            {
-              "action": "show",
-              "id": "coins",
-              "scale": 0.65,
-              "type": "prop"
-            },
-            {
-              "alpha": 0.35,
-              "color": "#e7cf8a",
-              "duration": 0.2,
-              "type": "flash"
-            },
-            {
-              "duration": 0.35,
-              "type": "wait"
-            }
-          ],
-          "speaker": "孙",
-          "text": "wukong.inspect.coin.1"
-        },
-        {
-          "cues": [
-            {
-              "action": "hide",
-              "delay": 0.5,
-              "id": "coins",
-              "type": "prop"
-            }
-          ],
-          "speaker": "圣",
-          "text": "wukong.inspect.coin.2"
+          "text": "wukong.inspect.staff.2"
         }
       ]
     },
@@ -272,12 +258,8 @@
               "type": "wait"
             }
           ],
-          "speaker": "圣",
-          "text": "wukong.identify.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.identify.2"
+          "text": "wukong.identify.1"
         }
       ]
     },
@@ -326,12 +308,8 @@
               "type": "prop"
             }
           ],
-          "speaker": "圣",
-          "text": "wukong.potion.react.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.potion.react.2"
+          "text": "wukong.potion.react.1"
         }
       ]
     },
@@ -465,10 +443,6 @@
       "callout.done": {
         "default": false,
         "type": "bool"
-      },
-      "clue.coin": {
-        "default": 0.0,
-        "type": "int"
       },
       "clue.photo": {
         "default": 0.0,

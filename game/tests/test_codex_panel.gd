@@ -210,7 +210,7 @@ func _check_guest_and_guards() -> void:
 	_tap(KEY_S)
 	await _capture("03-reception-recipe")
 	_tap(KEY_TAB)
-	_demo.shop.select_guest(6)
+	_demo.shop.select_guest(5)
 	_demo._story_action()
 	_check(_demo.story_panel.is_typing(), "The story true-name challenge is active")
 	_tap(KEY_TAB)

@@ -1,0 +1,572 @@
+{
+  "callout": {
+    "answer": "ANUBIS",
+    "button": "anubis.callout.button.1",
+    "case_sensitive": false,
+    "failure": "audit",
+    "once": false,
+    "success": "identify",
+    "time_limit": 20.0
+  },
+  "canon": [
+    "world.anubis_case_seen = true"
+  ],
+  "entry": "arrival",
+  "fee": 0.0,
+  "id": "anubis",
+  "linear": true,
+  "nodes": [
+    {
+      "id": "arrival",
+      "next": "wukong",
+      "steps": [
+        {
+          "cues": [
+            {
+              "alpha": 0.22,
+              "color": "#cdbdf0",
+              "duration": 0.25,
+              "type": "flash"
+            },
+            {
+              "duration": 0.25,
+              "type": "wait"
+            }
+          ],
+          "speaker": "阿",
+          "text": "anubis.arrival.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.arrival.2"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.arrival.3"
+        }
+      ]
+    },
+    {
+      "id": "wukong",
+      "next": "wukong.branch",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.wukong.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.wukong.2"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "world.hades_rampage",
+          "next": "wukong.rampage"
+        },
+        {
+          "next": "wukong.calm"
+        }
+      ],
+      "id": "wukong.branch"
+    },
+    {
+      "id": "wukong.calm",
+      "next": "orpheus",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.wukong.calm.1"
+        }
+      ]
+    },
+    {
+      "id": "wukong.rampage",
+      "next": "orpheus",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.wukong.rampage.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.wukong.rampage.2"
+        }
+      ]
+    },
+    {
+      "id": "orpheus",
+      "next": "orpheus.branch",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.orpheus.1"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "world.orpheus_reunion",
+          "next": "orpheus.reunion"
+        },
+        {
+          "if": "world.orpheus_confused",
+          "next": "orpheus.return"
+        },
+        {
+          "next": "orpheus.clear"
+        }
+      ],
+      "id": "orpheus.branch"
+    },
+    {
+      "id": "orpheus.return",
+      "next": "audit",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.orpheus.return.1"
+        }
+      ]
+    },
+    {
+      "id": "orpheus.clear",
+      "next": "audit",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.orpheus.clear.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.orpheus.clear.2"
+        }
+      ]
+    },
+    {
+      "id": "orpheus.reunion",
+      "next": "audit",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.orpheus.reunion.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.orpheus.reunion.2"
+        }
+      ]
+    },
+    {
+      "choices": [
+        {
+          "id": "admit",
+          "kind": "accept",
+          "next": "judgment.lead",
+          "text": "anubis.choice.continue"
+        }
+      ],
+      "id": "audit"
+    },
+    {
+      "id": "judgment.lead",
+      "next": "judgment",
+      "steps": [
+        {
+          "cues": [
+            {
+              "alpha": 0.18,
+              "color": "#9ac47a",
+              "duration": 0.25,
+              "type": "flash"
+            }
+          ],
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.2"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.3"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.4"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.5"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.6"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.7"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.lead.8"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "offering <= 0",
+          "next": "end.zero"
+        },
+        {
+          "if": "offering >= offering_max",
+          "next": "end.all"
+        },
+        {
+          "next": "end.other"
+        }
+      ],
+      "id": "judgment",
+      "judgment": {
+        "min": 0.0,
+        "prompt": "anubis.judgment.prompt.1"
+      }
+    },
+    {
+      "id": "end.zero",
+      "next": "close",
+      "steps": [
+        {
+          "cues": [
+            {
+              "duration": 0.3,
+              "strength": 3.0,
+              "type": "shake"
+            }
+          ],
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.2"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.3"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.4"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.5"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.6"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.7"
+        },
+        {
+          "if": "named",
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.named.1"
+        },
+        {
+          "if": "named",
+          "speaker": "阿",
+          "text": "anubis.judgment.zero.named.2"
+        }
+      ]
+    },
+    {
+      "id": "end.all",
+      "next": "close",
+      "steps": [
+        {
+          "cues": [
+            {
+              "duration": 0.3,
+              "strength": 3.0,
+              "type": "shake"
+            }
+          ],
+          "speaker": "阿",
+          "text": "anubis.judgment.all.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.2"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.3"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.4"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.5"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.6"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.7"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.all.8"
+        },
+        {
+          "if": "named",
+          "speaker": "阿",
+          "text": "anubis.judgment.all.named.1"
+        },
+        {
+          "if": "named",
+          "speaker": "阿",
+          "text": "anubis.judgment.all.named.2"
+        }
+      ]
+    },
+    {
+      "id": "end.other",
+      "next": "close",
+      "steps": [
+        {
+          "cues": [
+            {
+              "alpha": 0.2,
+              "color": "#9ac47a",
+              "duration": 0.2,
+              "type": "flash"
+            }
+          ],
+          "speaker": "阿",
+          "text": "anubis.judgment.other.1"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.other.2"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.other.3"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.other.4"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.other.5"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.other.6"
+        },
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.other.7"
+        },
+        {
+          "if": "named",
+          "speaker": "阿",
+          "text": "anubis.judgment.other.named.1"
+        },
+        {
+          "if": "named",
+          "speaker": "阿",
+          "text": "anubis.judgment.other.named.2"
+        }
+      ]
+    },
+    {
+      "branch": [
+        {
+          "if": "offering <= 0",
+          "next": "judged.zero"
+        },
+        {
+          "if": "offering >= offering_max",
+          "next": "judged.all"
+        },
+        {
+          "next": "judged.other"
+        }
+      ],
+      "id": "close",
+      "steps": [
+        {
+          "speaker": "阿",
+          "text": "anubis.judgment.close.1"
+        }
+      ]
+    },
+    {
+      "id": "judged.zero",
+      "outcome": "judged.zero"
+    },
+    {
+      "id": "judged.all",
+      "outcome": "judged.all"
+    },
+    {
+      "id": "judged.other",
+      "outcome": "judged.other"
+    },
+    {
+      "id": "identify",
+      "next": "audit",
+      "set": [
+        "named = true"
+      ],
+      "steps": [
+        {
+          "cues": [
+            {
+              "duration": 0.35,
+              "strength": 4.0,
+              "type": "shake"
+            },
+            {
+              "alpha": 0.4,
+              "color": "#e7cf8a",
+              "duration": 0.22,
+              "type": "flash"
+            },
+            {
+              "duration": 0.4,
+              "type": "wait"
+            }
+          ],
+          "speaker": "阿",
+          "text": "anubis.identify.1"
+        }
+      ]
+    }
+  ],
+  "outcomes": {
+    "judged.all": {
+      "effects": [
+        "world.anubis_result = \"all\""
+      ],
+      "ledger": {
+        "note": "anubis.ledger.all.1",
+        "result": "称心",
+        "who": "？？？",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "阿努比斯"
+          }
+        ]
+      },
+      "payout": 0.0,
+      "report": false,
+      "result": "judged"
+    },
+    "judged.other": {
+      "effects": [
+        "world.anubis_result = \"other\""
+      ],
+      "ledger": {
+        "note": "anubis.ledger.other.1",
+        "result": "称心",
+        "who": "？？？",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "阿努比斯"
+          }
+        ]
+      },
+      "payout": 0.0,
+      "report": false,
+      "result": "judged"
+    },
+    "judged.zero": {
+      "effects": [
+        "world.anubis_result = \"zero\""
+      ],
+      "ledger": {
+        "note": "anubis.ledger.zero.1",
+        "result": "称心",
+        "who": "？？？",
+        "who_if": [
+          {
+            "if": "named",
+            "who": "阿努比斯"
+          }
+        ]
+      },
+      "payout": 0.0,
+      "report": false,
+      "result": "judged"
+    }
+  },
+  "portrait": {
+    "default": "",
+    "rules": [
+      {
+        "id": "anubis",
+        "if": "named"
+      }
+    ]
+  },
+  "queue_name": "？？？",
+  "requires_stats": false,
+  "speakers": {
+    "圣": {
+      "name": "圣地亚哥"
+    },
+    "阿": {
+      "name": "？？？",
+      "name_if": [
+        {
+          "if": "named",
+          "name": "阿努比斯"
+        }
+      ]
+    }
+  },
+  "state": {
+    "flags": {
+      "callout.done": {
+        "default": false,
+        "type": "bool"
+      },
+      "judgment.done": {
+        "default": false,
+        "type": "bool"
+      },
+      "named": {
+        "default": false,
+        "type": "bool"
+      },
+      "offering": {
+        "default": 0.0,
+        "type": "int"
+      },
+      "offering_max": {
+        "default": 0.0,
+        "type": "int"
+      }
+    }
+  },
+  "title": "阿努比斯"
+}

@@ -1,6 +1,6 @@
 {
   "id": "orpheus",
-  "title": "俄耳甫斯",
+  "title": "俄耳普斯",
   "queue_name": "亚历克斯",
   "portrait": {
     "default": "orpheus_front",
@@ -20,7 +20,7 @@
       "name_if": [
         {
           "if": "named",
-          "name": "俄耳甫斯"
+          "name": "俄耳普斯"
         }
       ]
     },
@@ -48,10 +48,6 @@
   },
   "state": {
     "flags": {
-      "clue.registry": {
-        "type": "int",
-        "default": 0
-      },
       "clue.eurydice": {
         "type": "bool",
         "default": false
@@ -102,16 +98,6 @@
       "steps": [],
       "choices": [
         {
-          "id": "registry",
-          "text": "orpheus.choice.registry",
-          "locked_if": "clue.registry != 0",
-          "locked_text": "orpheus.choice.registry.locked",
-          "set": [
-            "clue.registry = 1"
-          ],
-          "next": "inspect.registry"
-        },
-        {
           "id": "eurydice",
           "text": "orpheus.choice.eurydice",
           "locked_if": "clue.eurydice",
@@ -119,7 +105,17 @@
           "set": [
             "clue.eurydice = true"
           ],
-          "next": "inspect.eurydice"
+          "next": "inspect.eurydice",
+          "hotspot": {
+            "rects": [
+              [
+                15,
+                22,
+                15,
+                13
+              ]
+            ]
+          }
         },
         {
           "id": "lyre",
@@ -129,7 +125,17 @@
           "set": [
             "clue.lyre = true"
           ],
-          "next": "inspect.lyre"
+          "next": "inspect.lyre",
+          "hotspot": {
+            "rects": [
+              [
+                30,
+                26,
+                14,
+                20
+              ]
+            ]
+          }
         },
         {
           "id": "admit",
@@ -146,19 +152,6 @@
       ]
     },
     {
-      "id": "inspect.registry",
-      "steps": [
-        {
-          "text": "orpheus.inspect.registry.1"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.inspect.registry.2"
-        }
-      ],
-      "next": "inspect"
-    },
-    {
       "id": "inspect.eurydice",
       "steps": [
         {
@@ -166,24 +159,12 @@
           "text": "orpheus.inspect.eurydice.1"
         },
         {
-          "speaker": "圣",
+          "speaker": "俄",
           "text": "orpheus.inspect.eurydice.2"
         },
         {
           "speaker": "俄",
           "text": "orpheus.inspect.eurydice.3"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.inspect.eurydice.4"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.inspect.eurydice.5"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.inspect.eurydice.6"
         }
       ],
       "next": "inspect"
@@ -192,24 +173,12 @@
       "id": "inspect.lyre",
       "steps": [
         {
-          "speaker": "圣",
+          "speaker": "俄",
           "text": "orpheus.inspect.lyre.1"
         },
         {
           "speaker": "俄",
           "text": "orpheus.inspect.lyre.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.inspect.lyre.3"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.inspect.lyre.4"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.inspect.lyre.5"
         }
       ],
       "next": "inspect"
@@ -218,12 +187,8 @@
       "id": "identify",
       "steps": [
         {
-          "speaker": "圣",
-          "text": "orpheus.identify.1"
-        },
-        {
           "speaker": "俄",
-          "text": "orpheus.identify.2"
+          "text": "orpheus.identify.1"
         }
       ],
       "set": [
@@ -318,7 +283,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳甫斯"
+            "who": "俄耳普斯"
           }
         ],
         "result": "已入境",
@@ -327,7 +292,8 @@
       "effects": [
         "world.orpheus_admitted = true",
         "world.orpheus_reunion = false",
-        "world.orpheus_lost = true"
+        "world.orpheus_lost = true",
+        "world.orpheus_confused = true"
       ],
       "aftermath": [
         "orpheus.end.accepted.confused.1"
@@ -341,7 +307,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳甫斯"
+            "who": "俄耳普斯"
           }
         ],
         "result": "已入境",
@@ -350,7 +316,8 @@
       "effects": [
         "world.orpheus_admitted = true",
         "world.orpheus_reunion = false",
-        "world.orpheus_lost = true"
+        "world.orpheus_lost = true",
+        "world.orpheus_confused = false"
       ],
       "aftermath": [
         "orpheus.end.accepted.clear.1"
@@ -364,7 +331,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳甫斯"
+            "who": "俄耳普斯"
           }
         ],
         "result": "已入境",
@@ -373,7 +340,8 @@
       "effects": [
         "world.orpheus_admitted = true",
         "world.orpheus_reunion = true",
-        "world.orpheus_lost = false"
+        "world.orpheus_lost = false",
+        "world.orpheus_confused = false"
       ],
       "aftermath": [
         "orpheus.end.accepted.reunion.1"
@@ -387,7 +355,7 @@
         "who_if": [
           {
             "if": "named",
-            "who": "俄耳甫斯"
+            "who": "俄耳普斯"
           }
         ],
         "result": "未入境",
@@ -396,7 +364,8 @@
       "effects": [
         "world.orpheus_admitted = false",
         "world.orpheus_reunion = false",
-        "world.orpheus_lost = true"
+        "world.orpheus_lost = true",
+        "world.orpheus_confused = true"
       ],
       "aftermath": [
         "orpheus.end.refused.1"

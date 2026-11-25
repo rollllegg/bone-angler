@@ -1,0 +1,42 @@
+{
+  "id": "anubis_turn",
+  "kind": "sprite",
+  "prompt": "阿努比斯的二头身背面，黑色胡狼头后脑与尖耳，深蓝黑长袍、金色宽领和腰带、背部金饰。",
+  "source": "game/art/source/story/anubis_turn_raw.png",
+  "source_sha256": "1986415e9648d2e64fae8669ecb7abfe3ec66ae4186d7ea26124c4096cbc493c",
+  "input_size": [
+    512,
+    512
+  ],
+  "output": "game/assets/art/story/sprites/anubis_turn.png",
+  "output_sha256": "8d34c67d12164158ac5fd3a26e8872b236878189ffe891c335a7786fb295f4dc",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": [
+    81,
+    83
+  ],
+  "watermark": "crop",
+  "watermark_box": [
+    0.78,
+    0.9,
+    1.0,
+    1.0
+  ],
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 1,
+  "white_specks": 8,
+  "shadow": true,
+  "palette": 32,
+  "bbox": [
+    22,
+    2,
+    58,
+    80
+  ],
+  "processed_at_utc": "2026-11-25T15:57:50.659138+00:00"
+}

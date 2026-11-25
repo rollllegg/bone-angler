@@ -65,6 +65,20 @@ func _walk(runtime, path: Array, allow_potion: bool, allow_callout: bool, world_
 		})
 		seen[runtime.get_outcome_id()] = true
 		return
+	if runtime.is_awaiting_judgment():
+		var config: Dictionary = runtime.start_judgment(100)
+		if not config.is_empty():
+			var top := int(config.get("max", 100))
+			var samples := [0]
+			if top > 0:
+				samples.append(top / 2)
+				samples.append(top)
+			for amount in samples:
+				var clone = _clone(runtime)
+				clone.start_judgment(100)
+				clone.resolve_judgment(int(amount))
+				_walk(clone, path + ["称心:%d" % int(amount)], false, false, world_rampage, results, seen)
+		return
 	if path.size() > 60:
 		return
 	if allow_potion and runtime.can_feed_potion():

@@ -186,8 +186,9 @@ func _check_first_order() -> void:
 	session.advance(interval - 0.1)
 	_check(session.souls.is_empty(), "The next guest receives the full arrival interval")
 	session.advance(Data.ARRIVAL_MAX * 5)
-	_check(session.souls.size() == 5 and not session.has_more_arrivals() and session.souls.back().get("story_case") == "wukong",
-		"Five guests remain on day one, with Wukong in the sixth seat")
+	_check(session.souls.size() == 5 and not session.has_more_arrivals()
+		and session.souls[3].get("story_case") == "wukong" and bool(session.souls[4].get("fixed_stats", false)),
+		"Five guests remain on day one, with Wukong in the fifth seat and the observer last")
 	session._open_day(2)
 	session.souls.clear()
 	session.advance(6.0 * Data.ARRIVAL_MAX)
@@ -274,7 +275,12 @@ func _check_tips() -> void:
 	_close_tip()
 	session.advance(5 * Data.ARRIVAL_MAX)
 	demo._show_location("Shop")
-	demo.shop.select_guest(int(session.souls.back().id))
+	var story_soul: Dictionary = {}
+	for soul in session.souls:
+		if soul.get("story_case", "") == "wukong":
+			story_soul = soul
+			break
+	demo.shop.select_guest(int(story_soul.id))
 	_expect_tip("tip_story_guest")
 	_close_tip()
 	session._open_day(2)
