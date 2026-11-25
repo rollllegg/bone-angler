@@ -185,8 +185,7 @@ func _live_checks() -> void:
 	demo.persist_save = false
 	root.add_child(demo)
 	await process_frame
-	_key(KEY_SPACE, true)
-	_key(KEY_SPACE, false)
+	demo._start_game()
 	for node in [demo.session, demo.qte, demo.river, demo.shop]:
 		node.set_process(false)
 	_prepare(demo.qte, Fishing.Action.HOLD)

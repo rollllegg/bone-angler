@@ -1,4 +1,6 @@
 extends Control
+
+signal tab_changed
 ## Visual pixel-art alchemy workbench: zero dropdowns, full Feishu fish art,
 ## and reception-consistent 3-icon attribute previews.
 
@@ -313,6 +315,7 @@ func _switch_tab(index: int) -> void:
 	][active_tab]
 	_status.text = ""
 	_update_previews()
+	tab_changed.emit()
 
 
 func handle_key(code: Key) -> bool:

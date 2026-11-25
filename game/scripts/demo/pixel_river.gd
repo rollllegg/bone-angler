@@ -100,7 +100,7 @@ func get_ferry_rect() -> Rect2:
 		return Rect2()
 	var session := qte.session
 	var remaining := session.spawn_remaining
-	if not session.active or not session.has_more_arrivals() or remaining <= 0.0 or remaining > FERRY_LEAD_TIME:
+	if not session.active or session.tutorial_pause_arrivals or not session.has_more_arrivals() or remaining <= 0.0 or remaining > FERRY_LEAD_TIME:
 		return Rect2()
 	var progress := 1.0 - remaining / FERRY_LEAD_TIME
 	var position_on_river := FERRY_START.lerp(FERRY_EXIT, progress).round()

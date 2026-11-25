@@ -20,6 +20,7 @@ const FISH := [
 	{"id": "fish_11", "name": "静鳍鳅", "essence": "静鳍原液", "effect": Vector3i(0, 0, -1), "primary_stat": Attribute.WILL, "cm": Vector2(10, 18), "water": [15, 5], "tier": 0},
 ]
 const VARIANT := 10
+const RIVER_CARP := 1
 const STILLFIN := 11
 const LANTERN := 2
 const CHAIN := 3

@@ -10,6 +10,7 @@ const DIRECTIONS := [Vector2.UP, Vector2.LEFT, Vector2.DOWN, Vector2.RIGHT]
 const DIRECTION_KEYS := [KEY_W, KEY_A, KEY_S, KEY_D]
 const ARROW_KEYS := [KEY_UP, KEY_LEFT, KEY_DOWN, KEY_RIGHT]
 const RETURN_LIMIT := 3.0
+const TUTORIAL_WAIT := 2.0
 # Temporary special-fish values for the playable test.
 const VARIANT_WORD := "FISH"
 const VARIANT_LIMIT := 20.0
@@ -17,6 +18,8 @@ const VARIANT_LIMIT := 20.0
 enum Phase { READY, WAITING, AWAITING_RETURN, PREPARING, REELING, FEEDBACK, TRUE_NAME, CAUGHT, ESCAPED, HOLDING, RELEASE_WAIT }
 enum Action { TAP, HOLD, SURGE }
 enum Judgement { NONE, NORMAL, PERFECT, MISS }
+
+const TUTORIAL_ACTIONS := [Action.TAP, Action.HOLD, Action.SURGE]
 
 var phase := Phase.READY
 var session: Session
@@ -61,6 +64,7 @@ var _release_lead := 0.16
 var _hold_elapsed := 0.0
 var _head_judgement := Judgement.NORMAL
 var needs_rehold := false
+var _tutorial_catch := Vector2i(-1, 0)
 
 
 func _ready() -> void:
@@ -91,6 +95,26 @@ func set_at_river(value: bool) -> void:
 
 func is_busy() -> bool:
 	return phase not in [Phase.READY, Phase.CAUGHT, Phase.ESCAPED]
+
+
+func has_tutorial_catch() -> bool:
+	return _tutorial_catch.x >= 0
+
+
+func enable_tutorial_catch(species: int, size: int) -> void:
+	_tutorial_catch = Vector2i(species, size)
+
+
+func clear_tutorial_catch() -> void:
+	if not has_tutorial_catch():
+		return
+	_tutorial_catch.x = -1
+	if phase == Phase.WAITING:
+		remaining = _roll_wait() + wait_extension
+	elif is_line_action() or phase in [Phase.PREPARING, Phase.FEEDBACK]:
+		var tier: int = Data.FISH[locked.species].tier
+		target = Data.PROGRESS[tier][locked.size]
+		_round_index = progress + int(is_line_action())
 
 
 func durability() -> int:
@@ -148,6 +172,7 @@ func save_pending() -> Dictionary:
 	if is_busy():
 		data.merge({
 			"phase": phase, "snapshot": _snapshot, "locked": locked,
+			"tutorial_catch": has_tutorial_catch(),
 			"remaining": remaining, "wait_extension": wait_extension,
 			"progress": progress, "target": target, "mistakes": mistakes,
 			"direction": fish_direction, "direction_run": _direction_run,
@@ -283,25 +308,26 @@ func cast() -> bool:
 	phase = Phase.WAITING
 	scare = maxf(scare, 10.0)
 	wait_extension = minf((scare - 10.0) * 0.1, 2.0)
+	remaining = TUTORIAL_WAIT if has_tutorial_catch() else _roll_wait() + wait_extension
+	state_changed.emit()
+	return true
+
+
+func _roll_wait() -> float:
 	var draw := _rng.randf()
 	# Sample a triangular distribution so waits near the mode occur more often.
 	var early_span := Data.BITE_MODE - Data.BITE_MIN
 	var late_span := Data.BITE_MAX - Data.BITE_MODE
 	var span := early_span + late_span
-	var wait: float
 	if draw < early_span / span:
-		wait = Data.BITE_MIN + sqrt(draw * span * early_span)
-	else:
-		wait = Data.BITE_MAX - sqrt((1.0 - draw) * span * late_span)
-	remaining = wait + wait_extension
-	state_changed.emit()
-	return true
+		return Data.BITE_MIN + sqrt(draw * span * early_span)
+	return Data.BITE_MAX - sqrt((1.0 - draw) * span * late_span)
 
 
 func disturb(level: float) -> void:
 	var increase := maxf(clampf(level, 0.0, 30.0) - scare, 0.0)
 	scare += increase
-	if phase == Phase.WAITING:
+	if phase == Phase.WAITING and not has_tutorial_catch():
 		var added := minf(increase * 0.1, 2.0 - wait_extension)
 		wait_extension += added
 		remaining += added
@@ -329,7 +355,7 @@ func advance(delta: float) -> void:
 			break
 		if is_holding() and needs_rehold:
 			break
-		var timed := phase in [Phase.REELING, Phase.HOLDING, Phase.RELEASE_WAIT, Phase.FEEDBACK]
+		var timed := not has_tutorial_catch() and phase in [Phase.REELING, Phase.HOLDING, Phase.RELEASE_WAIT, Phase.FEEDBACK]
 		var step := minf(delta, minf(remaining, _capture_remaining) if timed else remaining)
 		delta -= step
 		remaining -= step
@@ -478,7 +504,9 @@ func true_name_hint() -> String:
 func _bite() -> void:
 	var selected_bait: int = _snapshot.bait
 	var water: int = _snapshot.rod
-	if _rng.randf() >= (0.40 if selected_bait == Data.BONE_BAIT else 0.80):
+	if has_tutorial_catch():
+		locked = _fish_of_size(_tutorial_catch.x, _tutorial_catch.y)
+	elif _rng.randf() >= (0.40 if selected_bait == Data.BONE_BAIT else 0.80):
 		locked = {"bone": true}
 	elif water == 1 and selected_bait == Data.VARIANT_BAIT and _rng.randf() < Data.VARIANT_CHANCE:
 		locked = {"species": Data.VARIANT, "size": 3, "cm": _rng.randf_range(30.0001, 38.0)}
@@ -510,7 +538,7 @@ func _start_fish_capture() -> void:
 	else:
 		var tier: int = Data.FISH[locked.species]["tier"]
 		var multiplier := 1.0 + Data.SLOT_BONUS * int(_snapshot.attachments)
-		target = Data.PROGRESS[tier][locked.size]
+		target = TUTORIAL_ACTIONS.size() if has_tutorial_catch() else Data.PROGRESS[tier][locked.size]
 		_travel = Data.TRAVEL[tier]
 		_normal_half = Data.NORMAL_HALF_WINDOW[tier] * multiplier
 		_perfect_half = Data.PERFECT_HALF_WINDOW[tier] * multiplier
@@ -519,7 +547,7 @@ func _start_fish_capture() -> void:
 		_release_half = Data.RELEASE_HALF_WINDOW[tier] * multiplier
 		_release_lead = Data.RELEASE_CUE_LEAD * multiplier
 		_round_index = 0
-		round_action = Data.FISHING_ACTION_PATTERNS[locked.species][0]
+		round_action = TUTORIAL_ACTIONS[0] if has_tutorial_catch() else Data.FISHING_ACTION_PATTERNS[locked.species][0]
 		needs_rehold = false
 		phase = Phase.PREPARING
 		remaining = Data.PREPARATION
@@ -549,7 +577,10 @@ func _roll_fish(water: int, selected_bait: int) -> Dictionary:
 	var species := _weighted_index(fish_weights(water, selected_bait))
 	if species < 0:
 		return {}
-	var size := _weighted_index(size_weights(_snapshot.hook))
+	return _fish_of_size(species, _weighted_index(size_weights(_snapshot.hook)))
+
+
+func _fish_of_size(species: int, size: int) -> Dictionary:
 	var bounds: Vector2 = Data.FISH[species]["cm"]
 	var from := [bounds.x * 0.5, bounds.x, bounds.y + 0.0001]
 	var to := [bounds.x - 0.0001, bounds.y, bounds.y * 1.5]
@@ -581,9 +612,12 @@ func _start_round() -> void:
 	var next: int = candidates[_rng.randi_range(0, candidates.size() - 1)]
 	_direction_run = _direction_run + 1 if next == fish_direction else 1
 	fish_direction = next
-	var pattern: Array = Data.FISHING_ACTION_PATTERNS[locked.species]
-	round_action = pattern[_round_index % pattern.size()]
-	_round_index += 1
+	if has_tutorial_catch():
+		round_action = TUTORIAL_ACTIONS[progress]
+	else:
+		var pattern: Array = Data.FISHING_ACTION_PATTERNS[locked.species]
+		round_action = pattern[_round_index % pattern.size()]
+		_round_index += 1
 	_hold_elapsed = 0.0
 	needs_rehold = false
 	_elapsed = 0.0
@@ -600,8 +634,9 @@ func _judge(judgement: Judgement, reason: String) -> void:
 	last_success = judgement != Judgement.MISS
 	var previous := progress
 	if last_success:
-		progress = mini(progress + (2 if judgement == Judgement.PERFECT else 1), target)
-	else:
+		var gain := 2 if judgement == Judgement.PERFECT and not has_tutorial_catch() else 1
+		progress = mini(progress + gain, target)
+	elif not has_tutorial_catch():
 		mistakes += 1
 		progress = maxi(progress - 1, 0)
 	last_progress_gain = progress - previous
@@ -620,6 +655,7 @@ func _judge(judgement: Judgement, reason: String) -> void:
 func _land() -> void:
 	phase = Phase.CAUGHT
 	remaining = 0.0
+	clear_tutorial_catch()
 	if locked.has("bone"):
 		disturb(10.0)
 		session.record_bone()

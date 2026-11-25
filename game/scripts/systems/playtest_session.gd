@@ -21,6 +21,8 @@ const STARTER_LOWER_FISH := [5, 6, Data.STILLFIN]
 const HIGH_STAT_GUESTS := [4, 3, 7]
 const BOATMAN_CASE := 2
 const BOATMAN_COMMISSION_WILL := 9
+const TUTORIAL_GUEST_CASE := 1
+const TUTORIAL_GUEST_ID := 1
 
 var catches: Array[Dictionary] = []
 var essences: Array[int] = []
@@ -39,6 +41,7 @@ var last_payout := 0
 var _first_services: Dictionary = {}
 var spawn_remaining := 0.0
 var paused := false
+var tutorial_pause_arrivals := false
 var active := false
 var _arrived := 0
 var _day_guests: Array[Vector2i] = []
@@ -90,9 +93,12 @@ func set_story_open(value: bool) -> void:
 	state_changed.emit()
 
 
-func start_shift() -> void:
-	_open_day(1)
+func start_shift(tutorial_first_guest: bool = false) -> void:
+	tutorial_pause_arrivals = tutorial_first_guest
+	_open_day(1, tutorial_first_guest)
 	active = true
+	if tutorial_first_guest:
+		ensure_tutorial_guest()
 
 
 func has_more_arrivals() -> bool:
@@ -109,41 +115,57 @@ func total_guests() -> int:
 
 
 func advance(delta: float) -> void:
-	if not active or is_time_suspended() or not has_more_arrivals() or delta <= 0.0:
+	if not active or is_time_suspended() or tutorial_pause_arrivals or not has_more_arrivals() or delta <= 0.0:
 		return
 	spawn_remaining -= delta
 	var arrived := false
 	while spawn_remaining <= 0.0 and has_more_arrivals():
-		var slot := _day_arrived
-		var guest := _day_guests[slot]
-		if day == 3 and slot == GUESTS_PER_DAY - 1 and story_state != null and bool(story_state.world.get("world.orpheus_lost", false)):
-			guest = Vector2i(Data.DROWNED_LYRE_PLAYER, -1)
-		var entry: Array = Data.SOULS[guest.x]
-		var stats: Vector3i = entry[1]
-		if guest.y >= 0:
-			stats = _starter_stats(stats, guest.y)
-		var soul := {
-			"id": _arrived + 1, "case_id": guest.x, "name": entry[0], "stats": stats,
-			"before": stats, "served": false, "doses_used": 0, "fee": service_fee(stats),
-		}
-		var story_case := ""
-		if story_db != null:
-			story_case = story_db.get_scheduled_case(day, slot)
-		if story_case != "":
-			soul["story_case"] = story_case
-			soul["story_outcome"] = ""
-			soul["story_state"] = {}
-			soul["name"] = story_db.get_queue_name(story_case)
-			soul["stats"] = Vector3i(8, 8, 8)
-			soul["before"] = soul["stats"]
-			soul["fee"] = story_db.get_fee(story_case)
-		_day_arrived += 1
-		_arrived += 1
-		souls.append(soul)
-		spawn_remaining += _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+		_arrive_next_guest()
 		arrived = true
 	if arrived:
 		state_changed.emit()
+
+
+func _arrive_next_guest() -> void:
+	var slot := _day_arrived
+	var guest := _day_guests[slot]
+	if day == 3 and slot == GUESTS_PER_DAY - 1 and story_state != null and bool(story_state.world.get("world.orpheus_lost", false)):
+		guest = Vector2i(Data.DROWNED_LYRE_PLAYER, -1)
+	var entry: Array = Data.SOULS[guest.x]
+	var stats: Vector3i = entry[1] if guest.y < 0 else _starter_stats(entry[1], guest.y)
+	var soul := {
+		"id": _arrived + 1, "case_id": guest.x, "name": entry[0], "stats": stats,
+		"before": stats, "served": false, "doses_used": 0, "fee": service_fee(stats),
+	}
+	var story_case := ""
+	if story_db != null:
+		story_case = story_db.get_scheduled_case(day, slot)
+	if story_case != "":
+		soul["story_case"] = story_case
+		soul["story_outcome"] = ""
+		soul["story_state"] = {}
+		soul["name"] = story_db.get_queue_name(story_case)
+		soul["stats"] = Vector3i(8, 8, 8)
+		soul["before"] = soul["stats"]
+		soul["fee"] = story_db.get_fee(story_case)
+	_day_arrived += 1
+	_arrived += 1
+	souls.append(soul)
+	spawn_remaining += _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
+
+
+func ensure_tutorial_guest() -> void:
+	if tutorial_pause_arrivals and day == 1 and _day_arrived == 0 and has_more_arrivals():
+		spawn_remaining = 0.0
+		_arrive_next_guest()
+		state_changed.emit()
+
+
+func resume_tutorial_arrivals() -> void:
+	if tutorial_pause_arrivals:
+		tutorial_pause_arrivals = false
+		if spawn_remaining < Data.ARRIVAL_MIN:
+			spawn_remaining = _rng.randf_range(Data.ARRIVAL_MIN, Data.ARRIVAL_MAX)
 
 
 static func roll_requirements(number: int, rng: RandomNumberGenerator) -> Array[Vector3i]:
@@ -169,12 +191,15 @@ static func roll_requirements(number: int, rng: RandomNumberGenerator) -> Array[
 	return [lower, upper]
 
 
-func _open_day(number: int) -> void:
+func _open_day(number: int, tutorial_first_guest: bool = false) -> void:
 	day = number
 	day_story_entries.clear()
 	requirements = roll_requirements(day, _rng)
 	_day_guests.clear()
 	_day_arrived = 0
+	if tutorial_first_guest:
+		requirements = [Vector3i(0, 7, 7), STAT_CEILING]
+		_day_guests.append(Vector2i(TUTORIAL_GUEST_CASE, -1))
 	_fill_day_roster()
 	if story_state != null:
 		story_state.run["run.day"] = day

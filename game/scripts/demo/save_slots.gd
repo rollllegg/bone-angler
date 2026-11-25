@@ -33,9 +33,12 @@ static func read(path: String) -> Dictionary:
 	for key in ["catches", "essences", "potions", "souls", "rods_owned", "hooks_owned", "bait_stock"]:
 		if parsed.has(key) and not parsed[key] is Array:
 			return {}
-	for key in ["day_schedule", "first_services", "fishing", "story", "day_report"]:
+	for key in ["day_schedule", "first_services", "fishing", "story", "day_report", "tutorial"]:
 		if parsed.has(key) and not parsed[key] is Dictionary:
 			return {}
+	var tutorial: Dictionary = parsed.get("tutorial", {})
+	if not tutorial.get("seen_tips", []) is Array:
+		return {}
 	var day: Dictionary = parsed.get("day_schedule", {})
 	if not day.is_empty():
 		if not day.get("guests") is Array or not day.has("number") or not day.has("arrivals"):

@@ -5,6 +5,8 @@ const UI := preload("res://scripts/demo/demo_ui.gd")
 const Audio := preload("res://scripts/demo/demo_audio.gd")
 const TitleMenu := preload("res://scripts/demo/title_menu.gd")
 const TitleSettings := preload("res://scripts/demo/title_settings.gd")
+const StartMode := preload("res://scripts/demo/start_mode_modal.gd")
+const TutorialOverlay := preload("res://scripts/demo/tutorial_overlay.gd")
 const SoulHUD := preload("res://scripts/demo/soul_status_hud.gd")
 const River := preload("res://scripts/demo/pixel_river.gd")
 const Shop := preload("res://scripts/demo/pixel_shop.gd")
@@ -30,6 +32,15 @@ const BOBBER_WAIT_INTERVAL := 1.8
 const FONT := preload("res://assets/fonts/fusion-pixel/fusion-pixel-12px-proportional-zh_hans.otf.woff2")
 const FONT_FALLBACK := preload("res://assets/fonts/NotoSansSC.ttf")
 const CATCH_BOX_SIZES := [Vector2(184, 112), Vector2(236, 144), Vector2(288, 176), Vector2(310, 184)]
+const TUTORIAL_TIPS := {
+	"tip_mix": "在炼药台按 Shift 切到「配制复方」。两份原液可配成一剂新药，部分组合能中和负向药效。",
+	"tip_off_river_bite": "离开河岸也会继续候鱼。看到红色 ! 后，3 秒内按 Q 返回河岸开拉。",
+	"tip_day2_upper": "今日要求有属性上限。超标时可用静鳍鳅、泪纹鲦或墨眼鳉炼出的负向药剂调回区间。",
+	"tip_market_supply": "按 Q / E 前往市场补饵或升级钓组。握柄耐久归零后，可在市场临修或整修。",
+	"tip_concentrate": "获得了「浓缩的灵魂」。到炼药台的「强化成品」，可将一剂药的任一属性微调 ±1。",
+	"tip_story_guest": "特殊来客没有常规属性判定。留意对话，可端药或点击右侧按钮呼唤真名，再决定放行或拒绝。",
+	"tip_codex": "按 Tab 暂停并打开「冥河图鉴」，可查已钓鱼种的分布和已发现的配方。",
+}
 # Mouth positions measured in each original texture before rotation.
 const FISH_MOUTH_PIXELS := {
 	"fish_01": Vector2(3, 21),
@@ -62,6 +73,10 @@ var current_location: String = "River"
 var auto_pause_on_focus_loss: bool = true
 var persist_save: bool = true
 var save_directory := "user://"
+var tutorial_active := false
+var tutorial_completed := false
+var tutorial_step := 1
+var seen_tips: Array[String] = []
 var start_button: Button
 var continue_button: Button
 var settings_button: Button
@@ -73,6 +88,11 @@ var _bobber_sound_in := BOBBER_WAIT_INTERVAL
 var _menu: TitleMenu
 var _menu_pointer: Control
 var _menu_buttons: Array[Button] = []
+var _start_mode_modal: StartMode
+var _tutorial_overlay: TutorialOverlay
+var _tutorial_tips_enabled := false
+var _pending_tips: Array[String] = []
+var _current_tip := ""
 var _settings_modal: TitleSettings
 var _settings_panel: Panel
 var _title_transition: ColorRect
@@ -205,6 +225,7 @@ func _ready() -> void:
 	alchemy.name = "Alchemy"
 	_stage.add_child(alchemy)
 	alchemy.setup(session, _audio)
+	alchemy.tab_changed.connect(_refresh_tutorial)
 
 	market = Market.new()
 	market.name = "Market"
@@ -213,6 +234,14 @@ func _ready() -> void:
 
 	_build_pause()
 	_build_river_notice()
+	_tutorial_overlay = TutorialOverlay.new()
+	_tutorial_overlay.name = "TutorialOverlay"
+	_stage.add_child(_tutorial_overlay)
+	_tutorial_overlay.setup(BASE_SIZE, _audio)
+	_tutorial_overlay.skip_requested.connect(_finish_tutorial)
+	_tutorial_overlay.finish_requested.connect(_finish_tutorial)
+	_tutorial_overlay.tip_dismissed.connect(_advance_tutorial_tip)
+
 	_codex = CodexPanel.new()
 	_codex.name = "Codex"
 	_stage.add_child(_codex)
@@ -232,6 +261,7 @@ func _ready() -> void:
 	_save_menu.overwrite_confirmed.connect(_save_to_slot)
 	_save_menu.delete_confirmed.connect(_delete_save_slot)
 
+	_build_title_modals()
 	_title_transition = ColorRect.new()
 	_title_transition.size = BASE_SIZE
 	_title_transition.color = UI.INK
@@ -244,6 +274,7 @@ func _ready() -> void:
 	qte.state_changed.connect(_refresh_river_notice)
 	qte.bone_recovered.connect(_show_bone_notice)
 	qte.state_changed.connect(_refresh_economy)
+	qte.state_changed.connect(_refresh_tutorial)
 	resized.connect(_resize)
 	_resize()
 	_update_activation()
@@ -275,7 +306,7 @@ func _pixel_display(world_script: Script) -> Dictionary:
 func _build_menu() -> void:
 	_menu = TitleMenu.new()
 	_stage.add_child(_menu)
-	_menu.setup(BASE_SIZE, _start_game, _open_save_slots.bind(false), _open_settings, _quit_from_title, _audio)
+	_menu.setup(BASE_SIZE, _open_start_mode, _open_save_slots.bind(false), _open_settings, _quit_from_title, _audio)
 	_menu_buttons = _menu.buttons
 	_menu_pointer = _menu.pointer
 	start_button = _menu_buttons[0]
@@ -284,11 +315,21 @@ func _build_menu() -> void:
 	quit_button = _menu_buttons[3]
 	_refresh_continue_button()
 
+
+func _build_title_modals() -> void:
+	_start_mode_modal = StartMode.new()
+	_stage.add_child(_start_mode_modal)
+	_start_mode_modal.setup(BASE_SIZE, _audio)
+	_start_mode_modal.mode_selected.connect(_start_game)
 	_settings_modal = TitleSettings.new()
-	_menu.add_child(_settings_modal)
+	_stage.add_child(_settings_modal)
 	_settings_modal.setup(BASE_SIZE, _set_display_mode, _set_auto_pause, _audio)
 	_settings_panel = _settings_modal.panel
 	_refresh_settings_ui()
+
+
+func _open_start_mode() -> void:
+	_start_mode_modal.open()
 
 
 func _select_title_button(index: int) -> void:
@@ -569,32 +610,218 @@ func _build_pause() -> void:
 	_pause_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(_pause_banner)
 	UI.label(_pause_banner, "已暂停", Rect2(4, 0, 88, 48), 22, UI.MINT)
-	var labels := ["F  保存游戏", "R  读取存档", "T  返回封面"]
-	var actions := [_open_save_slots.bind(true), _open_save_slots.bind(false), _return_to_title]
+	var labels := ["F  保存游戏", "R  读取存档", "T  返回封面", "G  设置"]
+	var actions := [_open_save_slots.bind(true), _open_save_slots.bind(false), _return_to_title, _open_settings]
 	for index in labels.size():
-		var button := UI.button(_pause_banner, labels[index], Rect2(96 + index * 166, 0, 154, 48), actions[index])
+		var button := UI.button(_pause_banner, labels[index], Rect2(96 + index * 141, 0, 132, 48), actions[index])
 		button.add_theme_font_size_override("font_size", 20)
-		button.pressed.connect(_audio.play.bind(Audio.Cue.UI_CLICK))
+		if actions[index] != _return_to_title:
+			button.pressed.connect(_audio.play.bind(Audio.Cue.UI_CLICK))
 		_pause_buttons.append(button)
-	UI.label(_pause_banner, "Esc 继续　　Tab 图鉴", Rect2(606, 0, 260, 48), 17, UI.CREAM)
+	UI.label(_pause_banner, "Esc 继续　Tab 图鉴", Rect2(667, 0, 222, 48), 17, UI.CREAM)
 
 
 func _resize() -> void:
 	_stage.scale = size / BASE_SIZE
 
 
-func _start_game() -> void:
+func _start_game(with_tutorial: bool = false) -> void:
 	if started:
 		return
 	_close_settings()
+	_start_mode_modal.dismiss()
+	tutorial_active = with_tutorial
+	_tutorial_tips_enabled = with_tutorial
 	started = true
-	session.start_shift()
+	if with_tutorial:
+		qte.enable_tutorial_catch(Data.RIVER_CARP, 1)
+	session.start_shift(with_tutorial)
 	_show_location("River")
 	_title_transition.modulate.a = 1.0
 	_title_transition.show()
 	var fade := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	fade.tween_property(_title_transition, "modulate:a", 0.0, 0.26)
 	fade.tween_callback(_title_transition.hide)
+
+
+func _restore_tutorial(saved: Dictionary, fishing: Dictionary) -> void:
+	tutorial_completed = bool(saved.get("completed", saved.is_empty()))
+	tutorial_active = bool(saved.get("active", false)) and not tutorial_completed
+	_tutorial_tips_enabled = bool(saved.get("tips_enabled", not saved.is_empty()))
+	tutorial_step = clampi(int(saved.get("step", 1)), 1, 6)
+	seen_tips.clear()
+	for tip in saved.get("seen_tips", []):
+		if tip is String and not seen_tips.has(tip):
+			seen_tips.append(tip)
+	_pending_tips.clear()
+	_current_tip = ""
+	_tutorial_overlay.clear_tip()
+	session.tutorial_pause_arrivals = tutorial_active
+	if not tutorial_active:
+		return
+	if session.released_count > 0 or session.day > 1:
+		tutorial_active = false
+		tutorial_completed = true
+		tutorial_step = 6
+		session.resume_tutorial_arrivals()
+	elif bool(fishing.get("tutorial_catch", false)) or (not qte.is_busy() and not session.codex_fish.has(Data.FISH[Data.RIVER_CARP].id)):
+		qte.enable_tutorial_catch(Data.RIVER_CARP, 1)
+
+
+func _finish_tutorial() -> void:
+	if not tutorial_active:
+		return
+	tutorial_active = false
+	tutorial_completed = true
+	qte.clear_tutorial_catch()
+	session.resume_tutorial_arrivals()
+	_refresh_river()
+	_refresh_tutorial()
+
+
+func _refresh_tutorial() -> void:
+	if not started:
+		return
+	var suspended := session.is_time_suspended()
+	_tutorial_overlay.set_tip_context(current_location, suspended or qte.phase == Fishing.Phase.TRUE_NAME)
+	if tutorial_active and not suspended:
+		_show_tutorial_step()
+	else:
+		_tutorial_overlay.hide_guide()
+	if tutorial_completed and _tutorial_tips_enabled and not suspended:
+		_check_tutorial_tips()
+
+
+func _show_tutorial_step() -> void:
+	if session.released_count > 0:
+		tutorial_step = 6
+		_tutorial_overlay.set_step(6, "引导完成 · 自由值班",
+			"自由安排垂钓、炼药和接待。按 Q / E 切换四个地点。\nTab 暂停查图鉴。Esc 暂停后可存档，或到\n「设置 → 操作菜单」查看全部按键。",
+			Rect2(), Vector2(507, 643))
+		return
+
+	var total_essences: int = session.essences.reduce(func(total: int, count: int) -> int: return total + count, 0)
+	var has_medicine := total_essences > 0 or not session.potions.is_empty()
+	var ready_to_release := session.can_release(Session.TUTORIAL_GUEST_ID)
+	if ready_to_release or has_medicine:
+		session.ensure_tutorial_guest()
+		_show_tutorial_reception(ready_to_release)
+	elif not session.catches.is_empty():
+		tutorial_step = 3
+		if current_location != "Alchemy":
+			_show_tutorial_target("去炼药台", "点击顶部「炼药」。从接待窗口按 E 也能到达。\n把刚钓到的鱼炼成接待来客用的原液。", _alchemy_button, Vector2(982, 120))
+		elif alchemy.active_tab != 0:
+			_show_tutorial_target("切回提炼鱼获", "按 Shift 切换页签，或点击「提炼鱼获」。", alchemy._tab_buttons[0], Vector2(46, 192))
+		else:
+			_show_tutorial_target("提炼原液", "从鱼篓选中鱼获，按 Space 或点击「确认提炼」。\n普通鱼体型越大，提炼出的原液越多。", alchemy.refine_button, Vector2(350, 681))
+	else:
+		_show_tutorial_fishing()
+
+
+func _show_tutorial_fishing() -> void:
+	var pulling := qte.phase in [Fishing.Phase.PREPARING, Fishing.Phase.REELING, Fishing.Phase.HOLDING, Fishing.Phase.RELEASE_WAIT, Fishing.Phase.FEEDBACK]
+	tutorial_step = 2 if pulling else 1
+	if current_location != "River":
+		var message := "点击顶部「河岸」，回到水边抛竿。" if not qte.is_busy() else "点击顶部「河岸」，回到水边继续钓鱼。"
+		if qte.phase == Fishing.Phase.AWAITING_RETURN:
+			message = "鱼已上钩！看到红色 ! 后，3 秒内按 Q 返回河岸。"
+		_show_tutorial_target("回到河岸", message, _river_button, Vector2(982, 120))
+	elif pulling:
+		var prompts := [
+			"入水点到达虚线边界时，照右侧箭头点按一次，与鱼的拉扯方向相反。",
+			"入水点到达边界时，照右侧箭头按住方向键。\n等框下的拖拽条耗尽再松手。",
+			"到达边界时照右侧箭头按住方向键。\n等金环亮起、鱼线变金时，立刻松手！",
+		]
+		var message: String = prompts[qte.round_action]
+		if qte.needs_rehold:
+			message = qte.get_action_prompt() + "\n重新按住后，从这一拍继续。"
+		elif qte.phase == Fishing.Phase.RELEASE_WAIT:
+			message = qte.get_action_prompt() + "\n金环已经亮起，鱼线变金。现在松手！"
+		elif qte.last_judgement == Fishing.Judgement.MISS and qte.phase in [Fishing.Phase.REELING, Fishing.Phase.FEEDBACK]:
+			message += "\n" + qte.last_message + "，松开按键后重练本拍。"
+		var scale_to_stage := Transform2D(0.0, BASE_SIZE / Vector2(_river_viewport.size), 0.0, Vector2.ZERO)
+		var timing := scale_to_stage * River.TIMING_FRAME.grow(12).merge(Rect2(270, 120, 24, 26))
+		var title: String = ["点拉", "持续绷线", "猛冲时松手"][qte.round_action]
+		_tutorial_overlay.set_step(2, title, message, timing.merge(_tutorial_rect(_beat_panel)), Vector2(530, 796))
+	elif river.casting or qte.phase == Fishing.Phase.WAITING:
+		_show_tutorial_target("等鱼上钩", "浮漂入水后稍等片刻。\n鱼咬钩后，留意河面判定框和右侧的方向箭头。", _river_status, Vector2(82, 610))
+	elif not qte.can_cast():
+		_show_tutorial_target("补齐钓鱼用品", "握柄没有耐久或当前鱼饵用尽时，可到市场维修或补饵。\n准备好后回河岸继续。", _market_button, Vector2(982, 120))
+	else:
+		_show_tutorial_target("在河岸抛竿", "你是冥河的骷髅引渡者，要钓鱼炼药，为来客补全灵魂。\n按 Space 或点击「抛竿」。", _cast_button, Vector2(978, 620))
+
+
+func _show_tutorial_reception(ready_to_release: bool) -> void:
+	var selected := _selected_dose != null and not _serve_button.disabled
+	tutorial_step = 5 if ready_to_release or (current_location == "Shop" and selected) else 4
+	if current_location != "Shop":
+		var message := "点击顶部「接待」，或从炼药台按 Q 返回接待窗口。\n邮差已在窗口等候。"
+		_show_tutorial_target("去接待窗口", message, _shop_button, Vector2(982, 120))
+	elif ready_to_release:
+		_show_tutorial_target("放行来客", "按 Shift 或点击「放行」。一剂达标可拿全额奖金，\n从第二剂起，每多用一剂，奖金减半。", _release_button, Vector2(518, 670))
+	elif selected:
+		var preview := session.preview(shop.selected_id, _selected_dose[0], _selected_dose[1])
+		var message := "核对左上角的药效预览，再按 Space 或点击端药。\n邮差喝一份冥河原液，情感就能从 5 提升到 7。"
+		if not session.is_eligible(preview.after):
+			message = "预览显示这剂药还不能达标。可按 C 取消，\n重新选药，或端药后继续补足没达标的属性。"
+		_show_tutorial_target("端上药剂", message, _serve_button, Vector2(500, 690))
+	else:
+		var medicine := "选中「冥河原液」" if session.essences[Data.RIVER_CARP] > 0 else "选中一剂药"
+		var message := "按 W / S 或点击%s。绿色区间是当日达标线。\n左上角的半透明预览会显示饮药后是否「→ 达标」。" % medicine
+		_tutorial_overlay.set_step(4, "查看区间与药效", message, _tutorial_rect(soul_hud).merge(_tutorial_rect(_dose_scroll)), Vector2(500, 358))
+
+
+func _tutorial_rect(control: Control) -> Rect2:
+	var relative := _stage.get_global_transform().affine_inverse() * control.get_global_transform()
+	return relative * Rect2(Vector2.ZERO, control.size)
+
+
+func _show_tutorial_target(title: String, message: String, target: Control, card_origin: Vector2) -> void:
+	_tutorial_overlay.set_step(tutorial_step, title, message, _tutorial_rect(target), card_origin)
+
+
+func _check_tutorial_tips() -> void:
+	var upper := session.requirements[1]
+	var conditions := {
+		"tip_mix": current_location == "Alchemy" and session.essences.reduce(func(total: int, count: int) -> int: return total + count, 0) >= 2,
+		"tip_off_river_bite": qte.phase == Fishing.Phase.AWAITING_RETURN,
+		"tip_day2_upper": session.day >= 2 and mini(upper.x, mini(upper.y, upper.z)) < Session.STAT_MAX,
+		"tip_market_supply": not river.casting and not qte.is_busy() and (qte.durability() <= 2 or qte.bait_stock[qte.bait] == 0),
+		"tip_concentrate": session.concentrate > 0,
+		"tip_story_guest": current_location == "Shop" and session.has_story_case(shop.selected_id),
+		"tip_codex": _can_show_codex_tip() and session.has_unseen_codex(),
+	}
+	for tip: String in conditions:
+		if conditions[tip] and not seen_tips.has(tip) and not _pending_tips.has(tip):
+			if tip == "tip_off_river_bite":
+				_pending_tips.push_front(tip)
+				_current_tip = ""
+			else:
+				_pending_tips.append(tip)
+	_show_next_tutorial_tip()
+
+
+func _can_show_codex_tip() -> bool:
+	return not qte.is_line_action() and qte.phase not in [Fishing.Phase.PREPARING, Fishing.Phase.FEEDBACK, Fishing.Phase.TRUE_NAME] and not story_panel.is_typing()
+
+
+func _advance_tutorial_tip() -> void:
+	_current_tip = ""
+	_show_next_tutorial_tip()
+
+
+func _show_next_tutorial_tip() -> void:
+	if not _current_tip.is_empty() or session.is_time_suspended() or qte.phase == Fishing.Phase.TRUE_NAME:
+		return
+	for i in _pending_tips.size():
+		var tip := _pending_tips[i]
+		if tip == "tip_codex" and not _can_show_codex_tip():
+			continue
+		_pending_tips.remove_at(i)
+		_current_tip = tip
+		seen_tips.append(tip)
+		_tutorial_overlay.show_tip(TUTORIAL_TIPS[tip])
+		return
 
 
 func _start_story_lab() -> void:
@@ -630,6 +857,7 @@ func _start_story_lab() -> void:
 
 
 func _return_to_title() -> void:
+	_audio.play(Audio.Cue.UI_CLICK, true)
 	# Keep the current viewport attached until the button input finishes dispatching.
 	get_tree().reload_current_scene.call_deferred()
 
@@ -766,6 +994,11 @@ func save_progress(slot: int) -> bool:
 			"awaiting": session.awaiting_day_report,
 		},
 		"rejected_count": session.rejected_count,
+		"tutorial": {
+			"active": tutorial_active, "completed": tutorial_completed,
+			"step": tutorial_step, "seen_tips": seen_tips,
+			"tips_enabled": _tutorial_tips_enabled,
+		},
 		"fishing": qte.save_pending(),
 		"casting": river.casting,
 		"cast_elapsed": river.cast_elapsed,
@@ -781,6 +1014,7 @@ func load_progress(slot: int) -> bool:
 		return false
 	_save_menu.dismiss()
 	_close_settings()
+	_start_mode_modal.dismiss()
 	_close_rig_popup()
 	_clear_pull_input()
 	_audio.stop(Audio.Cue.FERRY)
@@ -894,7 +1128,9 @@ func load_progress(slot: int) -> bool:
 	var saved_fishing: Dictionary = data.get("fishing", {})
 	if from_v15 and saved_fishing.get("snapshot") is Dictionary:
 		saved_fishing.snapshot.bait = qte.bait
+	qte.clear_tutorial_catch()
 	qte.restore_pending(saved_fishing)
+	_restore_tutorial(data.get("tutorial", {}), saved_fishing)
 	river.casting = bool(data.get("casting", false)) and not qte.is_busy()
 	river.cast_elapsed = float(data.get("cast_elapsed", 0.0))
 	river.tension = Vector2.ZERO
@@ -988,6 +1224,7 @@ func _cast_line() -> void:
 		if river.start_cast():
 			_audio.play(Audio.Cue.CAST)
 		_refresh_river()
+		_refresh_tutorial()
 
 
 func _retract() -> void:
@@ -996,6 +1233,7 @@ func _retract() -> void:
 	else:
 		qte.retract()
 	_refresh_river()
+	_refresh_tutorial()
 
 
 func _toggle_rig_popup(slot: int) -> void:
@@ -1171,6 +1409,7 @@ func _set_paused(value: bool, open_codex: bool = false) -> void:
 		_pause_buttons[1].disabled = not has_save()
 	else:
 		_save_menu.dismiss()
+		_close_settings()
 	_clear_pull_input()
 	_update_activation()
 	_refresh_shared()
@@ -1241,8 +1480,12 @@ func _input(event: InputEvent) -> void:
 	if key.ctrl_pressed or key.alt_pressed or key.meta_pressed:
 		return
 	var code := key.physical_keycode if key.physical_keycode != 0 else key.keycode
-	# Reserve Tab before Godot's GUI focus navigation, even when a modal blocks the shortcut.
-	if code == KEY_TAB:
+	# Reserve modal shortcuts before Godot routes confirmation or Tab to a focused button.
+	if key.pressed and (_settings_modal.is_open or _start_mode_modal.is_open):
+		get_viewport().set_input_as_handled()
+		if not key.echo:
+			_handle_game_key(code)
+	elif code == KEY_TAB:
 		get_viewport().set_input_as_handled()
 		if key.pressed and not key.echo:
 			_codex_tab()
@@ -1275,6 +1518,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _handle_game_key(code: Key) -> bool:
+	if _settings_modal.is_open:
+		_settings_modal.handle_key(code)
+		return true
+	if _start_mode_modal.is_open:
+		_start_mode_modal.handle_key(code)
+		return true
 	if _save_menu.is_open:
 		if code == KEY_ESCAPE and _codex.is_open:
 			_audio.play(Audio.Cue.UI_CLICK)
@@ -1299,6 +1548,8 @@ func _handle_game_key(code: Key) -> bool:
 	if code == KEY_ESCAPE:
 		_set_paused(true)
 		return true
+	if tutorial_active and _tutorial_overlay.handle_key(code):
+		return true
 	if _rig_slot_cursor >= 0:
 		return _rig_key(code)
 	if code in [KEY_Q, KEY_E]:
@@ -1317,8 +1568,6 @@ func _handle_game_key(code: Key) -> bool:
 
 
 func _title_key(code: Key) -> bool:
-	if _settings_modal.is_open:
-		return _settings_modal.handle_key(code)
 	match code:
 		KEY_W, KEY_UP, KEY_S, KEY_DOWN:
 			var step := 1 if code in [KEY_S, KEY_DOWN] else -1
@@ -1343,6 +1592,9 @@ func _pause_key(code: Key) -> bool:
 			return true
 		KEY_T:
 			UI.activate(_pause_buttons[2])
+			return true
+		KEY_G:
+			UI.activate(_pause_buttons[3])
 			return true
 	if _codex.is_open:
 		return _codex.handle_key(code)
@@ -1536,6 +1788,7 @@ func _refresh_shared() -> void:
 
 	_refresh_dose()
 	alchemy.refresh()
+	_refresh_tutorial()
 
 
 func _rebuild_queue() -> void:
@@ -1605,6 +1858,7 @@ func _select_dose(key: Array) -> void:
 		_audio.play(Audio.Cue.ESSENCE_SELECT if key[0] else Audio.Cue.MEDICINE_SELECT)
 	_rebuild_dose_list()
 	_refresh_dose()
+	_refresh_tutorial()
 
 
 func _move_dose(step: int) -> void:
@@ -1810,6 +2064,8 @@ func _refresh_river() -> void:
 	_beat_panel.visible = qte.phase in [Fishing.Phase.REELING, Fishing.Phase.HOLDING, Fishing.Phase.RELEASE_WAIT, Fishing.Phase.FEEDBACK, Fishing.Phase.TRUE_NAME] and not river.casting
 	_beat_info.visible = _beat_panel.visible
 	_beat_info.text = "进度 %d / %d　失误 %d / %d　剩余 %.1f 秒" % [qte.progress, qte.target, qte.mistakes, Data.MISTAKE_LIMIT, qte.get_capture_time()]
+	if qte.has_tutorial_catch():
+		_beat_info.text = "引导练习　%d / %d　失误可重试" % [qte.progress, qte.target]
 	if qte.phase == Fishing.Phase.TRUE_NAME:
 		_beat_info.text = "%s　　%.1f 秒" % [qte.true_name_hint(), qte.remaining]
 	_hit.text = ""
@@ -1841,7 +2097,8 @@ func _refresh_river() -> void:
 				_river_status.text = "有鱼上钩了！"
 				_river_hint.text = "读方向后逆向拉鱼：点拉 / 按住绷线 / 金环亮时松手。"
 			elif qte.phase == Fishing.Phase.FEEDBACK:
-				_river_hint.text = "%s · 进度 %d / %d，松开按键准备下一轮。" % [qte.last_message, qte.progress, qte.target]
+				var next := "重练本拍" if qte.has_tutorial_catch() and not qte.last_success else "准备下一轮"
+				_river_hint.text = "%s · 进度 %d / %d，松开按键%s。" % [qte.last_message, qte.progress, qte.target, next]
 		Fishing.Phase.TRUE_NAME:
 			_river_status.text = "神秘鱼影 · 真名捕获"
 			_river_hint.text = "依次输入出现的字母，输错后从头开始。"
@@ -1885,4 +2142,7 @@ func _process(delta: float) -> void:
 		if _bone_notice_remaining == 0.0:
 			_refresh_river_notice()
 	_refresh_river()
-	_arrival.text = "本班来客已全部到达" if not session.has_more_arrivals() else "%.0f 秒后有新来客" % ceilf(session.spawn_remaining)
+	if session.tutorial_pause_arrivals:
+		_arrival.text = "正在接待首单"
+	else:
+		_arrival.text = "本班来客已全部到达" if not session.has_more_arrivals() else "%.0f 秒后有新来客" % ceilf(session.spawn_remaining)

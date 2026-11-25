@@ -50,8 +50,8 @@ var _players: Dictionary[Cue, AudioStreamPlayer] = {}
 var _rng := RandomNumberGenerator.new()
 
 
-func play(cue: Cue) -> void:
-	var player := _players.get(cue) as AudioStreamPlayer
+func play(cue: Cue, finish_after_scene_change: bool = false) -> void:
+	var player: AudioStreamPlayer = null if finish_after_scene_change else _players.get(cue)
 	var sound: Array = SOUNDS[cue]
 	if player == null:
 		player = AudioStreamPlayer.new()
@@ -59,8 +59,12 @@ func play(cue: Cue) -> void:
 		player.volume_db = sound[0]
 		if cue == Cue.TITLE_FISH_SPLASH:
 			player.max_polyphony = 12
-		add_child(player)
-		_players[cue] = player
+		if finish_after_scene_change:
+			get_tree().root.add_child(player)
+			player.finished.connect(player.queue_free, CONNECT_ONE_SHOT)
+		else:
+			add_child(player)
+			_players[cue] = player
 	var clips: Array = sound[1]
 	var clip: AudioStream = clips[_rng.randi_range(0, clips.size() - 1)]
 	if player.stream != clip:

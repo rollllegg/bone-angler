@@ -318,6 +318,17 @@ static func set_modal_button(control: Button, focused: bool, selected: bool = fa
 	control.add_theme_color_override("font_color", Color("fff8dc") if focused else (MINT if selected else CREAM))
 
 
+static func modal_pointer(parent: Control) -> Control:
+	var pointer := Control.new()
+	pointer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pointer.draw.connect(func() -> void:
+		pointer.draw_rect(Rect2(0, -2, 10, 4), GOLD)
+		pointer.draw_rect(Rect2(3, -5, 4, 10), GOLD)
+		pointer.draw_rect(Rect2(4, -1, 2, 2), Color("fff8dc")))
+	parent.add_child(pointer)
+	return pointer
+
+
 static func key_hint(parent: Control, keys: Array[String], caption: String, origin: Vector2) -> float:
 	var font := parent.get_theme_default_font()
 	var x := origin.x

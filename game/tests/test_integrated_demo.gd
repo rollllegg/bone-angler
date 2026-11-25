@@ -78,7 +78,14 @@ func _run() -> void:
 	if not demo.continue_button.disabled:
 		_key(KEY_W)
 	_key(KEY_SPACE)
+	_check(demo._start_mode_modal.is_open and not demo.started, "Space opens the start mode chooser without advancing the shift")
+	_key(KEY_ESCAPE)
+	_check(not demo._start_mode_modal.is_open and not demo.started, "Escape closes the mode chooser and leaves the cover active")
+	_key(KEY_ENTER)
+	_key(KEY_DOWN)
+	_key(KEY_SPACE)
 	_check(demo.started and demo._river_image.visible and not demo._menu.visible and not demo.river.casting and demo._title_transition.visible, "Space enters the river synchronously under the transition without casting")
+	_check(not demo.tutorial_active and not demo.session.tutorial_pause_arrivals, "Direct Start keeps the ordinary first-day schedule")
 	_check(fish._jumps.is_empty() and fish._bursts.is_empty(), "Entering the game clears title-only fish and ripples")
 	await create_timer(0.30).timeout
 	await process_frame
@@ -455,6 +462,7 @@ func _check_return_to_title() -> void:
 		var old_scene_id: int = demo.get_instance_id()
 		demo.auto_pause_on_focus_loss = false
 		_click(demo.start_button)
+		_click(demo._start_mode_modal.buttons[1])
 		demo.session.coins = 99
 		_key(KEY_ESCAPE)
 		_check(demo._pause_banner.visible, "The active game can open the pause menu before returning to the title")
@@ -463,6 +471,12 @@ func _check_return_to_title() -> void:
 		else:
 			_click(demo._pause_buttons[2])
 		_check(current_scene == demo and demo.is_inside_tree(), "Return to Title keeps the viewport attached until input dispatch finishes")
+		var click := root.get_node_or_null("UI_CLICK") as AudioStreamPlayer
+		_check(click != null and click.playing and not demo._audio._players.has(Audio.Cue.UI_CLICK),
+			"Return to Title plays the click once under the scene tree root")
+		# Keep the short cue active while the scene reloads, even on slow runners.
+		if click != null:
+			click.stream_paused = true
 		await process_frame
 		await process_frame
 		var reloaded := current_scene != null and current_scene.get_instance_id() != old_scene_id
@@ -471,7 +485,13 @@ func _check_return_to_title() -> void:
 			return
 		demo = current_scene
 		_check(not demo.started and demo._menu.visible and not demo.session.paused and not demo._pause_banner.is_visible_in_tree(), "Return to Title reopens a fresh cover through the scene tree")
+		_check(is_instance_valid(click) and click.get_parent() == root, "The click player survives the scene reload")
+		if is_instance_valid(click):
+			click.stream_paused = false
+			await create_timer(0.25).timeout
+			_check(not is_instance_valid(click), "The click player frees itself after playback")
 	_click(demo.start_button)
+	_click(demo._start_mode_modal.buttons[1])
 	_check(demo.started and demo.session.coins == 40 and demo._river_image.visible, "A new game can start normally after returning to the title")
 
 
@@ -485,6 +505,8 @@ func _check_save_slots() -> void:
 	demo.qte.set_process(false)
 	_move_mouse(Vector2(24, 24))
 	_check(demo.continue_button.disabled, "A fresh profile has no saved game to continue")
+	_key(KEY_SPACE)
+	_key(KEY_DOWN)
 	_key(KEY_SPACE)
 	_check(demo._pause_button.position.x == 36 and demo._summary.position.x > demo._pause_button.get_rect().end.x and not demo.has_save(), "The summary follows the top-left pause button and a new game leaves all save slots empty")
 	demo.session.coins = 91
@@ -686,6 +708,8 @@ func _check_keyboard_workflows() -> void:
 	root.add_child(demo)
 	await process_frame
 	_seed_first_day()
+	_key(KEY_SPACE)
+	_key(KEY_DOWN)
 	_key(KEY_SPACE)
 	var session: Session = demo.session
 	for species in Data.FISH.size():
