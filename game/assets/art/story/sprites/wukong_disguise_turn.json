@@ -1,0 +1,35 @@
+{
+  "id": "wukong_disguise_turn",
+  "kind": "sprite",
+  "prompt": "孙悟空解放真名前的二头身背面。暗紫色连帽斗篷，红杆金箍棒用皮带斜背在身后。",
+  "source": "game/art/source/characters/story-guests-chibi-v2/wukong_disguise_turn.perfect.png",
+  "source_sha256": "9743a58339941820784f0b9c730462ca759927bdb404f86b672ef91afa60dc16",
+  "input_size": [
+    48,
+    64
+  ],
+  "output": "game/assets/art/story/sprites/wukong_disguise_turn.png",
+  "output_sha256": "f3155da86aa1137826e7c00520aa496ed2a9ba96e1e9e553502a9149866bb3db",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    10,
+    6,
+    39,
+    62
+  ],
+  "processed_at_utc": "2026-11-24T13:29:37.643736+00:00",
+  "keep_canvas": true
+}

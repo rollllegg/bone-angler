@@ -6,7 +6,10 @@ extends RefCounted
 const TYPES := ["shake", "flash", "fade", "zoom", "sprite", "prop", "wait", "sound"]
 const PROP_ACTIONS := ["show", "hide", "move"]
 const PROP_IDS := ["lyre", "staff", "tail", "coins", "bowl", "gray_hand", "peach", "cloud"]
-const SPRITE_IDS := ["wukong_disguise", "wukong_monkey", "wukong_turn", "orpheus_front", "orpheus_turn"]
+const SPRITE_IDS := [
+	"wukong_disguise", "wukong_disguise_turn", "wukong_monkey", "wukong_turn",
+	"orpheus_front", "orpheus_revealed", "orpheus_turn",
+]
 const SOUND_IDS := []  # P4 audio arrives with the sound assets.
 const MAX_DURATION := 3.0
 const MAX_DELAY := 8.0

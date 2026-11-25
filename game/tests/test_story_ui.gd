@@ -92,13 +92,13 @@ func _run() -> void:
 	_arrive(1)
 	_check(str(session.souls[5].get("story_case", "")) == "orpheus", "Orpheus is the sixth guest on day two")
 	_demo.shop.select_guest(12)
-	_check_reception(ORPHEUS_LINE, "亚历克斯", "")
+	_check_reception(ORPHEUS_LINE, "亚历克斯", "orpheus_front")
 
 	_demo._story_action_button.pressed.emit()
 	_check(_demo.story_panel._bubbles.get_child_count() == 7 and _bubble_letter(0) == "·", "Orpheus has seven hidden letters")
 	_type_name("ORPHEUS")
 	var orpheus = session.get_story_runtime(12)
-	_check_reveal(orpheus, "俄耳甫斯", "orpheus_front", ORPHEUS_LINE)
+	_check_reveal(orpheus, "俄耳甫斯", "orpheus_revealed", ORPHEUS_LINE)
 	await _capture("story-reception-orpheus-revealed.png")
 	session._add_potion("test", "极识药", Vector3i(10, 0, -4), -1, 0)
 	session.state_changed.emit()
@@ -138,7 +138,7 @@ func _check_reception(line: String, alias: String, portrait: String) -> void:
 
 func _check_reveal(runtime, name: String, portrait: String, line: String) -> void:
 	_check(runtime.is_identity_revealed() and not _demo.story_panel.visible, "Correct letters complete the challenge")
-	_check(_demo.shop.story_sprite == portrait and _demo.soul_hud._name_label.text == name, "The true portrait and name appear immediately")
+	_check(_demo.shop.story_sprite == portrait and _demo.soul_hud._name_label.text == name, "The expected portrait and true name appear immediately")
 	_check(_demo._story_action_button.text == "拒绝入境" and _demo._dialog.text == line, "Refusal replaces true name and the greeting stays the same")
 
 

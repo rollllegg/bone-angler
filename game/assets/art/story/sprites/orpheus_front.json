@@ -1,42 +1,35 @@
 {
   "id": "orpheus_front",
   "kind": "sprite",
-  "prompt": "保持正面全身、连帽斗篷和手里的里拉琴不变；把斗篷提亮成深蓝灰色，增加浅金色边缘光，让轮廓在深色背景上清楚；纯白背景，无阴影，无文字，16-bit 像素风",
-  "source": "game/art/source/story/orpheus_edit_raw.png",
-  "source_sha256": "18c95edc927156c65a7eaef4f3042764ec7adafe5073ad7586ac9008033b32b5",
+  "prompt": "俄耳甫斯的二头身正面。金边蓝灰兜帽压低至眉眼，帽檐下仅留自然短阴影，露出与解放形态逐像素对齐的沉静紧抿嘴唇与下巴；加大的里拉琴从肩侧露出。",
+  "source": "game/art/source/characters/orpheus-face-fix-v1/orpheus_front.perfect.png",
+  "source_sha256": "6349dc1f8fed544541e09298a64d3abe5aecb44af747d7242c1c505931ea31ff",
   "input_size": [
-    1056,
-    1056
+    48,
+    64
   ],
   "output": "game/assets/art/story/sprites/orpheus_front.png",
-  "output_sha256": "ccb0305982f6c9ee9042901ac6c7ea12fc0e364daa70f603eca9e6c0ef72047e",
+  "output_sha256": "ed37603f9fdbc0660618ac805dc659b134a2f31aaacb4f54e1240d4c65296f48",
   "output_size": [
-    64,
-    96
+    48,
+    64
   ],
-  "pixel_grid": [
-    150,
-    154
-  ],
-  "watermark": "crop",
-  "watermark_box": [
-    0.78,
-    0.9,
-    1.0,
-    1.0
-  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
   "threshold": 245,
   "min_component": 12,
-  "erode": 1,
-  "outline": 1,
-  "white_specks": 24,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
   "shadow": true,
   "palette": 0,
   "bbox": [
-    55,
-    11,
-    96,
-    142
+    9,
+    6,
+    42,
+    62
   ],
-  "processed_at_utc": "2026-11-23T18:33:06.234882+00:00"
+  "processed_at_utc": "2026-11-24T14:13:20.699716+00:00",
+  "keep_canvas": true
 }

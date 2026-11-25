@@ -14,21 +14,27 @@ const DROWNED_TURN := preload("res://assets/art/demo/drowned_lyre_turn.png")
 const DROWNED_BACK := [preload("res://assets/art/demo/drowned_lyre_back_01.png"), preload("res://assets/art/demo/drowned_lyre_back_02.png")]
 const STORY_SPRITES := {
 	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise.png"),
+	"wukong_disguise_turn": preload("res://assets/art/story/sprites/wukong_disguise_turn.png"),
 	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey.png"),
 	"wukong_turn": preload("res://assets/art/story/sprites/wukong_turn.png"),
 	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front.png"),
+	"orpheus_revealed": preload("res://assets/art/story/sprites/orpheus_revealed.png"),
 	"orpheus_turn": preload("res://assets/art/story/sprites/orpheus_turn.png"),
 }
 const STORY_SHADOWS := {
 	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise_shadow.png"),
+	"wukong_disguise_turn": preload("res://assets/art/story/sprites/wukong_disguise_turn_shadow.png"),
 	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey_shadow.png"),
 	"wukong_turn": preload("res://assets/art/story/sprites/wukong_turn_shadow.png"),
 	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front_shadow.png"),
+	"orpheus_revealed": preload("res://assets/art/story/sprites/orpheus_revealed_shadow.png"),
 	"orpheus_turn": preload("res://assets/art/story/sprites/orpheus_turn_shadow.png"),
 }
 const STORY_TURNS := {
+	"wukong_disguise": "wukong_disguise_turn",
 	"wukong_monkey": "wukong_turn",
 	"orpheus_front": "orpheus_turn",
+	"orpheus_revealed": "orpheus_turn",
 }
 const COUNTER := Vector2(201, 194)
 const PATH_CORNER := Vector2(276, 177)
@@ -39,8 +45,7 @@ const FADE_DURATION := 0.45
 const COUNTER_CLEAR_TIME := 1.2
 const PATH_CORNER_RATIO := 0.40
 const START_SCALE := 1.45
-const STORY_SCALE := 1.0
-const STORY_OFFSET := Vector2(-32, -94)
+const GUEST_OFFSET := Vector2(-24, -62)
 
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
@@ -195,23 +200,17 @@ func _draw_departure(elapsed: float, sprite_id: String) -> void:
 	var opacity := 1.0 - clampf((walk_time - WALK_DURATION) / FADE_DURATION, 0.0, 1.0)
 	var step := int(maxf(walk_time, 0.0) / 0.18) % 2
 	var texture: Texture2D = TURN if walk_time < 0.0 else BACK[step]
-	var scale_start := START_SCALE
-	var scale_end := 0.36
-	var offset := Vector2(-24, -62)
 	var turn_id := str(STORY_TURNS.get(sprite_id, sprite_id))
 	if sprite_id == DROWNED_SPRITE:
 		texture = DROWNED_TURN if walk_time < 0.0 else DROWNED_BACK[step]
 	elif STORY_SPRITES.has(turn_id):
 		texture = STORY_SPRITES[turn_id]
-		scale_start = STORY_SCALE
-		scale_end = 0.25
-		offset = STORY_OFFSET
 	point.y -= step * (1.0 - t)
-	draw_set_transform(point.round(), 0.0, Vector2.ONE * lerpf(scale_start, scale_end, t))
+	draw_set_transform(point.round(), 0.0, Vector2.ONE * lerpf(START_SCALE, 0.36, t))
 	var shadow: Texture2D = STORY_SHADOWS.get(turn_id)
 	if shadow != null:
-		draw_texture(shadow, offset, Color(1, 1, 1, 0.35 * opacity))
-	draw_texture(texture, offset, Color(1, 1, 1, opacity))
+		draw_texture(shadow, GUEST_OFFSET, Color(1, 1, 1, 0.35 * opacity))
+	draw_texture(texture, GUEST_OFFSET, Color(1, 1, 1, opacity))
 	draw_set_transform(Vector2.ZERO)
 
 
@@ -233,21 +232,17 @@ func _draw() -> void:
 				break
 		var opacity := 1.0 if departure_elapsed < 0.0 else smoothstep(TURN_DURATION, COUNTER_CLEAR_TIME, departure_elapsed)
 		var texture: Texture2D = DROWNED_FRONT if selected.case_id == Data.DROWNED_LYRE_PLAYER else FRONT
-		var sprite_scale := START_SCALE
-		var offset := Vector2(-24, -62)
 		if story_sprite != "" and selected.has("story_case"):
 			texture = STORY_SPRITES.get(story_sprite, FRONT)
-			sprite_scale = STORY_SCALE
-			offset = STORY_OFFSET
-		var flip := -sprite_scale if story_sprite_flip else sprite_scale
-		draw_set_transform(COUNTER + Vector2(0, roundf(sin(clock * 2.0))), 0.0, Vector2(flip, sprite_scale))
+		var flip := -START_SCALE if story_sprite_flip else START_SCALE
+		draw_set_transform(COUNTER + Vector2(0, roundf(sin(clock * 2.0))), 0.0, Vector2(flip, START_SCALE))
 		if story_sprite != "":
 			var shadow: Texture2D = STORY_SHADOWS.get(story_sprite)
 			if shadow != null:
-				draw_texture(shadow, offset, Color(1, 1, 1, 0.35 * opacity))
-		draw_texture(texture, offset, Color(1, 1, 1, opacity))
+				draw_texture(shadow, GUEST_OFFSET, Color(1, 1, 1, 0.35 * opacity))
+		draw_texture(texture, GUEST_OFFSET, Color(1, 1, 1, opacity))
 		if fed_flash > 0.0:
-			draw_texture(texture, offset, Color(1, 0.94, 0.7, fed_flash * 0.4 * opacity))
+			draw_texture(texture, GUEST_OFFSET, Color(1, 0.94, 0.7, fed_flash * 0.4 * opacity))
 		draw_set_transform(Vector2.ZERO)
 	_draw_story_props("front")
 	# Repaint the original foreground counter so the guest stands behind it.

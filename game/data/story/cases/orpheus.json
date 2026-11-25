@@ -196,6 +196,13 @@
             {
               "delay": 1.0,
               "id": "orpheus_front",
+              "if": "not named",
+              "type": "sprite"
+            },
+            {
+              "delay": 1.0,
+              "id": "orpheus_revealed",
+              "if": "named",
               "type": "sprite"
             }
           ],
@@ -218,7 +225,7 @@
         {
           "cues": [
             {
-              "id": "orpheus_front",
+              "id": "orpheus_revealed",
               "type": "sprite"
             },
             {
@@ -440,9 +447,10 @@
     }
   },
   "portrait": {
+    "default": "orpheus_front",
     "rules": [
       {
-        "id": "orpheus_front",
+        "id": "orpheus_revealed",
         "if": "named"
       }
     ]

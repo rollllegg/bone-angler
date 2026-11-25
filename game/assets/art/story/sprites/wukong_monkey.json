@@ -1,42 +1,35 @@
 {
   "id": "wukong_monkey",
   "kind": "sprite",
-  "prompt": "16-bit 像素风游戏角色立绘，孙悟空猴子本相，正面全身站立，穿着红色袈裟，双手自然垂下，没有武器，没有金箍棒，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
-  "source": "game/art/source/story/wukong_monkey_raw.png",
-  "source_sha256": "c6e47ab2216ebd29696f65c7a42d223eca741b3ebda2064fecb67d3276f62db3",
+  "prompt": "孙悟空本相的二头身正面。棕色猴毛、金箍、红色袈裟和短靴，下巴猴毛与斗篷形态一致，背后的金箍棒两端露出。",
+  "source": "game/art/source/characters/story-guests-chibi-v2/wukong_monkey.perfect.png",
+  "source_sha256": "01fe3e04a5f3de8d450887a5ab0392c5ca5698facb2dd4b80414a51bd5caf80b",
   "input_size": [
-    512,
-    512
+    48,
+    64
   ],
   "output": "game/assets/art/story/sprites/wukong_monkey.png",
-  "output_sha256": "0bc16f1fed92f6a5d24084090a5a2be3d2a0d93dfb7c7b94c955ef049839224a",
+  "output_sha256": "18bfb6d18035f991767e86d48264711548c058f3c6f4fd84bf27209fd2a0f8f4",
   "output_size": [
-    64,
-    96
+    48,
+    64
   ],
-  "pixel_grid": [
-    99,
-    105
-  ],
-  "watermark": "crop",
-  "watermark_box": [
-    0.78,
-    0.9,
-    1.0,
-    1.0
-  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
   "threshold": 245,
   "min_component": 12,
-  "erode": 1,
-  "outline": 1,
-  "white_specks": 24,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
   "shadow": true,
   "palette": 0,
   "bbox": [
-    29,
+    7,
     6,
-    68,
-    96
+    40,
+    62
   ],
-  "processed_at_utc": "2026-11-23T18:33:04.964595+00:00"
+  "processed_at_utc": "2026-11-24T13:29:37.661010+00:00",
+  "keep_canvas": true
 }

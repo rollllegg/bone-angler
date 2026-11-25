@@ -1,0 +1,35 @@
+{
+  "id": "orpheus_revealed",
+  "kind": "sprite",
+  "prompt": "真名解放后俄耳甫斯的二头身正面。金边蓝灰兜帽敞开，露出饱满对称的二头身脸庞、深蓝侧分刘海，以及克制沉郁的微蹙眉心、半阖低垂倦眸与沉静抿唇，保留肩侧加大的里拉琴与衣袍。",
+  "source": "game/art/source/characters/orpheus-face-fix-v1/orpheus_revealed.perfect.png",
+  "source_sha256": "ccd5c8b9a15b6bc4347383f8cc33074cdaf6c6f9bd2569194fa97dcbd1fe127d",
+  "input_size": [
+    48,
+    64
+  ],
+  "output": "game/assets/art/story/sprites/orpheus_revealed.png",
+  "output_sha256": "f7b70598429337b961e7d69afdf494d82ab9ef8ac75f80cd9bf5a75883d4994d",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    9,
+    6,
+    42,
+    62
+  ],
+  "processed_at_utc": "2026-11-24T14:13:20.720684+00:00",
+  "keep_canvas": true
+}

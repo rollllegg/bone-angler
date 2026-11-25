@@ -166,11 +166,6 @@
         {
           "cues": [
             {
-              "action": "show",
-              "id": "staff",
-              "type": "prop"
-            },
-            {
               "duration": 0.35,
               "scale": 1.12,
               "type": "zoom"
@@ -201,12 +196,6 @@
               "duration": 0.3,
               "scale": 1.0,
               "type": "zoom"
-            },
-            {
-              "action": "hide",
-              "delay": 1.4,
-              "id": "staff",
-              "type": "prop"
             }
           ],
           "speaker": "孙",

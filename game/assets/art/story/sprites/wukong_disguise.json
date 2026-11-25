@@ -1,42 +1,35 @@
 {
   "id": "wukong_disguise",
   "kind": "sprite",
-  "prompt": "16-bit 像素风游戏角色立绘，一个苍白的白人男性亡灵，穿维多利亚时代白衬衫和深色外套，正面全身站立，神情紧张，纯白背景，无阴影，无文字，深色描边，限制色板，512x512",
-  "source": "game/art/source/story/wukong_disguise_raw.png",
-  "source_sha256": "4e4e6c88ce50ddcafa562b4c585dd489af2d24f0edc2fc7c4ccea79acf3259e4",
+  "prompt": "暗紫色连帽斗篷遮住孙悟空上半脸，嘴和下巴猴毛与本相一致，背后的金箍棒两端露出。二头身正面。",
+  "source": "game/art/source/characters/story-guests-chibi-v2/wukong_disguise.perfect.png",
+  "source_sha256": "3749d9d52521cf47a17d51db57b6938fadcb699a037a1861c5c02a4834bb12f6",
   "input_size": [
-    512,
-    512
+    48,
+    64
   ],
   "output": "game/assets/art/story/sprites/wukong_disguise.png",
-  "output_sha256": "c1913cfb63907f2fd1260bea22c72425e63eb7f76df5d9193918a98b75919da1",
+  "output_sha256": "c821ef7629468a4f1c2281e1e9c2bfdae6de66d7b9b83041bdec96a46f66abbc",
   "output_size": [
-    64,
-    96
+    48,
+    64
   ],
-  "pixel_grid": [
-    77,
-    83
-  ],
-  "watermark": "crop",
-  "watermark_box": [
-    0.78,
-    0.9,
-    1.0,
-    1.0
-  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
   "threshold": 245,
   "min_component": 12,
-  "erode": 1,
-  "outline": 1,
-  "white_specks": 24,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
   "shadow": true,
   "palette": 0,
   "bbox": [
-    24,
-    3,
-    51,
-    80
+    8,
+    6,
+    40,
+    62
   ],
-  "processed_at_utc": "2026-11-23T18:33:04.469968+00:00"
+  "processed_at_utc": "2026-11-24T13:29:37.626857+00:00",
+  "keep_canvas": true
 }

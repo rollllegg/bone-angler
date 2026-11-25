@@ -62,13 +62,20 @@
     {
       "type": "sprite",
       "id": "orpheus_front",
+      "if": "not named",
+      "delay": 1.0
+    },
+    {
+      "type": "sprite",
+      "id": "orpheus_revealed",
+      "if": "named",
       "delay": 1.0
     }
   ],
   "orpheus.identify.1": [
     {
       "type": "sprite",
-      "id": "orpheus_front"
+      "id": "orpheus_revealed"
     },
     {
       "type": "shake",

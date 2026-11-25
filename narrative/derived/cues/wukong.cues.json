@@ -49,11 +49,6 @@
   ],
   "wukong.inspect.staff.1": [
     {
-      "type": "prop",
-      "id": "staff",
-      "action": "show"
-    },
-    {
       "type": "zoom",
       "scale": 1.12,
       "duration": 0.35
@@ -72,12 +67,6 @@
       "type": "zoom",
       "scale": 1.0,
       "duration": 0.3
-    },
-    {
-      "type": "prop",
-      "id": "staff",
-      "action": "hide",
-      "delay": 1.4
     }
   ],
   "wukong.inspect.coin.1": [

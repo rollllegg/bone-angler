@@ -3,10 +3,11 @@
   "title": "俄耳甫斯",
   "queue_name": "亚历克斯",
   "portrait": {
+    "default": "orpheus_front",
     "rules": [
       {
         "if": "named",
-        "id": "orpheus_front"
+        "id": "orpheus_revealed"
       }
     ]
   },

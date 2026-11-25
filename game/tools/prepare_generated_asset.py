@@ -235,6 +235,7 @@ def process_asset(entry: dict, config: dict, keep_temp: bool) -> dict:
     white_specks = int(entry.get("white_specks", config.get("white_specks", 0)))
     shadow = bool(entry.get("shadow", config.get("shadow", False)))
     palette = int(entry.get("palette", config.get("palette", 0)))
+    keep_canvas = bool(entry.get("keep_canvas", False))
 
     image = Image.open(source).convert("RGBA")
     input_size = list(image.size)
@@ -253,7 +254,14 @@ def process_asset(entry: dict, config: dict, keep_temp: bool) -> dict:
         else:
             grid = None
         image = remove_background(image, threshold, min_component, erode)
-        image, bbox = fit_canvas(image, width, height, 1 if outline > 0 else 0)
+        if keep_canvas:
+            if image.size != (width, height):
+                raise ValueError(f"{asset_id}: expected an aligned {width}x{height} input")
+            bbox = image.getchannel("A").getbbox()
+            if bbox is None:
+                raise RuntimeError("image is empty after background removal")
+        else:
+            image, bbox = fit_canvas(image, width, height, 1 if outline > 0 else 0)
         image = remove_white_specks(image, white_specks)
         if outline > 0:
             image = add_outline(image, parse_color(outline_color), outline)
@@ -290,6 +298,8 @@ def process_asset(entry: dict, config: dict, keep_temp: bool) -> dict:
         "bbox": list(bbox),
         "processed_at_utc": datetime.now(timezone.utc).isoformat(),
     }
+    if keep_canvas:
+        metadata["keep_canvas"] = True
     sidecar = destination.with_suffix(".json")
     sidecar.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
