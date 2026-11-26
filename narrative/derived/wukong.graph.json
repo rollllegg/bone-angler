@@ -60,10 +60,6 @@
         "type": "int",
         "default": 0
       },
-      "clue.coin": {
-        "type": "int",
-        "default": 0
-      },
       "named": {
         "type": "bool",
         "default": false
@@ -113,7 +109,17 @@
           "set": [
             "clue.photo = 1"
           ],
-          "next": "inspect.photo"
+          "next": "inspect.photo",
+          "hotspot": {
+            "rects": [
+              [
+                15,
+                22,
+                18,
+                15
+              ]
+            ]
+          }
         },
         {
           "id": "tail",
@@ -123,7 +129,27 @@
           "set": [
             "clue.tail = 1"
           ],
-          "next": "inspect.tail"
+          "next": "inspect.tail",
+          "hotspot": {
+            "rects": [
+              [
+                26,
+                37,
+                10,
+                8
+              ]
+            ],
+            "variants": {
+              "wukong_monkey": [
+                [
+                  22,
+                  48,
+                  8,
+                  8
+                ]
+              ]
+            }
+          }
         },
         {
           "id": "staff",
@@ -133,17 +159,33 @@
           "set": [
             "clue.staff = 1"
           ],
-          "next": "inspect.staff"
-        },
-        {
-          "id": "coin",
-          "text": "wukong.choice.coin",
-          "locked_if": "clue.coin != 0",
-          "locked_text": "wukong.choice.coin.locked",
-          "set": [
-            "clue.coin = 1"
-          ],
-          "next": "inspect.coin"
+          "next": "inspect.staff",
+          "hotspot": {
+            "rects": [
+              [
+                36,
+                28,
+                8,
+                8
+              ],
+              [
+                6,
+                48,
+                12,
+                10
+              ]
+            ],
+            "variants": {
+              "wukong_monkey": [
+                [
+                  6,
+                  48,
+                  13,
+                  11
+                ]
+              ]
+            }
+          }
         },
         {
           "id": "admit",
@@ -163,12 +205,8 @@
       "id": "inspect.photo",
       "steps": [
         {
-          "speaker": "圣",
-          "text": "wukong.inspect.photo.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.inspect.photo.2"
+          "text": "wukong.inspect.photo.1"
         }
       ],
       "next": "inspect"
@@ -177,12 +215,8 @@
       "id": "inspect.tail",
       "steps": [
         {
-          "speaker": "圣",
-          "text": "wukong.inspect.tail.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.inspect.tail.2"
+          "text": "wukong.inspect.tail.1"
         }
       ],
       "next": "inspect"
@@ -191,34 +225,12 @@
       "id": "inspect.staff",
       "steps": [
         {
-          "speaker": "圣",
+          "speaker": "孙",
           "text": "wukong.inspect.staff.1"
         },
         {
           "speaker": "孙",
           "text": "wukong.inspect.staff.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "wukong.inspect.staff.3"
-        },
-        {
-          "speaker": "孙",
-          "text": "wukong.inspect.staff.4"
-        }
-      ],
-      "next": "inspect"
-    },
-    {
-      "id": "inspect.coin",
-      "steps": [
-        {
-          "speaker": "孙",
-          "text": "wukong.inspect.coin.1"
-        },
-        {
-          "speaker": "圣",
-          "text": "wukong.inspect.coin.2"
         }
       ],
       "next": "inspect"
@@ -227,12 +239,8 @@
       "id": "identify",
       "steps": [
         {
-          "speaker": "圣",
-          "text": "wukong.identify.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.identify.2"
+          "text": "wukong.identify.1"
         }
       ],
       "set": [
@@ -244,12 +252,8 @@
       "id": "potion.react",
       "steps": [
         {
-          "speaker": "圣",
-          "text": "wukong.potion.react.1"
-        },
-        {
           "speaker": "孙",
-          "text": "wukong.potion.react.2"
+          "text": "wukong.potion.react.1"
         }
       ],
       "branch": [

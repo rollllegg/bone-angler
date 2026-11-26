@@ -1,1429 +1,399 @@
 case,world_rampage,path,outcome,named,confused,rage,dose_score
-orpheus,false,药:正 > registry > eurydice > lyre > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > registry > eurydice > lyre > refuse,refused,false,true,false,4
-orpheus,false,药:正 > registry > eurydice > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > registry > eurydice > refuse,refused,false,true,false,4
-orpheus,false,药:正 > registry > lyre > eurydice > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > registry > lyre > eurydice > refuse,refused,false,true,false,4
-orpheus,false,药:正 > registry > lyre > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > registry > lyre > refuse,refused,false,true,false,4
-orpheus,false,药:正 > registry > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > registry > refuse,refused,false,true,false,4
-orpheus,false,药:正 > eurydice > registry > lyre > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > eurydice > registry > lyre > refuse,refused,false,true,false,4
-orpheus,false,药:正 > eurydice > registry > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > eurydice > registry > refuse,refused,false,true,false,4
-orpheus,false,药:正 > eurydice > lyre > registry > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > eurydice > lyre > registry > refuse,refused,false,true,false,4
+anubis,false,叫破:成功 > admit > 称心:0,judged.zero,true,false,false,0
+anubis,false,叫破:成功 > admit > 称心:50,judged.other,true,false,false,0
+anubis,false,叫破:成功 > admit > 称心:100,judged.all,true,false,false,0
+anubis,false,叫破:失败 > admit > 称心:0,judged.zero,false,false,false,0
+anubis,false,叫破:失败 > admit > 称心:50,judged.other,false,false,false,0
+anubis,false,叫破:失败 > admit > 称心:100,judged.all,false,false,false,0
+anubis,false,admit > 称心:0,judged.zero,false,false,false,0
+anubis,false,admit > 称心:50,judged.other,false,false,false,0
+anubis,false,admit > 称心:100,judged.all,false,false,false,0
+anubis,true,叫破:成功 > admit > 称心:0,judged.zero,true,false,false,0
+anubis,true,叫破:成功 > admit > 称心:50,judged.other,true,false,false,0
+anubis,true,叫破:成功 > admit > 称心:100,judged.all,true,false,false,0
+anubis,true,叫破:失败 > admit > 称心:0,judged.zero,false,false,false,0
+anubis,true,叫破:失败 > admit > 称心:50,judged.other,false,false,false,0
+anubis,true,叫破:失败 > admit > 称心:100,judged.all,false,false,false,0
+anubis,true,admit > 称心:0,judged.zero,false,false,false,0
+anubis,true,admit > 称心:50,judged.other,false,false,false,0
+anubis,true,admit > 称心:100,judged.all,false,false,false,0
 orpheus,false,药:正 > eurydice > lyre > admit,accepted.confused,false,true,false,4
 orpheus,false,药:正 > eurydice > lyre > refuse,refused,false,true,false,4
 orpheus,false,药:正 > eurydice > admit,accepted.confused,false,true,false,4
 orpheus,false,药:正 > eurydice > refuse,refused,false,true,false,4
-orpheus,false,药:正 > lyre > registry > eurydice > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > lyre > registry > eurydice > refuse,refused,false,true,false,4
-orpheus,false,药:正 > lyre > registry > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > lyre > registry > refuse,refused,false,true,false,4
-orpheus,false,药:正 > lyre > eurydice > registry > admit,accepted.confused,false,true,false,4
-orpheus,false,药:正 > lyre > eurydice > registry > refuse,refused,false,true,false,4
 orpheus,false,药:正 > lyre > eurydice > admit,accepted.confused,false,true,false,4
 orpheus,false,药:正 > lyre > eurydice > refuse,refused,false,true,false,4
 orpheus,false,药:正 > lyre > admit,accepted.confused,false,true,false,4
 orpheus,false,药:正 > lyre > refuse,refused,false,true,false,4
 orpheus,false,药:正 > admit,accepted.confused,false,true,false,4
 orpheus,false,药:正 > refuse,refused,false,true,false,4
-orpheus,false,药:负 > registry > eurydice > lyre > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > registry > eurydice > lyre > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > registry > eurydice > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > registry > eurydice > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > registry > lyre > eurydice > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > registry > lyre > eurydice > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > registry > lyre > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > registry > lyre > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > registry > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > registry > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > eurydice > registry > lyre > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > eurydice > registry > lyre > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > eurydice > registry > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > eurydice > registry > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > eurydice > lyre > registry > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > eurydice > lyre > registry > refuse,refused,false,false,false,-1
 orpheus,false,药:负 > eurydice > lyre > admit,accepted.clear,false,false,false,-1
 orpheus,false,药:负 > eurydice > lyre > refuse,refused,false,false,false,-1
 orpheus,false,药:负 > eurydice > admit,accepted.clear,false,false,false,-1
 orpheus,false,药:负 > eurydice > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > lyre > registry > eurydice > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > lyre > registry > eurydice > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > lyre > registry > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > lyre > registry > refuse,refused,false,false,false,-1
-orpheus,false,药:负 > lyre > eurydice > registry > admit,accepted.clear,false,false,false,-1
-orpheus,false,药:负 > lyre > eurydice > registry > refuse,refused,false,false,false,-1
 orpheus,false,药:负 > lyre > eurydice > admit,accepted.clear,false,false,false,-1
 orpheus,false,药:负 > lyre > eurydice > refuse,refused,false,false,false,-1
 orpheus,false,药:负 > lyre > admit,accepted.clear,false,false,false,-1
 orpheus,false,药:负 > lyre > refuse,refused,false,false,false,-1
 orpheus,false,药:负 > admit,accepted.clear,false,false,false,-1
 orpheus,false,药:负 > refuse,refused,false,false,false,-1
-orpheus,false,药:零 > registry > eurydice > lyre > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > registry > eurydice > lyre > refuse,refused,false,false,false,0
-orpheus,false,药:零 > registry > eurydice > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > registry > eurydice > refuse,refused,false,false,false,0
-orpheus,false,药:零 > registry > lyre > eurydice > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > registry > lyre > eurydice > refuse,refused,false,false,false,0
-orpheus,false,药:零 > registry > lyre > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > registry > lyre > refuse,refused,false,false,false,0
-orpheus,false,药:零 > registry > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > registry > refuse,refused,false,false,false,0
-orpheus,false,药:零 > eurydice > registry > lyre > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > eurydice > registry > lyre > refuse,refused,false,false,false,0
-orpheus,false,药:零 > eurydice > registry > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > eurydice > registry > refuse,refused,false,false,false,0
-orpheus,false,药:零 > eurydice > lyre > registry > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > eurydice > lyre > registry > refuse,refused,false,false,false,0
 orpheus,false,药:零 > eurydice > lyre > admit,accepted.clear,false,false,false,0
 orpheus,false,药:零 > eurydice > lyre > refuse,refused,false,false,false,0
 orpheus,false,药:零 > eurydice > admit,accepted.clear,false,false,false,0
 orpheus,false,药:零 > eurydice > refuse,refused,false,false,false,0
-orpheus,false,药:零 > lyre > registry > eurydice > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > lyre > registry > eurydice > refuse,refused,false,false,false,0
-orpheus,false,药:零 > lyre > registry > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > lyre > registry > refuse,refused,false,false,false,0
-orpheus,false,药:零 > lyre > eurydice > registry > admit,accepted.clear,false,false,false,0
-orpheus,false,药:零 > lyre > eurydice > registry > refuse,refused,false,false,false,0
 orpheus,false,药:零 > lyre > eurydice > admit,accepted.clear,false,false,false,0
 orpheus,false,药:零 > lyre > eurydice > refuse,refused,false,false,false,0
 orpheus,false,药:零 > lyre > admit,accepted.clear,false,false,false,0
 orpheus,false,药:零 > lyre > refuse,refused,false,false,false,0
 orpheus,false,药:零 > admit,accepted.clear,false,false,false,0
 orpheus,false,药:零 > refuse,refused,false,false,false,0
-orpheus,false,叫破:成功 > registry > eurydice > lyre > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > registry > eurydice > lyre > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > registry > eurydice > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > registry > eurydice > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > registry > lyre > eurydice > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > registry > lyre > eurydice > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > registry > lyre > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > registry > lyre > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > registry > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > registry > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > eurydice > registry > lyre > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > eurydice > registry > lyre > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > eurydice > registry > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > eurydice > registry > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > eurydice > lyre > registry > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > eurydice > lyre > registry > refuse,refused,true,true,false,1
 orpheus,false,叫破:成功 > eurydice > lyre > admit,accepted.confused,true,true,false,1
 orpheus,false,叫破:成功 > eurydice > lyre > refuse,refused,true,true,false,1
 orpheus,false,叫破:成功 > eurydice > admit,accepted.confused,true,true,false,1
 orpheus,false,叫破:成功 > eurydice > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > lyre > registry > eurydice > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > lyre > registry > eurydice > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > lyre > registry > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > lyre > registry > refuse,refused,true,true,false,1
-orpheus,false,叫破:成功 > lyre > eurydice > registry > admit,accepted.confused,true,true,false,1
-orpheus,false,叫破:成功 > lyre > eurydice > registry > refuse,refused,true,true,false,1
 orpheus,false,叫破:成功 > lyre > eurydice > admit,accepted.confused,true,true,false,1
 orpheus,false,叫破:成功 > lyre > eurydice > refuse,refused,true,true,false,1
 orpheus,false,叫破:成功 > lyre > admit,accepted.confused,true,true,false,1
 orpheus,false,叫破:成功 > lyre > refuse,refused,true,true,false,1
 orpheus,false,叫破:成功 > admit,accepted.confused,true,true,false,1
 orpheus,false,叫破:成功 > refuse,refused,true,true,false,1
-orpheus,false,叫破:失败 > registry > eurydice > lyre > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > registry > eurydice > lyre > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > registry > eurydice > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > registry > lyre > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > registry > lyre > eurydice > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > registry > lyre > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > registry > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > eurydice > registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > eurydice > registry > lyre > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > eurydice > registry > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > eurydice > lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > eurydice > lyre > registry > refuse,refused,false,true,false,1
 orpheus,false,叫破:失败 > eurydice > lyre > admit,accepted.confused,false,true,false,1
 orpheus,false,叫破:失败 > eurydice > lyre > refuse,refused,false,true,false,1
 orpheus,false,叫破:失败 > eurydice > admit,accepted.confused,false,true,false,1
 orpheus,false,叫破:失败 > eurydice > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > lyre > registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > lyre > registry > eurydice > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > lyre > registry > refuse,refused,false,true,false,1
-orpheus,false,叫破:失败 > lyre > eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,叫破:失败 > lyre > eurydice > registry > refuse,refused,false,true,false,1
 orpheus,false,叫破:失败 > lyre > eurydice > admit,accepted.confused,false,true,false,1
 orpheus,false,叫破:失败 > lyre > eurydice > refuse,refused,false,true,false,1
 orpheus,false,叫破:失败 > lyre > admit,accepted.confused,false,true,false,1
 orpheus,false,叫破:失败 > lyre > refuse,refused,false,true,false,1
 orpheus,false,叫破:失败 > admit,accepted.confused,false,true,false,1
 orpheus,false,叫破:失败 > refuse,refused,false,true,false,1
-orpheus,false,registry > eurydice > lyre > admit,accepted.confused,false,true,false,1
-orpheus,false,registry > eurydice > lyre > refuse,refused,false,true,false,1
-orpheus,false,registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,false,registry > eurydice > refuse,refused,false,true,false,1
-orpheus,false,registry > lyre > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,false,registry > lyre > eurydice > refuse,refused,false,true,false,1
-orpheus,false,registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,false,registry > lyre > refuse,refused,false,true,false,1
-orpheus,false,registry > admit,accepted.confused,false,true,false,1
-orpheus,false,registry > refuse,refused,false,true,false,1
-orpheus,false,eurydice > registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,false,eurydice > registry > lyre > refuse,refused,false,true,false,1
-orpheus,false,eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,eurydice > registry > refuse,refused,false,true,false,1
-orpheus,false,eurydice > lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,eurydice > lyre > registry > refuse,refused,false,true,false,1
 orpheus,false,eurydice > lyre > admit,accepted.confused,false,true,false,1
 orpheus,false,eurydice > lyre > refuse,refused,false,true,false,1
 orpheus,false,eurydice > admit,accepted.confused,false,true,false,1
 orpheus,false,eurydice > refuse,refused,false,true,false,1
-orpheus,false,lyre > registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,false,lyre > registry > eurydice > refuse,refused,false,true,false,1
-orpheus,false,lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,lyre > registry > refuse,refused,false,true,false,1
-orpheus,false,lyre > eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,false,lyre > eurydice > registry > refuse,refused,false,true,false,1
 orpheus,false,lyre > eurydice > admit,accepted.confused,false,true,false,1
 orpheus,false,lyre > eurydice > refuse,refused,false,true,false,1
 orpheus,false,lyre > admit,accepted.confused,false,true,false,1
 orpheus,false,lyre > refuse,refused,false,true,false,1
 orpheus,false,admit,accepted.confused,false,true,false,1
 orpheus,false,refuse,refused,false,true,false,1
-orpheus,true,药:正 > registry > eurydice > lyre > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > registry > eurydice > lyre > refuse,refused,false,true,false,4
-orpheus,true,药:正 > registry > eurydice > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > registry > eurydice > refuse,refused,false,true,false,4
-orpheus,true,药:正 > registry > lyre > eurydice > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > registry > lyre > eurydice > refuse,refused,false,true,false,4
-orpheus,true,药:正 > registry > lyre > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > registry > lyre > refuse,refused,false,true,false,4
-orpheus,true,药:正 > registry > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > registry > refuse,refused,false,true,false,4
-orpheus,true,药:正 > eurydice > registry > lyre > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > eurydice > registry > lyre > refuse,refused,false,true,false,4
-orpheus,true,药:正 > eurydice > registry > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > eurydice > registry > refuse,refused,false,true,false,4
-orpheus,true,药:正 > eurydice > lyre > registry > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > eurydice > lyre > registry > refuse,refused,false,true,false,4
 orpheus,true,药:正 > eurydice > lyre > admit,accepted.confused,false,true,false,4
 orpheus,true,药:正 > eurydice > lyre > refuse,refused,false,true,false,4
 orpheus,true,药:正 > eurydice > admit,accepted.confused,false,true,false,4
 orpheus,true,药:正 > eurydice > refuse,refused,false,true,false,4
-orpheus,true,药:正 > lyre > registry > eurydice > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > lyre > registry > eurydice > refuse,refused,false,true,false,4
-orpheus,true,药:正 > lyre > registry > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > lyre > registry > refuse,refused,false,true,false,4
-orpheus,true,药:正 > lyre > eurydice > registry > admit,accepted.confused,false,true,false,4
-orpheus,true,药:正 > lyre > eurydice > registry > refuse,refused,false,true,false,4
 orpheus,true,药:正 > lyre > eurydice > admit,accepted.confused,false,true,false,4
 orpheus,true,药:正 > lyre > eurydice > refuse,refused,false,true,false,4
 orpheus,true,药:正 > lyre > admit,accepted.confused,false,true,false,4
 orpheus,true,药:正 > lyre > refuse,refused,false,true,false,4
 orpheus,true,药:正 > admit,accepted.confused,false,true,false,4
 orpheus,true,药:正 > refuse,refused,false,true,false,4
-orpheus,true,药:负 > registry > eurydice > lyre > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > registry > eurydice > lyre > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > registry > eurydice > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > registry > eurydice > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > registry > lyre > eurydice > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > registry > lyre > eurydice > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > registry > lyre > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > registry > lyre > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > registry > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > registry > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > eurydice > registry > lyre > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > eurydice > registry > lyre > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > eurydice > registry > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > eurydice > registry > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > eurydice > lyre > registry > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > eurydice > lyre > registry > refuse,refused,false,false,false,-1
 orpheus,true,药:负 > eurydice > lyre > admit,accepted.reunion,false,false,false,-1
 orpheus,true,药:负 > eurydice > lyre > refuse,refused,false,false,false,-1
 orpheus,true,药:负 > eurydice > admit,accepted.reunion,false,false,false,-1
 orpheus,true,药:负 > eurydice > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > lyre > registry > eurydice > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > lyre > registry > eurydice > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > lyre > registry > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > lyre > registry > refuse,refused,false,false,false,-1
-orpheus,true,药:负 > lyre > eurydice > registry > admit,accepted.reunion,false,false,false,-1
-orpheus,true,药:负 > lyre > eurydice > registry > refuse,refused,false,false,false,-1
 orpheus,true,药:负 > lyre > eurydice > admit,accepted.reunion,false,false,false,-1
 orpheus,true,药:负 > lyre > eurydice > refuse,refused,false,false,false,-1
 orpheus,true,药:负 > lyre > admit,accepted.reunion,false,false,false,-1
 orpheus,true,药:负 > lyre > refuse,refused,false,false,false,-1
 orpheus,true,药:负 > admit,accepted.reunion,false,false,false,-1
 orpheus,true,药:负 > refuse,refused,false,false,false,-1
-orpheus,true,药:零 > registry > eurydice > lyre > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > registry > eurydice > lyre > refuse,refused,false,false,false,0
-orpheus,true,药:零 > registry > eurydice > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > registry > eurydice > refuse,refused,false,false,false,0
-orpheus,true,药:零 > registry > lyre > eurydice > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > registry > lyre > eurydice > refuse,refused,false,false,false,0
-orpheus,true,药:零 > registry > lyre > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > registry > lyre > refuse,refused,false,false,false,0
-orpheus,true,药:零 > registry > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > registry > refuse,refused,false,false,false,0
-orpheus,true,药:零 > eurydice > registry > lyre > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > eurydice > registry > lyre > refuse,refused,false,false,false,0
-orpheus,true,药:零 > eurydice > registry > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > eurydice > registry > refuse,refused,false,false,false,0
-orpheus,true,药:零 > eurydice > lyre > registry > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > eurydice > lyre > registry > refuse,refused,false,false,false,0
 orpheus,true,药:零 > eurydice > lyre > admit,accepted.reunion,false,false,false,0
 orpheus,true,药:零 > eurydice > lyre > refuse,refused,false,false,false,0
 orpheus,true,药:零 > eurydice > admit,accepted.reunion,false,false,false,0
 orpheus,true,药:零 > eurydice > refuse,refused,false,false,false,0
-orpheus,true,药:零 > lyre > registry > eurydice > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > lyre > registry > eurydice > refuse,refused,false,false,false,0
-orpheus,true,药:零 > lyre > registry > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > lyre > registry > refuse,refused,false,false,false,0
-orpheus,true,药:零 > lyre > eurydice > registry > admit,accepted.reunion,false,false,false,0
-orpheus,true,药:零 > lyre > eurydice > registry > refuse,refused,false,false,false,0
 orpheus,true,药:零 > lyre > eurydice > admit,accepted.reunion,false,false,false,0
 orpheus,true,药:零 > lyre > eurydice > refuse,refused,false,false,false,0
 orpheus,true,药:零 > lyre > admit,accepted.reunion,false,false,false,0
 orpheus,true,药:零 > lyre > refuse,refused,false,false,false,0
 orpheus,true,药:零 > admit,accepted.reunion,false,false,false,0
 orpheus,true,药:零 > refuse,refused,false,false,false,0
-orpheus,true,叫破:成功 > registry > eurydice > lyre > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > registry > eurydice > lyre > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > registry > eurydice > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > registry > eurydice > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > registry > lyre > eurydice > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > registry > lyre > eurydice > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > registry > lyre > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > registry > lyre > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > registry > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > registry > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > eurydice > registry > lyre > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > eurydice > registry > lyre > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > eurydice > registry > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > eurydice > registry > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > eurydice > lyre > registry > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > eurydice > lyre > registry > refuse,refused,true,true,false,1
 orpheus,true,叫破:成功 > eurydice > lyre > admit,accepted.confused,true,true,false,1
 orpheus,true,叫破:成功 > eurydice > lyre > refuse,refused,true,true,false,1
 orpheus,true,叫破:成功 > eurydice > admit,accepted.confused,true,true,false,1
 orpheus,true,叫破:成功 > eurydice > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > lyre > registry > eurydice > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > lyre > registry > eurydice > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > lyre > registry > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > lyre > registry > refuse,refused,true,true,false,1
-orpheus,true,叫破:成功 > lyre > eurydice > registry > admit,accepted.confused,true,true,false,1
-orpheus,true,叫破:成功 > lyre > eurydice > registry > refuse,refused,true,true,false,1
 orpheus,true,叫破:成功 > lyre > eurydice > admit,accepted.confused,true,true,false,1
 orpheus,true,叫破:成功 > lyre > eurydice > refuse,refused,true,true,false,1
 orpheus,true,叫破:成功 > lyre > admit,accepted.confused,true,true,false,1
 orpheus,true,叫破:成功 > lyre > refuse,refused,true,true,false,1
 orpheus,true,叫破:成功 > admit,accepted.confused,true,true,false,1
 orpheus,true,叫破:成功 > refuse,refused,true,true,false,1
-orpheus,true,叫破:失败 > registry > eurydice > lyre > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > registry > eurydice > lyre > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > registry > eurydice > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > registry > lyre > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > registry > lyre > eurydice > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > registry > lyre > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > registry > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > eurydice > registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > eurydice > registry > lyre > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > eurydice > registry > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > eurydice > lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > eurydice > lyre > registry > refuse,refused,false,true,false,1
 orpheus,true,叫破:失败 > eurydice > lyre > admit,accepted.confused,false,true,false,1
 orpheus,true,叫破:失败 > eurydice > lyre > refuse,refused,false,true,false,1
 orpheus,true,叫破:失败 > eurydice > admit,accepted.confused,false,true,false,1
 orpheus,true,叫破:失败 > eurydice > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > lyre > registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > lyre > registry > eurydice > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > lyre > registry > refuse,refused,false,true,false,1
-orpheus,true,叫破:失败 > lyre > eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,叫破:失败 > lyre > eurydice > registry > refuse,refused,false,true,false,1
 orpheus,true,叫破:失败 > lyre > eurydice > admit,accepted.confused,false,true,false,1
 orpheus,true,叫破:失败 > lyre > eurydice > refuse,refused,false,true,false,1
 orpheus,true,叫破:失败 > lyre > admit,accepted.confused,false,true,false,1
 orpheus,true,叫破:失败 > lyre > refuse,refused,false,true,false,1
 orpheus,true,叫破:失败 > admit,accepted.confused,false,true,false,1
 orpheus,true,叫破:失败 > refuse,refused,false,true,false,1
-orpheus,true,registry > eurydice > lyre > admit,accepted.confused,false,true,false,1
-orpheus,true,registry > eurydice > lyre > refuse,refused,false,true,false,1
-orpheus,true,registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,true,registry > eurydice > refuse,refused,false,true,false,1
-orpheus,true,registry > lyre > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,true,registry > lyre > eurydice > refuse,refused,false,true,false,1
-orpheus,true,registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,true,registry > lyre > refuse,refused,false,true,false,1
-orpheus,true,registry > admit,accepted.confused,false,true,false,1
-orpheus,true,registry > refuse,refused,false,true,false,1
-orpheus,true,eurydice > registry > lyre > admit,accepted.confused,false,true,false,1
-orpheus,true,eurydice > registry > lyre > refuse,refused,false,true,false,1
-orpheus,true,eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,eurydice > registry > refuse,refused,false,true,false,1
-orpheus,true,eurydice > lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,eurydice > lyre > registry > refuse,refused,false,true,false,1
 orpheus,true,eurydice > lyre > admit,accepted.confused,false,true,false,1
 orpheus,true,eurydice > lyre > refuse,refused,false,true,false,1
 orpheus,true,eurydice > admit,accepted.confused,false,true,false,1
 orpheus,true,eurydice > refuse,refused,false,true,false,1
-orpheus,true,lyre > registry > eurydice > admit,accepted.confused,false,true,false,1
-orpheus,true,lyre > registry > eurydice > refuse,refused,false,true,false,1
-orpheus,true,lyre > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,lyre > registry > refuse,refused,false,true,false,1
-orpheus,true,lyre > eurydice > registry > admit,accepted.confused,false,true,false,1
-orpheus,true,lyre > eurydice > registry > refuse,refused,false,true,false,1
 orpheus,true,lyre > eurydice > admit,accepted.confused,false,true,false,1
 orpheus,true,lyre > eurydice > refuse,refused,false,true,false,1
 orpheus,true,lyre > admit,accepted.confused,false,true,false,1
 orpheus,true,lyre > refuse,refused,false,true,false,1
 orpheus,true,admit,accepted.confused,false,true,false,1
 orpheus,true,refuse,refused,false,true,false,1
-wukong,false,药:正 > photo > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > photo > tail > staff > admit,admitted,false,false,true,1
 wukong,false,药:正 > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > photo > tail > admit,admitted,false,false,true,1
 wukong,false,药:正 > photo > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > photo > staff > tail > admit,admitted,false,false,true,1
 wukong,false,药:正 > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > photo > staff > admit,admitted,false,false,true,1
 wukong,false,药:正 > photo > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > photo > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > photo > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > photo > admit,admitted,false,false,true,1
 wukong,false,药:正 > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > tail > photo > staff > admit,admitted,false,false,true,1
 wukong,false,药:正 > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > tail > photo > admit,admitted,false,false,true,1
 wukong,false,药:正 > tail > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > tail > staff > photo > admit,admitted,false,false,true,1
 wukong,false,药:正 > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > tail > staff > admit,admitted,false,false,true,1
 wukong,false,药:正 > tail > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > tail > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > tail > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > tail > admit,admitted,false,false,true,1
 wukong,false,药:正 > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > staff > photo > tail > admit,admitted,false,false,true,1
 wukong,false,药:正 > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > staff > photo > admit,admitted,false,false,true,1
 wukong,false,药:正 > staff > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > staff > tail > photo > admit,admitted,false,false,true,1
 wukong,false,药:正 > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > staff > tail > admit,admitted,false,false,true,1
 wukong,false,药:正 > staff > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > staff > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > staff > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > staff > admit,admitted,false,false,true,1
 wukong,false,药:正 > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > photo > tail > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > photo > staff > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > tail > photo > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > tail > staff > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > staff > photo > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > staff > tail > photo > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > staff > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > staff > refuse,refused,false,false,true,1
-wukong,false,药:正 > coin > admit,admitted,false,false,true,1
-wukong,false,药:正 > coin > refuse,refused,false,false,true,1
 wukong,false,药:正 > admit,admitted,false,false,true,1
 wukong,false,药:正 > refuse,refused,false,false,true,1
 wukong,false,药:负,calm,false,false,false,-4
 wukong,false,药:零,calm,false,false,false,0
-wukong,false,叫破:成功 > photo > tail > staff > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > tail > staff > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > photo > tail > staff > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > photo > tail > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > tail > coin > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > tail > coin > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > tail > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > tail > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > photo > tail > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > photo > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > staff > tail > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > staff > tail > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > photo > staff > tail > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > photo > staff > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > staff > coin > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > staff > coin > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > staff > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > staff > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > photo > staff > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > photo > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > tail > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > tail > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > staff > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > staff > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > photo > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > photo > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > photo > staff > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > photo > staff > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > tail > photo > staff > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > tail > photo > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > photo > coin > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > photo > coin > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > photo > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > photo > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > tail > photo > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > tail > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > staff > photo > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > staff > photo > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > tail > staff > photo > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > tail > staff > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > staff > coin > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > staff > coin > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > staff > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > staff > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > tail > staff > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > tail > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > photo > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > photo > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > staff > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > staff > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > tail > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > tail > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > photo > tail > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > photo > tail > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > staff > photo > tail > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > staff > photo > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > photo > coin > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > photo > coin > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > photo > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > photo > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > staff > photo > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > staff > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > tail > photo > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > tail > photo > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > staff > tail > photo > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > staff > tail > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > tail > coin > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > tail > coin > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > tail > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > tail > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > staff > tail > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > staff > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > photo > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > photo > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > tail > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > tail > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > staff > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > staff > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > tail > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > tail > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > staff > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > staff > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > photo > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > photo > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > staff > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > staff > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > photo > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > photo > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > tail > photo > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > tail > photo > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > tail > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > tail > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > staff > refuse,refused,true,false,true,1
-wukong,false,叫破:成功 > coin > admit,admitted,true,false,true,1
-wukong,false,叫破:成功 > coin > refuse,refused,true,false,true,1
 wukong,false,叫破:成功 > admit,admitted,true,false,true,1
 wukong,false,叫破:成功 > refuse,refused,true,false,true,1
-wukong,false,叫破:失败 > photo > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > photo > tail > staff > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > photo > tail > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > photo > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > photo > staff > tail > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > photo > staff > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > photo > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > photo > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > photo > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > tail > photo > staff > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > tail > photo > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > tail > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > tail > staff > photo > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > tail > staff > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > tail > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > tail > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > tail > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > staff > photo > tail > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > staff > photo > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > staff > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > staff > tail > photo > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > staff > tail > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > staff > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > staff > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > staff > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > tail > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > staff > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > photo > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > staff > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > photo > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > tail > photo > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > staff > refuse,refused,false,false,true,1
-wukong,false,叫破:失败 > coin > admit,admitted,false,false,true,1
-wukong,false,叫破:失败 > coin > refuse,refused,false,false,true,1
 wukong,false,叫破:失败 > admit,admitted,false,false,true,1
 wukong,false,叫破:失败 > refuse,refused,false,false,true,1
-wukong,false,photo > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,false,photo > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,false,photo > tail > staff > admit,admitted,false,false,true,1
 wukong,false,photo > tail > staff > refuse,refused,false,false,true,1
-wukong,false,photo > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,false,photo > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,false,photo > tail > coin > admit,admitted,false,false,true,1
-wukong,false,photo > tail > coin > refuse,refused,false,false,true,1
 wukong,false,photo > tail > admit,admitted,false,false,true,1
 wukong,false,photo > tail > refuse,refused,false,false,true,1
-wukong,false,photo > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,false,photo > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,false,photo > staff > tail > admit,admitted,false,false,true,1
 wukong,false,photo > staff > tail > refuse,refused,false,false,true,1
-wukong,false,photo > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,false,photo > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,false,photo > staff > coin > admit,admitted,false,false,true,1
-wukong,false,photo > staff > coin > refuse,refused,false,false,true,1
 wukong,false,photo > staff > admit,admitted,false,false,true,1
 wukong,false,photo > staff > refuse,refused,false,false,true,1
-wukong,false,photo > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,false,photo > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,false,photo > coin > tail > admit,admitted,false,false,true,1
-wukong,false,photo > coin > tail > refuse,refused,false,false,true,1
-wukong,false,photo > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,false,photo > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,false,photo > coin > staff > admit,admitted,false,false,true,1
-wukong,false,photo > coin > staff > refuse,refused,false,false,true,1
-wukong,false,photo > coin > admit,admitted,false,false,true,1
-wukong,false,photo > coin > refuse,refused,false,false,true,1
 wukong,false,photo > admit,admitted,false,false,true,1
 wukong,false,photo > refuse,refused,false,false,true,1
-wukong,false,tail > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,false,tail > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,false,tail > photo > staff > admit,admitted,false,false,true,1
 wukong,false,tail > photo > staff > refuse,refused,false,false,true,1
-wukong,false,tail > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,false,tail > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,false,tail > photo > coin > admit,admitted,false,false,true,1
-wukong,false,tail > photo > coin > refuse,refused,false,false,true,1
 wukong,false,tail > photo > admit,admitted,false,false,true,1
 wukong,false,tail > photo > refuse,refused,false,false,true,1
-wukong,false,tail > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,false,tail > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,false,tail > staff > photo > admit,admitted,false,false,true,1
 wukong,false,tail > staff > photo > refuse,refused,false,false,true,1
-wukong,false,tail > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,false,tail > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,false,tail > staff > coin > admit,admitted,false,false,true,1
-wukong,false,tail > staff > coin > refuse,refused,false,false,true,1
 wukong,false,tail > staff > admit,admitted,false,false,true,1
 wukong,false,tail > staff > refuse,refused,false,false,true,1
-wukong,false,tail > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,false,tail > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,false,tail > coin > photo > admit,admitted,false,false,true,1
-wukong,false,tail > coin > photo > refuse,refused,false,false,true,1
-wukong,false,tail > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,false,tail > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,false,tail > coin > staff > admit,admitted,false,false,true,1
-wukong,false,tail > coin > staff > refuse,refused,false,false,true,1
-wukong,false,tail > coin > admit,admitted,false,false,true,1
-wukong,false,tail > coin > refuse,refused,false,false,true,1
 wukong,false,tail > admit,admitted,false,false,true,1
 wukong,false,tail > refuse,refused,false,false,true,1
-wukong,false,staff > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,false,staff > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,false,staff > photo > tail > admit,admitted,false,false,true,1
 wukong,false,staff > photo > tail > refuse,refused,false,false,true,1
-wukong,false,staff > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,false,staff > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,false,staff > photo > coin > admit,admitted,false,false,true,1
-wukong,false,staff > photo > coin > refuse,refused,false,false,true,1
 wukong,false,staff > photo > admit,admitted,false,false,true,1
 wukong,false,staff > photo > refuse,refused,false,false,true,1
-wukong,false,staff > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,false,staff > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,false,staff > tail > photo > admit,admitted,false,false,true,1
 wukong,false,staff > tail > photo > refuse,refused,false,false,true,1
-wukong,false,staff > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,false,staff > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,false,staff > tail > coin > admit,admitted,false,false,true,1
-wukong,false,staff > tail > coin > refuse,refused,false,false,true,1
 wukong,false,staff > tail > admit,admitted,false,false,true,1
 wukong,false,staff > tail > refuse,refused,false,false,true,1
-wukong,false,staff > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,false,staff > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,false,staff > coin > photo > admit,admitted,false,false,true,1
-wukong,false,staff > coin > photo > refuse,refused,false,false,true,1
-wukong,false,staff > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,false,staff > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,false,staff > coin > tail > admit,admitted,false,false,true,1
-wukong,false,staff > coin > tail > refuse,refused,false,false,true,1
-wukong,false,staff > coin > admit,admitted,false,false,true,1
-wukong,false,staff > coin > refuse,refused,false,false,true,1
 wukong,false,staff > admit,admitted,false,false,true,1
 wukong,false,staff > refuse,refused,false,false,true,1
-wukong,false,coin > photo > tail > staff > admit,admitted,false,false,true,1
-wukong,false,coin > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,false,coin > photo > tail > admit,admitted,false,false,true,1
-wukong,false,coin > photo > tail > refuse,refused,false,false,true,1
-wukong,false,coin > photo > staff > tail > admit,admitted,false,false,true,1
-wukong,false,coin > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,false,coin > photo > staff > admit,admitted,false,false,true,1
-wukong,false,coin > photo > staff > refuse,refused,false,false,true,1
-wukong,false,coin > photo > admit,admitted,false,false,true,1
-wukong,false,coin > photo > refuse,refused,false,false,true,1
-wukong,false,coin > tail > photo > staff > admit,admitted,false,false,true,1
-wukong,false,coin > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,false,coin > tail > photo > admit,admitted,false,false,true,1
-wukong,false,coin > tail > photo > refuse,refused,false,false,true,1
-wukong,false,coin > tail > staff > photo > admit,admitted,false,false,true,1
-wukong,false,coin > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,false,coin > tail > staff > admit,admitted,false,false,true,1
-wukong,false,coin > tail > staff > refuse,refused,false,false,true,1
-wukong,false,coin > tail > admit,admitted,false,false,true,1
-wukong,false,coin > tail > refuse,refused,false,false,true,1
-wukong,false,coin > staff > photo > tail > admit,admitted,false,false,true,1
-wukong,false,coin > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,false,coin > staff > photo > admit,admitted,false,false,true,1
-wukong,false,coin > staff > photo > refuse,refused,false,false,true,1
-wukong,false,coin > staff > tail > photo > admit,admitted,false,false,true,1
-wukong,false,coin > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,false,coin > staff > tail > admit,admitted,false,false,true,1
-wukong,false,coin > staff > tail > refuse,refused,false,false,true,1
-wukong,false,coin > staff > admit,admitted,false,false,true,1
-wukong,false,coin > staff > refuse,refused,false,false,true,1
-wukong,false,coin > admit,admitted,false,false,true,1
-wukong,false,coin > refuse,refused,false,false,true,1
 wukong,false,admit,admitted,false,false,true,1
 wukong,false,refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > photo > tail > staff > admit,admitted,false,false,true,1
 wukong,true,药:正 > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > photo > tail > admit,admitted,false,false,true,1
 wukong,true,药:正 > photo > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > photo > staff > tail > admit,admitted,false,false,true,1
 wukong,true,药:正 > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > photo > staff > admit,admitted,false,false,true,1
 wukong,true,药:正 > photo > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > photo > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > photo > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > photo > admit,admitted,false,false,true,1
 wukong,true,药:正 > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > tail > photo > staff > admit,admitted,false,false,true,1
 wukong,true,药:正 > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > tail > photo > admit,admitted,false,false,true,1
 wukong,true,药:正 > tail > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > tail > staff > photo > admit,admitted,false,false,true,1
 wukong,true,药:正 > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > tail > staff > admit,admitted,false,false,true,1
 wukong,true,药:正 > tail > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > tail > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > tail > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > tail > admit,admitted,false,false,true,1
 wukong,true,药:正 > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > staff > photo > tail > admit,admitted,false,false,true,1
 wukong,true,药:正 > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > staff > photo > admit,admitted,false,false,true,1
 wukong,true,药:正 > staff > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > staff > tail > photo > admit,admitted,false,false,true,1
 wukong,true,药:正 > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > staff > tail > admit,admitted,false,false,true,1
 wukong,true,药:正 > staff > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > staff > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > staff > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > staff > admit,admitted,false,false,true,1
 wukong,true,药:正 > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > photo > tail > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > photo > staff > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > tail > photo > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > tail > staff > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > staff > photo > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > staff > tail > photo > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > staff > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > staff > refuse,refused,false,false,true,1
-wukong,true,药:正 > coin > admit,admitted,false,false,true,1
-wukong,true,药:正 > coin > refuse,refused,false,false,true,1
 wukong,true,药:正 > admit,admitted,false,false,true,1
 wukong,true,药:正 > refuse,refused,false,false,true,1
 wukong,true,药:负,calm,false,false,false,-4
 wukong,true,药:零,calm,false,false,false,0
-wukong,true,叫破:成功 > photo > tail > staff > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > tail > staff > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > photo > tail > staff > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > photo > tail > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > tail > coin > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > tail > coin > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > tail > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > tail > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > photo > tail > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > photo > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > staff > tail > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > staff > tail > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > photo > staff > tail > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > photo > staff > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > staff > coin > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > staff > coin > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > staff > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > staff > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > photo > staff > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > photo > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > tail > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > tail > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > staff > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > staff > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > photo > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > photo > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > photo > staff > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > photo > staff > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > tail > photo > staff > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > tail > photo > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > photo > coin > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > photo > coin > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > photo > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > photo > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > tail > photo > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > tail > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > staff > photo > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > staff > photo > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > tail > staff > photo > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > tail > staff > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > staff > coin > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > staff > coin > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > staff > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > staff > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > tail > staff > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > tail > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > photo > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > photo > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > staff > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > staff > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > tail > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > tail > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > photo > tail > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > photo > tail > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > staff > photo > tail > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > staff > photo > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > photo > coin > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > photo > coin > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > photo > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > photo > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > staff > photo > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > staff > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > tail > photo > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > tail > photo > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > staff > tail > photo > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > staff > tail > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > tail > coin > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > tail > coin > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > tail > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > tail > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > staff > tail > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > staff > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > photo > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > photo > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > tail > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > tail > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > staff > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > staff > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > tail > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > tail > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > staff > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > staff > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > photo > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > photo > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > staff > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > staff > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > photo > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > photo > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > tail > photo > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > tail > photo > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > tail > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > tail > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > staff > refuse,refused,true,false,true,1
-wukong,true,叫破:成功 > coin > admit,admitted,true,false,true,1
-wukong,true,叫破:成功 > coin > refuse,refused,true,false,true,1
 wukong,true,叫破:成功 > admit,admitted,true,false,true,1
 wukong,true,叫破:成功 > refuse,refused,true,false,true,1
-wukong,true,叫破:失败 > photo > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > photo > tail > staff > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > photo > tail > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > photo > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > photo > staff > tail > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > photo > staff > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > photo > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > photo > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > photo > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > tail > photo > staff > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > tail > photo > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > tail > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > tail > staff > photo > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > tail > staff > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > tail > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > tail > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > tail > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > staff > photo > tail > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > staff > photo > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > staff > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > staff > tail > photo > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > staff > tail > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > staff > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > staff > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > staff > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > tail > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > staff > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > photo > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > staff > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > photo > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > tail > photo > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > staff > refuse,refused,false,false,true,1
-wukong,true,叫破:失败 > coin > admit,admitted,false,false,true,1
-wukong,true,叫破:失败 > coin > refuse,refused,false,false,true,1
 wukong,true,叫破:失败 > admit,admitted,false,false,true,1
 wukong,true,叫破:失败 > refuse,refused,false,false,true,1
-wukong,true,photo > tail > staff > coin > admit,admitted,false,false,true,1
-wukong,true,photo > tail > staff > coin > refuse,refused,false,false,true,1
 wukong,true,photo > tail > staff > admit,admitted,false,false,true,1
 wukong,true,photo > tail > staff > refuse,refused,false,false,true,1
-wukong,true,photo > tail > coin > staff > admit,admitted,false,false,true,1
-wukong,true,photo > tail > coin > staff > refuse,refused,false,false,true,1
-wukong,true,photo > tail > coin > admit,admitted,false,false,true,1
-wukong,true,photo > tail > coin > refuse,refused,false,false,true,1
 wukong,true,photo > tail > admit,admitted,false,false,true,1
 wukong,true,photo > tail > refuse,refused,false,false,true,1
-wukong,true,photo > staff > tail > coin > admit,admitted,false,false,true,1
-wukong,true,photo > staff > tail > coin > refuse,refused,false,false,true,1
 wukong,true,photo > staff > tail > admit,admitted,false,false,true,1
 wukong,true,photo > staff > tail > refuse,refused,false,false,true,1
-wukong,true,photo > staff > coin > tail > admit,admitted,false,false,true,1
-wukong,true,photo > staff > coin > tail > refuse,refused,false,false,true,1
-wukong,true,photo > staff > coin > admit,admitted,false,false,true,1
-wukong,true,photo > staff > coin > refuse,refused,false,false,true,1
 wukong,true,photo > staff > admit,admitted,false,false,true,1
 wukong,true,photo > staff > refuse,refused,false,false,true,1
-wukong,true,photo > coin > tail > staff > admit,admitted,false,false,true,1
-wukong,true,photo > coin > tail > staff > refuse,refused,false,false,true,1
-wukong,true,photo > coin > tail > admit,admitted,false,false,true,1
-wukong,true,photo > coin > tail > refuse,refused,false,false,true,1
-wukong,true,photo > coin > staff > tail > admit,admitted,false,false,true,1
-wukong,true,photo > coin > staff > tail > refuse,refused,false,false,true,1
-wukong,true,photo > coin > staff > admit,admitted,false,false,true,1
-wukong,true,photo > coin > staff > refuse,refused,false,false,true,1
-wukong,true,photo > coin > admit,admitted,false,false,true,1
-wukong,true,photo > coin > refuse,refused,false,false,true,1
 wukong,true,photo > admit,admitted,false,false,true,1
 wukong,true,photo > refuse,refused,false,false,true,1
-wukong,true,tail > photo > staff > coin > admit,admitted,false,false,true,1
-wukong,true,tail > photo > staff > coin > refuse,refused,false,false,true,1
 wukong,true,tail > photo > staff > admit,admitted,false,false,true,1
 wukong,true,tail > photo > staff > refuse,refused,false,false,true,1
-wukong,true,tail > photo > coin > staff > admit,admitted,false,false,true,1
-wukong,true,tail > photo > coin > staff > refuse,refused,false,false,true,1
-wukong,true,tail > photo > coin > admit,admitted,false,false,true,1
-wukong,true,tail > photo > coin > refuse,refused,false,false,true,1
 wukong,true,tail > photo > admit,admitted,false,false,true,1
 wukong,true,tail > photo > refuse,refused,false,false,true,1
-wukong,true,tail > staff > photo > coin > admit,admitted,false,false,true,1
-wukong,true,tail > staff > photo > coin > refuse,refused,false,false,true,1
 wukong,true,tail > staff > photo > admit,admitted,false,false,true,1
 wukong,true,tail > staff > photo > refuse,refused,false,false,true,1
-wukong,true,tail > staff > coin > photo > admit,admitted,false,false,true,1
-wukong,true,tail > staff > coin > photo > refuse,refused,false,false,true,1
-wukong,true,tail > staff > coin > admit,admitted,false,false,true,1
-wukong,true,tail > staff > coin > refuse,refused,false,false,true,1
 wukong,true,tail > staff > admit,admitted,false,false,true,1
 wukong,true,tail > staff > refuse,refused,false,false,true,1
-wukong,true,tail > coin > photo > staff > admit,admitted,false,false,true,1
-wukong,true,tail > coin > photo > staff > refuse,refused,false,false,true,1
-wukong,true,tail > coin > photo > admit,admitted,false,false,true,1
-wukong,true,tail > coin > photo > refuse,refused,false,false,true,1
-wukong,true,tail > coin > staff > photo > admit,admitted,false,false,true,1
-wukong,true,tail > coin > staff > photo > refuse,refused,false,false,true,1
-wukong,true,tail > coin > staff > admit,admitted,false,false,true,1
-wukong,true,tail > coin > staff > refuse,refused,false,false,true,1
-wukong,true,tail > coin > admit,admitted,false,false,true,1
-wukong,true,tail > coin > refuse,refused,false,false,true,1
 wukong,true,tail > admit,admitted,false,false,true,1
 wukong,true,tail > refuse,refused,false,false,true,1
-wukong,true,staff > photo > tail > coin > admit,admitted,false,false,true,1
-wukong,true,staff > photo > tail > coin > refuse,refused,false,false,true,1
 wukong,true,staff > photo > tail > admit,admitted,false,false,true,1
 wukong,true,staff > photo > tail > refuse,refused,false,false,true,1
-wukong,true,staff > photo > coin > tail > admit,admitted,false,false,true,1
-wukong,true,staff > photo > coin > tail > refuse,refused,false,false,true,1
-wukong,true,staff > photo > coin > admit,admitted,false,false,true,1
-wukong,true,staff > photo > coin > refuse,refused,false,false,true,1
 wukong,true,staff > photo > admit,admitted,false,false,true,1
 wukong,true,staff > photo > refuse,refused,false,false,true,1
-wukong,true,staff > tail > photo > coin > admit,admitted,false,false,true,1
-wukong,true,staff > tail > photo > coin > refuse,refused,false,false,true,1
 wukong,true,staff > tail > photo > admit,admitted,false,false,true,1
 wukong,true,staff > tail > photo > refuse,refused,false,false,true,1
-wukong,true,staff > tail > coin > photo > admit,admitted,false,false,true,1
-wukong,true,staff > tail > coin > photo > refuse,refused,false,false,true,1
-wukong,true,staff > tail > coin > admit,admitted,false,false,true,1
-wukong,true,staff > tail > coin > refuse,refused,false,false,true,1
 wukong,true,staff > tail > admit,admitted,false,false,true,1
 wukong,true,staff > tail > refuse,refused,false,false,true,1
-wukong,true,staff > coin > photo > tail > admit,admitted,false,false,true,1
-wukong,true,staff > coin > photo > tail > refuse,refused,false,false,true,1
-wukong,true,staff > coin > photo > admit,admitted,false,false,true,1
-wukong,true,staff > coin > photo > refuse,refused,false,false,true,1
-wukong,true,staff > coin > tail > photo > admit,admitted,false,false,true,1
-wukong,true,staff > coin > tail > photo > refuse,refused,false,false,true,1
-wukong,true,staff > coin > tail > admit,admitted,false,false,true,1
-wukong,true,staff > coin > tail > refuse,refused,false,false,true,1
-wukong,true,staff > coin > admit,admitted,false,false,true,1
-wukong,true,staff > coin > refuse,refused,false,false,true,1
 wukong,true,staff > admit,admitted,false,false,true,1
 wukong,true,staff > refuse,refused,false,false,true,1
-wukong,true,coin > photo > tail > staff > admit,admitted,false,false,true,1
-wukong,true,coin > photo > tail > staff > refuse,refused,false,false,true,1
-wukong,true,coin > photo > tail > admit,admitted,false,false,true,1
-wukong,true,coin > photo > tail > refuse,refused,false,false,true,1
-wukong,true,coin > photo > staff > tail > admit,admitted,false,false,true,1
-wukong,true,coin > photo > staff > tail > refuse,refused,false,false,true,1
-wukong,true,coin > photo > staff > admit,admitted,false,false,true,1
-wukong,true,coin > photo > staff > refuse,refused,false,false,true,1
-wukong,true,coin > photo > admit,admitted,false,false,true,1
-wukong,true,coin > photo > refuse,refused,false,false,true,1
-wukong,true,coin > tail > photo > staff > admit,admitted,false,false,true,1
-wukong,true,coin > tail > photo > staff > refuse,refused,false,false,true,1
-wukong,true,coin > tail > photo > admit,admitted,false,false,true,1
-wukong,true,coin > tail > photo > refuse,refused,false,false,true,1
-wukong,true,coin > tail > staff > photo > admit,admitted,false,false,true,1
-wukong,true,coin > tail > staff > photo > refuse,refused,false,false,true,1
-wukong,true,coin > tail > staff > admit,admitted,false,false,true,1
-wukong,true,coin > tail > staff > refuse,refused,false,false,true,1
-wukong,true,coin > tail > admit,admitted,false,false,true,1
-wukong,true,coin > tail > refuse,refused,false,false,true,1
-wukong,true,coin > staff > photo > tail > admit,admitted,false,false,true,1
-wukong,true,coin > staff > photo > tail > refuse,refused,false,false,true,1
-wukong,true,coin > staff > photo > admit,admitted,false,false,true,1
-wukong,true,coin > staff > photo > refuse,refused,false,false,true,1
-wukong,true,coin > staff > tail > photo > admit,admitted,false,false,true,1
-wukong,true,coin > staff > tail > photo > refuse,refused,false,false,true,1
-wukong,true,coin > staff > tail > admit,admitted,false,false,true,1
-wukong,true,coin > staff > tail > refuse,refused,false,false,true,1
-wukong,true,coin > staff > admit,admitted,false,false,true,1
-wukong,true,coin > staff > refuse,refused,false,false,true,1
-wukong,true,coin > admit,admitted,false,false,true,1
-wukong,true,coin > refuse,refused,false,false,true,1
 wukong,true,admit,admitted,false,false,true,1
 wukong,true,refuse,refused,false,false,true,1

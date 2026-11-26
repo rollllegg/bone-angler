@@ -172,6 +172,44 @@
       "pixelate": false,
       "keep_canvas": true,
       "shadow": true
+    },
+    {
+      "id": "anubis",
+      "kind": "sprite",
+      "input": "game/art/source/story/anubis_raw.png",
+      "output": "game/assets/art/story/sprites/anubis.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "古埃及胡狼头神阿努比斯，二头身正面，黑色胡狼头、尖耳、金色眼睛，深蓝黑长袍、金色宽领和腰带。",
+      "outline": 1,
+      "white_specks": 8,
+      "palette": 32,
+      "shadow": true
+    },
+    {
+      "id": "anubis_turn",
+      "kind": "sprite",
+      "input": "game/art/source/story/anubis_turn_raw.png",
+      "output": "game/assets/art/story/sprites/anubis_turn.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "阿努比斯的二头身背面，黑色胡狼头后脑与尖耳，深蓝黑长袍、金色宽领和腰带、背部金饰。",
+      "outline": 1,
+      "white_specks": 8,
+      "palette": 32,
+      "shadow": true
+    },
+    {
+      "id": "scale",
+      "kind": "prop",
+      "input": "game/art/source/story/scale_raw.png",
+      "output": "game/assets/art/story/props/scale.png",
+      "width": 64,
+      "height": 64,
+      "prompt": "金色古埃及天平，左盘幽绿火焰，右盘金币，正面。",
+      "outline": 1,
+      "white_specks": 8,
+      "palette": 32
     }
   ],
   "outline": 0,

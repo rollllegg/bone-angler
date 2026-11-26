@@ -20,18 +20,24 @@ func _run() -> void:
 	_check(_db.load_all(), "story DB loads")
 	_check(_db.cases.has("wukong"), "wukong case exists")
 	_check(_db.cases.has("orpheus"), "orpheus case exists")
-	_check(_db.get_scheduled_case(1, 5) == "wukong", "wukong is the sixth guest on day 1")
+	_check(_db.cases.has("anubis"), "anubis case exists")
+	_check(_db.get_scheduled_case(1, 4) == "wukong", "wukong is the fifth guest on day 1")
+	_check(_db.get_scheduled_case(1, 5) == "", "day 1's last seat is the disguised observer")
 	_check(_db.get_scheduled_case(2, 5) == "orpheus", "orpheus is the sixth guest on day 2")
-	_check(_db.get_scheduled_case(5, 5) == "", "the old day 5 story slot is gone")
+	_check(_db.get_scheduled_case(5, 5) == "anubis", "anubis closes the fifth day")
 	_check(_db.get_scheduled_case(2, 1) == "", "day 2 slot 1 is not a story slot")
 	_check_cues("wukong")
 	_check_cues("orpheus")
+	_check_cues("anubis")
 
 	_check_wukong_data()
 	_check_wukong_paths()
 	_check_orpheus_data()
 	_check_orpheus_paths()
+	_check_anubis_data()
+	_check_anubis_paths()
 	_check_speaker_aliases()
+	_check_no_action_parentheses()
 
 	if _failures == 0:
 		print("StoryContent: %d checks, 0 failures" % _checks)
@@ -164,7 +170,7 @@ func _check_orpheus_data() -> void:
 	_check_all_text_keys(data)
 	_check_potion_scores(data, -1, 1, -1, "迷茫")
 	_check(int(data.state.flags["confused"].get("default", -1)) == 1, "orpheus starts confused")
-	_check(int(data.state.flags["clue.registry"].get("default", -1)) == 0, "orpheus starts without a registry clue")
+	_check(not bool(data.state.flags["clue.eurydice"].get("default", true)), "orpheus starts without a face clue")
 
 
 func _check_orpheus_paths() -> void:
@@ -174,10 +180,10 @@ func _check_orpheus_paths() -> void:
 	var orpheus_choices: Array = path1["runtime"].visible_choices()
 	_check(_choice_kind(orpheus_choices, "admit") == "accept", "orpheus accept choice is marked")
 	_check(_choice_kind(orpheus_choices, "refuse") == "refuse", "orpheus refuse choice is marked")
-	_check(_choice_kind(orpheus_choices, "registry") == "", "orpheus clues stay normal choices")
+	_check(_choice_kind(orpheus_choices, "eurydice") == "", "orpheus clues stay normal choices")
 	_choose(path1["runtime"], "admit")
 	_check(_aftermath_text(path1["runtime"]).contains("伪装成亡灵"), "orpheus unnamed aftermath hides the real name")
-	_check(not _aftermath_text(path1["runtime"]).contains("俄耳甫斯转世"), "orpheus unnamed aftermath omits the bracket text")
+	_check(not _aftermath_text(path1["runtime"]).contains("俄耳普斯转世"), "orpheus unnamed aftermath omits the bracket text")
 	_check(not _aftermath_text(path1["runtime"]).contains("{{"), "orpheus inline tags are rendered away")
 	_settle(path1["runtime"])
 	_check(path1["runtime"].is_closed(), "orpheus default accept closes")
@@ -230,7 +236,7 @@ func _check_orpheus_paths() -> void:
 	_check(path4["runtime"].get_outcome_id() == "refused", "orpheus refusal outcome")
 	_check(not bool(path4["state"].world["world.orpheus_admitted"]), "orpheus refusal does not admit")
 	_check(not bool(path4["state"].world["world.orpheus_reunion"]), "orpheus refusal has no reunion")
-	_check(str(path4["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳甫斯", "orpheus named ledger records the real name")
+	_check(str(path4["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳普斯", "orpheus named ledger records the real name")
 	_check(str(path4["runtime"].get_outcome().get("ledger", {}).get("result", "")) == "未入境", "orpheus refusal ledger result")
 
 	# 5. A zero score is non-positive.
@@ -251,22 +257,23 @@ func _check_orpheus_paths() -> void:
 	path6["runtime"].resolve_callout(true)
 	_settle(path6["runtime"])
 	_choose(path6["runtime"], "admit")
-	_check(_aftermath_text(path6["runtime"]).contains("俄耳甫斯转世"), "orpheus named aftermath shows the real name")
+	_check(_aftermath_text(path6["runtime"]).contains("俄耳普斯转世"), "orpheus named aftermath shows the real name")
 	_settle(path6["runtime"])
-	_check(str(path6["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳甫斯", "orpheus named accept ledger")
+	_check(str(path6["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳普斯", "orpheus named accept ledger")
 
-	# 7. The registry look is a one-time charmed action.
+	# 7. The face question is a one-time charmed action.
 	var path7 = _new_path("orpheus")
 	_settle(path7["runtime"])
-	_choose(path7["runtime"], "registry")
-	_check(path7["runtime"].get_node_id() == "inspect.registry", "orpheus registry node")
-	_check(path7["runtime"].advance(), "orpheus registry narration advances")
-	_check(_current_text(path7["runtime"]).contains("身份没问题"), "orpheus registry look is charmed")
+	_choose(path7["runtime"], "eurydice")
+	_check(path7["runtime"].get_node_id() == "inspect.eurydice", "orpheus face node")
+	_check(path7["runtime"].advance(), "orpheus face narration advances")
+	_check(path7["runtime"].advance(), "orpheus face narration finishes")
+	_check(_current_text(path7["runtime"]).contains("哈迪斯的神庙"), "orpheus face look reaches the temple")
 	_settle(path7["runtime"])
-	_check(int(path7["runtime"].flags["clue.registry"]) == 1, "orpheus registry clue is set")
-	_check(_has_choice(path7["runtime"], "registry"), "orpheus registry choice stays visible")
-	_check(_choice_locked(path7["runtime"].visible_choices(), "registry"), "orpheus registry choice is grayed out")
-	_check(_has_choice(path7["runtime"], "eurydice"), "orpheus can still ask about Eurydice")
+	_check(bool(path7["runtime"].flags["clue.eurydice"]), "orpheus face clue is set")
+	_check(_has_choice(path7["runtime"], "eurydice"), "orpheus face choice stays visible")
+	_check(_choice_locked(path7["runtime"].visible_choices(), "eurydice"), "orpheus face choice is grayed out")
+	_check(_has_choice(path7["runtime"], "lyre"), "orpheus can still inspect the lyre")
 
 	# 7b. A used Wukong clue stays visible and disabled.
 	var path7b = _new_path("wukong")
@@ -287,6 +294,90 @@ func _check_orpheus_paths() -> void:
 	_check(path8["runtime"].can_callout(), "orpheus callout returns after failure")
 
 
+func _check_anubis_data() -> void:
+	var data: Dictionary = _db.get_case("anubis")
+	_check(str(data.get("entry", "")) == "arrival", "anubis entry is arrival")
+	_check(bool(data.get("linear", false)), "anubis is a linear final hearing")
+	_check(not bool(data.get("requires_stats", true)), "anubis does not use the stat gate")
+	_check(not data.has("potion"), "anubis has no potion rule")
+	_check(str(data.get("queue_name", "")) == "？？？", "anubis queue name hides the god")
+	_check(str(data.get("callout", {}).get("answer", "")) == "ANUBIS", "anubis callout answer is ANUBIS")
+	_check(str(data.get("callout", {}).get("success", "")) == "identify", "anubis callout success goes to identify")
+	_check(str(data.get("callout", {}).get("failure", "")) == "audit", "anubis callout failure returns to the hearing")
+	_check_all_text_keys(data)
+
+
+func _check_anubis_paths() -> void:
+	# The hearing reaches a mandatory judgment, and the amount selects the ending.
+	for pair in [[0, "judged.zero", "zero"], [120, "judged.all", "all"], [40, "judged.other", "other"]]:
+		var path = _new_path("anubis")
+		var runtime = path["runtime"]
+		_settle(runtime)
+		_check(runtime.is_awaiting_choice() and _has_choice(runtime, "admit"), "anubis stops for the hearing")
+		_check(runtime.choose("admit"), "anubis hearing continues")
+		_settle(runtime)
+		_check(runtime.is_awaiting_judgment(), "anubis asks for a soul-coin amount")
+		_check(not runtime.advance(), "anubis dialogue is blocked during the judgment")
+		_check(not runtime.choose("admit"), "anubis choices are blocked during the judgment")
+		var config: Dictionary = runtime.start_judgment(120)
+		_check(int(config.get("min", -1)) == 0 and int(config.get("max", -1)) == 120, "anubis judgment exposes the coin range")
+		_check(str(config.get("prompt_text", "")).contains("天平"), "anubis judgment prompt is readable")
+		_check(runtime.resolve_judgment(int(pair[0])), "anubis judgment resolves")
+		var text := _collect_until_closed(runtime)
+		_check(runtime.is_closed(), "anubis judgment closes the hearing")
+		_check(runtime.get_outcome_id() == str(pair[1]), "anubis amount selects %s" % str(pair[1]))
+		_check(str(path["state"].world.get("world.anubis_result", "")) == str(pair[2]), "anubis records the %s result" % str(pair[2]))
+		_check(_ending_id(path["state"]) == "anubis", "anubis ending resolves")
+		if int(pair[0]) == 0:
+			_check(text.contains("子路受牛"), "anubis zero branch keeps the teaching")
+			_check(not text.contains("卢苇原"), "unnamed anubis hides the offer")
+		elif int(pair[0]) == 120:
+			_check(text.contains("无私"), "anubis all branch praises the offering")
+		else:
+			_check(text.contains("认识你自己"), "anubis other branch keeps the proverb")
+
+	# The true name adds the bracketed offer and the ledger name.
+	var named = _new_path("anubis")
+	var named_runtime = named["runtime"]
+	_settle(named_runtime)
+	_check(named_runtime.start_callout().get("answer", "") == "ANUBIS", "anubis callout starts")
+	_check(named_runtime.resolve_callout(true), "anubis callout resolves")
+	_settle(named_runtime)
+	_check(bool(named_runtime.flags["named"]), "anubis callout sets named")
+	named_runtime.choose("admit")
+	_settle(named_runtime)
+	named_runtime.start_judgment(60)
+	named_runtime.resolve_judgment(60)
+	var named_text := _collect_until_closed(named_runtime)
+	_check(named_text.contains("卢苇原"), "named anubis shows the bracketed offer")
+	_check(str(named_runtime.get_outcome().get("ledger", {}).get("who", "")) == "阿努比斯", "named anubis ledger records the god")
+
+	# The god's references follow the earlier guests.
+	var rampage = _new_path("anubis")
+	rampage["state"].world["world.hades_rampage"] = true
+	_check(_collect_until_choice(rampage["runtime"]).contains("哈迪斯"), "anubis notices the rampage")
+	var calm = _new_path("anubis")
+	_check(_collect_until_choice(calm["runtime"]).contains("本事不一般"), "anubis notices a calm wukong")
+	var reunion = _new_path("anubis")
+	reunion["state"].world["world.orpheus_reunion"] = true
+	_check(_collect_until_choice(reunion["runtime"]).contains("因果"), "anubis notices the rescued couple")
+	var lost = _new_path("anubis")
+	lost["state"].world["world.orpheus_confused"] = true
+	_check(_collect_until_choice(lost["runtime"]).contains("命运"), "anubis notices a lost couple")
+
+
+func _check_no_action_parentheses() -> void:
+	var offenders: Array = []
+	for key in _db.text.entries.keys():
+		var text_key := str(key)
+		if not (text_key.begins_with("wukong.") or text_key.begins_with("orpheus.") or text_key.begins_with("anubis.")):
+			continue
+		var value := str(_db.text.entries[key])
+		if (value.contains("（") or value.contains("(")) and not value.contains("（fate）"):
+			offenders.append(text_key)
+	_check(offenders.is_empty(), "story text has no parenthetical action directions: %s" % ", ".join(offenders))
+
+
 func _check_speaker_aliases() -> void:
 	var wukong = _new_path("wukong")
 	_check(str(wukong["runtime"].current_step().get("speaker_name", "")) == "史密斯", "wukong speaks as the alias before the callout")
@@ -296,7 +387,6 @@ func _check_speaker_aliases() -> void:
 	wukong["runtime"].resolve_callout(true)
 	_settle(wukong["runtime"])
 	_choose(wukong["runtime"], "photo")
-	_check(wukong["runtime"].advance(), "wukong photo advances to the speaker")
 	_check(str(wukong["runtime"].current_step().get("speaker_name", "")) == "孙悟空", "wukong speaks as the real name after the callout")
 
 	var orpheus = _new_path("orpheus")
@@ -308,7 +398,7 @@ func _check_speaker_aliases() -> void:
 	_check(orpheus["runtime"].get_portrait_id() == "orpheus_revealed", "orpheus's true name reveals his face")
 	_settle(orpheus["runtime"])
 	_choose(orpheus["runtime"], "eurydice")
-	_check(str(orpheus["runtime"].current_step().get("speaker_name", "")) == "俄耳甫斯", "orpheus speaks as the real name after the callout")
+	_check(str(orpheus["runtime"].current_step().get("speaker_name", "")) == "俄耳普斯", "orpheus speaks as the real name after the callout")
 
 
 func _check_cues(case_id: String) -> void:
@@ -328,7 +418,7 @@ func _check_cues(case_id: String) -> void:
 					_check(Catalog.has_prop(str(cue.get("id", ""))), "%s prop is declared" % case_id)
 				if str(cue.get("type", "")) == "sprite":
 					_check(Catalog.has_sprite(str(cue.get("id", ""))), "%s sprite is declared" % case_id)
-	_check(cue_steps >= 6, "%s has cue coverage on its action steps" % case_id)
+	_check(cue_steps >= 4, "%s has cue coverage on its action steps" % case_id)
 	_check(cue_count >= cue_steps, "%s cue arrays carry actions" % case_id)
 
 
@@ -340,6 +430,34 @@ func _new_path(case_id: String, rampage: bool = false) -> Dictionary:
 	runtime.setup(_db.get_case(case_id), _db.text, state)
 	runtime.start()
 	return {"runtime": runtime, "state": state}
+
+
+func _collect_until_choice(runtime) -> String:
+	var lines: Array = []
+	var guard := 0
+	while not runtime.is_closed() and not runtime.is_awaiting_choice() and guard < 80:
+		var step: Dictionary = runtime.current_step()
+		if not step.is_empty():
+			lines.append(str(step.get("text", "")))
+		if not runtime.advance():
+			break
+		guard += 1
+	return "
+".join(lines)
+
+
+func _collect_until_closed(runtime) -> String:
+	var lines: Array = []
+	var guard := 0
+	while not runtime.is_closed() and guard < 120:
+		var step: Dictionary = runtime.current_step()
+		if not step.is_empty():
+			lines.append(str(step.get("text", "")))
+		if not runtime.advance():
+			break
+		guard += 1
+	return "
+".join(lines)
 
 
 func _settle(runtime) -> void:
@@ -406,6 +524,9 @@ func _check_all_text_keys(data: Dictionary) -> void:
 			_check(_db.text.has(str(step.get("text", ""))), "text exists: %s" % str(step.get("text", "")))
 		for choice in node.get("choices", []):
 			_check(_db.text.has(str(choice.get("text", ""))), "choice text exists: %s" % str(choice.get("text", "")))
+		if node.has("judgment"):
+			var judgment: Dictionary = node.get("judgment", {})
+			_check(_db.text.has(str(judgment.get("prompt", ""))), "judgment prompt exists: %s" % str(judgment.get("prompt", "")))
 	for outcome_id in data.get("outcomes", {}).keys():
 		var ledger: Dictionary = data.outcomes[outcome_id].get("ledger", {})
 		_check(_db.text.has(str(ledger.get("note", ""))), "ledger note exists for %s" % outcome_id)

@@ -13,10 +13,15 @@ const Shop := preload("res://scripts/demo/pixel_shop.gd")
 const Alchemy := preload("res://scripts/demo/alchemy_panel.gd")
 const Market := preload("res://scripts/demo/market_panel.gd")
 const StoryPanel := preload("res://scripts/demo/story_panel.gd")
+const StoryHotspotLayer := preload("res://scripts/demo/story_hotspot_layer.gd")
+const JudgmentPanel := preload("res://scripts/demo/judgment_panel.gd")
+const EndingScreen := preload("res://scripts/demo/ending_screen.gd")
 const DayReportPanel := preload("res://scripts/demo/day_report_panel.gd")
 const CodexPanel := preload("res://scripts/demo/codex_panel.gd")
 const SaveMenu := preload("res://scripts/demo/save_menu.gd")
 const SaveSlots := preload("res://scripts/demo/save_slots.gd")
+const StoryStage := preload("res://scripts/story/story_stage.gd")
+const StoryDirector := preload("res://scripts/story/story_director.gd")
 const Data := preload("res://scripts/systems/playtest_data.gd")
 const Session := preload("res://scripts/systems/playtest_session.gd")
 const Fishing := preload("res://scripts/systems/playtest_fishing.gd")
@@ -66,9 +71,15 @@ var alchemy: Alchemy
 var market: Market
 var soul_hud: SoulHUD
 var story_panel: StoryPanel
+var story_hotspots: StoryHotspotLayer
+var judgment_panel: JudgmentPanel
+var _ending_screen: EndingScreen
+var story_stage: StoryStage
+var story_director: StoryDirector
 var day_report: DayReportPanel
 
 var started: bool = false
+var story_lab := false
 var current_location: String = "River"
 var auto_pause_on_focus_loss: bool = true
 var persist_save: bool = true
@@ -103,6 +114,10 @@ var _river_image: TextureRect
 var _shop_image: TextureRect
 var _river_viewport: SubViewport
 var _shop_viewport: SubViewport
+var _story_screen: Control
+var _story_cue_key := ""
+var _story_last_soul_id := -1
+var _story_last_text := ""
 var _pause_banner: Control
 var _pause_buttons: Array[Button] = []
 var _pause_button_animation: Tween
@@ -213,6 +228,17 @@ func _ready() -> void:
 	_shop_viewport = shop_display["viewport"]
 	shop.bind(session)
 	shop.walk_started.connect(_audio.play.bind(Audio.Cue.FOOTSTEPS))
+
+	_story_screen = Control.new()
+	_story_screen.size = BASE_SIZE
+	_story_screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage.add_child(_story_screen)
+	story_stage = StoryStage.new()
+	story_stage.name = "StoryStage"
+	_stage.add_child(story_stage)
+	story_stage.bind(shop, _story_screen)
+	story_director = StoryDirector.new()
+	story_director.set_stage(story_stage)
 
 
 	_build_menu()
@@ -532,6 +558,7 @@ func _build_river_ui() -> void:
 
 func _build_shop_ui() -> void:
 	_shop_ui = Control.new()
+	_shop_ui.size = BASE_SIZE
 	_shop_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_stage.add_child(_shop_ui)
 
@@ -567,6 +594,7 @@ func _build_shop_ui() -> void:
 	UI.panel(_shop_ui, Rect2(492, 112, 578, 116), "parchment")
 	_dialog = UI.label(_shop_ui, "", Rect2(516, 124, 530, 92), 22, UI.CREAM)
 	_dialog.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialog.gui_input.connect(_on_dialog_input)
 	_payout_notice = UI.label(_shop_ui, "", Rect2(516, 232, 530, 34), 20, UI.GOLD)
 
 	# 4. Top-Right: Compact Waiting Queue in Sky (keeps underworld gate 100% visible!)
@@ -601,6 +629,23 @@ func _build_shop_ui() -> void:
 	story_panel.position = Vector2(500, 232)
 	story_panel.size = Vector2(562, 104)
 	_shop_ui.add_child(story_panel)
+
+	judgment_panel = JudgmentPanel.new()
+	judgment_panel.name = "JudgmentPanel"
+	judgment_panel.position = Vector2(400, 300)
+	_shop_ui.add_child(judgment_panel)
+	judgment_panel.submitted.connect(_on_judgment_submitted)
+
+	story_hotspots = StoryHotspotLayer.new()
+	story_hotspots.name = "StoryHotspots"
+	story_hotspots.setup(shop)
+	_shop_ui.add_child(story_hotspots)
+	story_hotspots.choice_made.connect(_on_story_hotspot)
+
+	_ending_screen = EndingScreen.new()
+	_ending_screen.name = "EndingScreen"
+	_ending_screen.finished.connect(_return_to_title)
+	_stage.add_child(_ending_screen)
 
 
 func _build_pause() -> void:
@@ -827,32 +872,69 @@ func _show_next_tutorial_tip() -> void:
 func _start_story_lab() -> void:
 	if started:
 		return
+	story_lab = true
 	persist_save = false
 	started = true
 	session.start_shift()
-	for day in [1, 2]:
-		if day != session.day:
-			session._open_day(day)
-		session.advance(Session.GUESTS_PER_DAY * Data.ARRIVAL_MAX + 1.0)
-		for soul in session.souls.duplicate():
-			if not soul.has("story_case"):
-				soul.stats = session.requirements[0]
-				session.release_soul(int(soul.id))
+	session.advance(Session.GUESTS_PER_DAY * Data.ARRIVAL_MAX + 1.0)
+	_story_lab_clear_ordinary()
+	_story_lab_select_guest()
 	session.coins = 200
 	session.potions.clear()
 	session._add_potion("lab", "暖心药", Vector3i(0, 4, 0), -1, 0)
 	session._add_potion("lab", "极识药", Vector3i(10, 0, -4), -1, 0)
 	session._add_potion("lab", "零值药", Vector3i(1, 0, -1), -1, 0)
 	_show_location("Shop")
-	for soul in session.souls:
-		if soul.has("story_case"):
-			shop.select_guest(int(soul.id))
-			break
 	_refresh_shared()
-	print("Story lab: %d story guest(s), %d potion(s)" % [
+	print("Story lab: day %d, %d guest(s), %d potion(s)" % [
+		session.day,
 		session.souls.size(),
 		session.potions.size(),
 	])
+
+
+func _story_lab_next_day() -> void:
+	if not story_lab or session.day >= Session.DAY_COUNT:
+		return
+	# Drop the current queue, including any unresolved story guest.
+	session.story_runtimes.clear()
+	session.souls.clear()
+	session.awaiting_day_report = false
+	session.pending_day_report = {}
+	session.day_story_entries.clear()
+	session.last_story_outcome = ""
+	session.last_payout = 0
+	shop.clear_departures()
+	shop.selected_id = -1
+	shop.fed_flash = 0.0
+	session._open_day(session.day + 1)
+	session.advance(Session.GUESTS_PER_DAY * Data.ARRIVAL_MAX + 1.0)
+	_story_lab_clear_ordinary()
+	_story_lab_select_guest()
+	_refresh_shared()
+
+
+func _story_lab_clear_ordinary() -> void:
+	for soul in session.souls.duplicate():
+		if soul.has("story_case") or bool(soul.get("fixed_stats", false)) or int(soul.case_id) == Data.DROWNED_LYRE_PLAYER:
+			continue
+		session._first_services[int(soul.case_id)] = true
+		session.released_count += 1
+		session.souls.erase(soul)
+
+
+func _story_lab_select_guest() -> void:
+	if session.souls.is_empty():
+		return
+	for soul in session.souls:
+		if soul.has("story_case"):
+			shop.select_guest(int(soul.id))
+			return
+	for soul in session.souls:
+		if bool(soul.get("fixed_stats", false)) or int(soul.case_id) == Data.DROWNED_LYRE_PLAYER:
+			shop.select_guest(int(soul.id))
+			return
+	shop.select_guest(int(session.souls[0].id))
 
 
 
@@ -958,6 +1040,12 @@ func save_progress(slot: int) -> bool:
 			entry["story_case"] = str(s.story_case)
 			entry["story_state"] = s.get("story_state", {})
 			entry["story_outcome"] = str(s.get("story_outcome", ""))
+		if bool(s.get("fixed_stats", false)):
+			entry["fixed_stats"] = true
+		if bool(s.get("anubis_disguise", false)):
+			entry["anubis_disguise"] = true
+		if str(s.get("story_echo", "")) != "":
+			entry["story_echo"] = str(s.story_echo)
 		saved_souls.append(entry)
 	var payload := {
 		"saved_at": Time.get_datetime_string_from_system(false, true).substr(0, 16),
@@ -1083,7 +1171,13 @@ func load_progress(slot: int) -> bool:
 				soul["story_case"] = str(s.story_case)
 				soul["story_state"] = s.get("story_state", {})
 				soul["story_outcome"] = str(s.get("story_outcome", ""))
-			elif from_v15 or not s.has("doses_used") or not s.has("fee"):
+			if bool(s.get("fixed_stats", false)):
+				soul["fixed_stats"] = true
+			if bool(s.get("anubis_disguise", false)):
+				soul["anubis_disguise"] = true
+			if str(s.get("story_echo", "")) != "":
+				soul["story_echo"] = str(s.story_echo)
+			if str(s.get("story_case", "")) == "" and not bool(s.get("fixed_stats", false)) and (from_v15 or not s.has("doses_used") or not s.has("fee")):
 				fees_to_recalculate.append(soul)
 			session.souls.append(soul)
 	var schedule: Dictionary = data.get("day_schedule", {})
@@ -1170,6 +1264,8 @@ func _cycle_location(step: int) -> void:
 
 func _show_location(value: String, from_input: bool = false) -> void:
 	if not started or session.paused or value not in LOCATION_ORDER:
+		return
+	if judgment_panel != null and judgment_panel.is_active():
 		return
 	if from_input and current_location != value:
 		_audio.play(Audio.Cue.MARKET_OPEN if value == "Market" else Audio.Cue.PAGE_TURN)
@@ -1531,6 +1627,10 @@ func _handle_game_key(code: Key) -> bool:
 		else:
 			_save_menu.handle_key(code)
 		return true
+	if _ending_screen != null and _ending_screen.is_active():
+		if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
+			_ending_screen.advance()
+		return true
 	if started and not session.paused and current_location == "Shop" and story_panel != null and story_panel.is_typing():
 		if code >= KEY_A and code <= KEY_Z:
 			story_panel.submit_letter(OS.get_keycode_string(code))
@@ -1538,13 +1638,18 @@ func _handle_game_key(code: Key) -> bool:
 			story_panel.cancel_callout()
 		return true
 	if day_report != null and day_report.visible:
-		if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
+		if story_lab and code == KEY_N:
+			_story_lab_next_day()
+		elif code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
 			_close_day_report()
 		return true
 	if not started:
 		return _title_key(code)
 	if session.paused:
 		return _pause_key(code)
+	if story_lab and code == KEY_N:
+		_story_lab_next_day()
+		return true
 	if code == KEY_ESCAPE:
 		_set_paused(true)
 		return true
@@ -1621,6 +1726,10 @@ func _river_key(code: Key) -> bool:
 
 
 func _reception_key(code: Key) -> bool:
+	var story = _selected_story_runtime()
+	if story != null and story.has_pending_steps() and code == KEY_SPACE:
+		_story_advance()
+		return true
 	match code:
 		KEY_W, KEY_S:
 			_move_dose(1 if code == KEY_S else -1)
@@ -1730,27 +1839,74 @@ func _refresh_shared() -> void:
 	var story = _selected_story_runtime()
 	if story == null or current_location != "Shop" or session.paused:
 		story_panel.cancel_callout()
+	if shop.selected_id != _story_last_soul_id:
+		_story_last_soul_id = shop.selected_id
+		_story_cue_key = ""
+		_story_last_text = ""
+		if story_director != null:
+			story_director.cancel()
+		if story_stage != null:
+			story_stage.reset()
 	var typing := story_panel.is_typing()
-	session.set_story_open(typing)
-	_story_action_button.visible = story != null and not story.is_closed()
-	_story_action_button.disabled = session.paused
+	var judging := judgment_panel != null and judgment_panel.is_active()
+	if session.paused:
+		if judging:
+			judgment_panel.close()
+		judging = false
+	elif story != null and story.is_awaiting_judgment() and not judging and judgment_panel != null:
+		judgment_panel.open(story, session.coins)
+		judging = judgment_panel.is_active()
+	elif story == null or not story.is_awaiting_judgment():
+		if judgment_panel != null and judgment_panel.is_active():
+			judgment_panel.close()
+		judging = false
+	session.set_story_open(typing or judging)
+	var revealed: bool = story != null and story.is_identity_revealed()
+	var linear := story != null and bool(story.case_data.get("linear", false))
+	var hearing_done := linear and bool(story.flags.get("judgment.done", false))
+	_story_action_button.visible = story != null and not story.is_closed() and (not linear or not revealed) and not hearing_done and not judging
+	_story_action_button.disabled = session.paused or judging
 	_release_button.size.x = 196 if _story_action_button.visible else 404
 	if story != null:
-		var revealed: bool = story.is_identity_revealed()
+		if not story.changed.is_connected(_refresh_shared):
+			story.changed.connect(_refresh_shared)
 		var portrait: String = story.get_portrait_id()
 		if portrait.is_empty():
 			shop.clear_story_sprite()
-		else:
+		elif not shop.has_story_sprite() or story.is_awaiting_choice() or story.is_closed():
 			shop.set_story_sprite(portrait)
-		_dialog.text = story.get_greeting()
-		_guest_state.text = "真名已解放" if revealed else "特殊来客"
+		var step: Dictionary = story.current_step()
+		var line := str(step.get("text", ""))
+		if line == "":
+			_dialog.text = _story_last_text if _story_last_text != "" else story.get_greeting()
+		else:
+			var speaker := str(step.get("speaker_name", ""))
+			_dialog.text = ("%s：%s" % [speaker, line]) if speaker != "" else line
+			_story_last_text = _dialog.text
+		_dialog.mouse_filter = Control.MOUSE_FILTER_STOP if story.has_pending_steps() and not judging else Control.MOUSE_FILTER_IGNORE
+		if judging:
+			_guest_state.text = "将渡魂币放上天平"
+		elif story.has_pending_steps():
+			_guest_state.text = "空格 / 点击对话继续"
+		elif story.is_awaiting_choice():
+			_guest_state.text = "按 Shift 继续" if linear else "点击可疑处调查"
+		elif revealed:
+			_guest_state.text = "真名已解放"
+		else:
+			_guest_state.text = "特殊来客"
 		_guest_state.add_theme_color_override("font_color", UI.GOOD if revealed else UI.GOLD)
-		_service_fee.text = "结果记入账本"
-		_release_button.text = "Shift  结束接待" if story.is_closed() else "Shift  放行"
-		_release_button.disabled = session.paused or typing
-		_story_action_button.text = "取消（Esc）" if typing else ("拒绝入境" if revealed else story.get_callout_button_text())
+		_service_fee.text = "称心结束后进入结局" if linear else "结果记入账本"
+		if story.is_closed():
+			_release_button.text = "Shift  结束接待"
+		elif linear:
+			_release_button.text = "Shift  继续"
+		else:
+			_release_button.text = "Shift  放行"
+		_release_button.disabled = session.paused or typing or judging
+		_story_action_button.text = "取消（Esc）" if typing else ("拒绝入境" if revealed and not linear else story.get_callout_button_text())
 	else:
 		shop.clear_story_sprite()
+		_dialog.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var ready := session.can_release(shop.selected_id)
 		_guest_state.text = "达到要求 · 可以放行" if ready else ("窗口空闲" if selected.is_empty() else "等待调配药剂")
 		_guest_state.add_theme_color_override("font_color", UI.GOOD if ready else UI.GOLD)
@@ -1772,10 +1928,15 @@ func _refresh_shared() -> void:
 				_service_fee.text += "\n已用 %d 剂　再次用药奖金减半" % dose_count
 
 	if not shop.departure_times.is_empty():
-		_payout_notice.text = "未放行　账本已记" if session.last_story_outcome in ["reject", "leave"] else "放行成功　渡魂币 +%d" % session.last_payout
+		if session.last_story_outcome == "judged":
+			_payout_notice.text = "称心结束　天平归位"
+		else:
+			_payout_notice.text = "未放行　账本已记" if session.last_story_outcome in ["reject", "leave"] else "放行成功　渡魂币 +%d" % session.last_payout
 	else:
 		_payout_notice.text = ""
-	if session.is_complete():
+	if session.is_complete() and not session.awaiting_day_report:
+		_show_ending()
+	elif session.is_complete():
 		var ending_lines := session.get_ending_lines()
 		_dialog.text = "\n".join(ending_lines) if not ending_lines.is_empty() else "五天的灵魂都已放行。"
 	elif story == null:
@@ -1786,6 +1947,9 @@ func _refresh_shared() -> void:
 		else:
 			_dialog.text = "请帮我补全灵魂，让我能通过冥府之门。"
 
+	_sync_story_cues(story if current_location == "Shop" and not session.paused else null)
+	if story_hotspots != null:
+		story_hotspots.refresh(story if current_location == "Shop" and not session.paused and not session.awaiting_day_report and not judging else null)
 	_refresh_dose()
 	alchemy.refresh()
 	_refresh_tutorial()
@@ -1805,7 +1969,7 @@ func _rebuild_queue() -> void:
 		btn.pressed.connect(func() -> void: shop.select_guest(sid))
 		_queue_box.add_child(btn)
 		_queue_buttons.append(btn)
-		var eligible := not soul.has("story_case") and session.is_eligible(soul.stats)
+		var eligible := not soul.has("story_case") and session.can_release(sid)
 		var dot_col := UI.GOOD if eligible else UI.GOLD
 		var lbl := UI.label(btn, ("● " if eligible else "") + str(soul.name), Rect2(10, 2, 204, 26), 15, dot_col if is_sel else UI.CREAM)
 		lbl.clip_text = true
@@ -1881,6 +2045,11 @@ func _refresh_dose() -> void:
 	var story = _selected_story_runtime()
 	if story != null:
 		soul_hud.set_state(selected, {}, session.day, session.requirements)
+		if judgment_panel != null and judgment_panel.is_active():
+			_serve_button.disabled = true
+			_dose_preview.text = "正在称量……"
+			_dose_preview.add_theme_color_override("font_color", UI.MUTED)
+			return
 		if story_panel.is_typing():
 			_serve_button.disabled = true
 			_dose_preview.text = "正在输入真名……"
@@ -1910,7 +2079,7 @@ func _refresh_dose() -> void:
 		_dose_preview.add_theme_color_override("font_color", UI.MUTED)
 	else:
 		var after: Vector3i = preview.after
-		var ok := session.is_eligible(after)
+		var ok := bool(selected.get("fixed_stats", false)) or session.is_eligible(after)
 		_dose_preview.text = "预览饮后：%d / %d / %d　%s" % [after.x, after.y, after.z, "放行 %d 枚" % int(preview.reward) if ok else "仍需继续调整"]
 		_dose_preview.add_theme_color_override("font_color", UI.GOOD if ok else UI.GOLD)
 
@@ -1922,8 +2091,7 @@ func _serve_dose() -> void:
 	_selected_dose = null
 	var story = _selected_story_runtime()
 	if story != null:
-		if session.feed_story_potion(shop.selected_id, chosen[0], chosen[1]):
-			story.skip_dialogue()
+		session.feed_story_potion(shop.selected_id, chosen[0], chosen[1])
 	else:
 		session.serve(shop.selected_id, chosen[0], chosen[1])
 
@@ -1936,7 +2104,7 @@ func _selected_story_runtime():
 
 
 func _release_guest() -> void:
-	if session.paused or story_panel.is_typing():
+	if session.paused or story_panel.is_typing() or judgment_panel.is_active():
 		return
 	var story = _selected_story_runtime()
 	if story == null:
@@ -1950,7 +2118,7 @@ func _release_guest() -> void:
 
 
 func _story_action() -> void:
-	if session.paused:
+	if session.paused or judgment_panel.is_active():
 		return
 	if story_panel.is_typing():
 		story_panel.cancel_callout()
@@ -1964,6 +2132,80 @@ func _story_action() -> void:
 			shop.begin_story_departure()
 	else:
 		story_panel.start_callout(story)
+
+
+func _on_judgment_submitted(amount: int) -> void:
+	var story = _selected_story_runtime()
+	if story == null or not story.judgment_active:
+		return
+	story.resolve_judgment(amount)
+	_refresh_shared()
+
+
+func _on_story_hotspot(choice_id: String) -> void:
+	if session.paused or story_panel.is_typing():
+		return
+	var story = _selected_story_runtime()
+	if story == null or not story.is_awaiting_choice():
+		return
+	if story.choose(choice_id):
+		_refresh_shared()
+
+
+func _story_advance() -> void:
+	if session.paused or story_panel.is_typing() or judgment_panel.is_active():
+		return
+	var story = _selected_story_runtime()
+	if story == null or story.is_closed() or not story.has_pending_steps():
+		return
+	if story_director != null and story_director.blocks_advance():
+		story_director.skip()
+		return
+	story.advance()
+	_refresh_shared()
+
+
+func _on_dialog_input(event: InputEvent) -> void:
+	if judgment_panel != null and judgment_panel.is_active():
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_story_advance()
+		_dialog.accept_event()
+
+
+func _sync_story_cues(story) -> void:
+	if story_director == null:
+		return
+	if story == null:
+		_story_cue_key = ""
+		story_director.cancel()
+		return
+	var step: Dictionary = story.current_step()
+	var identity := "%s|%d|%s" % [story.get_node_id(), story.step_index, str(step.get("key", ""))]
+	if identity == _story_cue_key:
+		return
+	_story_cue_key = identity
+	if step.is_empty():
+		story_director.cancel()
+		return
+	story_director.play(str(step.get("key", "")), step.get("cues", []), story.get_context())
+
+
+func _show_ending() -> void:
+	if _ending_screen == null or _ending_screen.is_active():
+		return
+	var lines := session.get_ending_lines()
+	if lines.is_empty():
+		return
+	_hud.visible = false
+	_shop_ui.visible = false
+	shop.clear_departures()
+	shop.selected_id = -1
+	if story_director != null:
+		story_director.cancel()
+	if story_stage != null:
+		story_stage.reset()
+	_ending_screen.show_ending(lines, str(session.story_state.world.get("world.anubis_result", "")) != "")
 
 
 func _close_day_report() -> void:
@@ -2136,13 +2378,17 @@ func _update_scene_audio(delta: float) -> void:
 func _process(delta: float) -> void:
 	if not started:
 		return
+	if story_director != null:
+		story_director.tick(delta)
 	_update_scene_audio(delta)
 	if _bone_notice_remaining > 0.0 and not session.paused:
 		_bone_notice_remaining = maxf(_bone_notice_remaining - delta, 0.0)
 		if _bone_notice_remaining == 0.0:
 			_refresh_river_notice()
 	_refresh_river()
-	if session.tutorial_pause_arrivals:
+	if story_lab:
+		_arrival.text = "N 下一天"
+	elif session.tutorial_pause_arrivals:
 		_arrival.text = "正在接待首单"
 	else:
 		_arrival.text = "本班来客已全部到达" if not session.has_more_arrivals() else "%.0f 秒后有新来客" % ceilf(session.spawn_remaining)

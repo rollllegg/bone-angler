@@ -182,7 +182,7 @@ func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 	for outcome_id in outcomes.keys():
 		var outcome: Dictionary = outcomes[outcome_id]
 		var result := str(outcome.get("result", ""))
-		if result not in ["release", "reject", "stay", "leave"]:
+		if result not in ["release", "reject", "stay", "leave", "judged"]:
 			_error("%s: outcome '%s' has invalid result '%s'" % [case_id, outcome_id, result])
 		var ledger: Dictionary = outcome.get("ledger", {})
 		if ledger.is_empty():
@@ -378,6 +378,7 @@ func _validate_nodes(graph_data: Dictionary, node_ids: Dictionary, outcomes: Dic
 		if exits != 1:
 			_error("%s node '%s' must have exactly one exit (found %d)" % [case_id, id, exits])
 		_check_effects(node.get("set", []), case_flags, world_decl, "%s node %s set" % [case_id, id])
+		_validate_judgment(node, case_flags, case_id)
 		for step in node.get("steps", []):
 			_check_text_key(str(step.get("text", "")), "%s node %s step" % [case_id, id])
 			if step.has("if"):
@@ -385,6 +386,23 @@ func _validate_nodes(graph_data: Dictionary, node_ids: Dictionary, outcomes: Dic
 			var speaker := str(step.get("speaker", ""))
 			if speaker != "" and not speakers.has(speaker):
 				_error("%s node '%s': undeclared speaker '%s'" % [case_id, id, speaker])
+
+
+func _validate_judgment(node: Dictionary, case_flags: Dictionary, case_id: String) -> void:
+	if not node.has("judgment"):
+		return
+	if node.has("choices"):
+		_error("%s node '%s': judgment cannot share a node with choices" % [case_id, str(node.get("id", ""))])
+	var raw = node.get("judgment")
+	if typeof(raw) != TYPE_DICTIONARY:
+		_error("%s node '%s': judgment must be an object" % [case_id, str(node.get("id", ""))])
+		return
+	var config: Dictionary = raw
+	if not config.has("min") or typeof(config.get("min")) not in [TYPE_INT, TYPE_FLOAT]:
+		_error("%s node '%s': judgment needs a numeric min" % [case_id, str(node.get("id", ""))])
+	_check_text_key(str(config.get("prompt", "")), "%s node %s judgment prompt" % [case_id, str(node.get("id", ""))])
+	if not node.has("branch") and not node.has("next"):
+		_error("%s node '%s': judgment needs a branch or next" % [case_id, str(node.get("id", ""))])
 
 
 func _validate_choices(node: Dictionary, node_ids: Dictionary, case_flags: Dictionary, world_decl: Dictionary, case_id: String, speakers: Dictionary) -> void:
@@ -415,8 +433,44 @@ func _validate_choices(node: Dictionary, node_ids: Dictionary, case_flags: Dicti
 			_check_condition(str(choice.locked_if), case_flags, world_decl, "%s choice %s locked" % [case_id, choice_id])
 		if choice.has("locked_text"):
 			_check_text_key(str(choice.locked_text), "%s choice %s locked text" % [case_id, choice_id])
+		if not choice.has("kind"):
+			_check_hotspot(choice, case_id, choice_id)
 	if unconditional == 0:
 		_error("%s node '%s': no unconditional choice (player can be stuck)" % [case_id, node_id])
+
+
+func _check_hotspot(choice: Dictionary, case_id: String, choice_id: String) -> void:
+	if not choice.has("hotspot"):
+		_error("%s choice %s: missing hotspot" % [case_id, choice_id])
+		return
+	var hotspot = choice.get("hotspot")
+	if typeof(hotspot) != TYPE_DICTIONARY:
+		_error("%s choice %s: hotspot must be an object" % [case_id, choice_id])
+		return
+	_check_hotspot_rects(hotspot.get("rects", []), case_id, choice_id, "hotspot")
+	var variants = hotspot.get("variants", {})
+	if typeof(variants) != TYPE_DICTIONARY:
+		_error("%s choice %s: hotspot variants must be an object" % [case_id, choice_id])
+		return
+	for key in variants:
+		_check_hotspot_rects(variants[key], case_id, choice_id, "hotspot variant %s" % str(key))
+
+
+func _check_hotspot_rects(rects, case_id: String, choice_id: String, label: String) -> void:
+	if typeof(rects) != TYPE_ARRAY or rects.is_empty():
+		_error("%s choice %s: %s needs a non-empty rects array" % [case_id, choice_id, label])
+		return
+	for index in rects.size():
+		var raw = rects[index]
+		if typeof(raw) != TYPE_ARRAY or raw.size() != 4:
+			_error("%s choice %s: %s rect %d needs 4 numbers" % [case_id, choice_id, label, index])
+			continue
+		var x := float(raw[0])
+		var y := float(raw[1])
+		var w := float(raw[2])
+		var h := float(raw[3])
+		if w <= 0.0 or h <= 0.0 or x < 0.0 or y < 0.0 or x + w > 48.0 or y + h > 64.0:
+			_error("%s choice %s: %s rect %d is outside the 48x64 portrait" % [case_id, choice_id, label, index])
 
 
 func _validate_branch(node: Dictionary, node_ids: Dictionary, case_flags: Dictionary, world_decl: Dictionary, case_id: String) -> void:

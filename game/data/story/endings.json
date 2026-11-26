@@ -1,6 +1,13 @@
 {
   "endings": [
     {
+      "epilogue": [],
+      "id": "anubis",
+      "if": "world.anubis_result != \"\"",
+      "priority": 30.0,
+      "text": "ending.anubis.1"
+    },
+    {
       "epilogue": [
         {
           "if": "case.wukong.named",

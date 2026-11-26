@@ -20,6 +20,8 @@ const STORY_SPRITES := {
 	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front.png"),
 	"orpheus_revealed": preload("res://assets/art/story/sprites/orpheus_revealed.png"),
 	"orpheus_turn": preload("res://assets/art/story/sprites/orpheus_turn.png"),
+	"anubis": preload("res://assets/art/story/sprites/anubis.png"),
+	"anubis_turn": preload("res://assets/art/story/sprites/anubis_turn.png"),
 }
 const STORY_SHADOWS := {
 	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise_shadow.png"),
@@ -29,12 +31,15 @@ const STORY_SHADOWS := {
 	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front_shadow.png"),
 	"orpheus_revealed": preload("res://assets/art/story/sprites/orpheus_revealed_shadow.png"),
 	"orpheus_turn": preload("res://assets/art/story/sprites/orpheus_turn_shadow.png"),
+	"anubis": preload("res://assets/art/story/sprites/anubis_shadow.png"),
+	"anubis_turn": preload("res://assets/art/story/sprites/anubis_turn_shadow.png"),
 }
 const STORY_TURNS := {
 	"wukong_disguise": "wukong_disguise_turn",
 	"wukong_monkey": "wukong_turn",
 	"orpheus_front": "orpheus_turn",
 	"orpheus_revealed": "orpheus_turn",
+	"anubis": "anubis_turn",
 }
 const COUNTER := Vector2(201, 194)
 const PATH_CORNER := Vector2(276, 177)
@@ -117,6 +122,18 @@ func clear_story_sprite() -> void:
 
 func has_story_sprite() -> bool:
 	return story_sprite != ""
+
+
+func is_story_sprite_flipped() -> bool:
+	return story_sprite_flip
+
+
+func get_story_portrait_rect() -> Rect2:
+	if story_sprite == "":
+		return Rect2()
+	var bob := Vector2(0, roundf(sin(clock * 2.0)))
+	var origin := COUNTER + bob + GUEST_OFFSET * START_SCALE
+	return Rect2(position + origin * scale, Vector2(48, 64) * START_SCALE * scale)
 
 
 func clear_departures() -> void:
