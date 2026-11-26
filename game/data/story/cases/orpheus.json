@@ -14,6 +14,7 @@
   "entry": "arrival",
   "fee": 60.0,
   "id": "orpheus",
+  "initial_choices": "inspect",
   "nodes": [
     {
       "id": "arrival",
@@ -39,26 +40,6 @@
     },
     {
       "choices": [
-        {
-          "hotspot": {
-            "rects": [
-              [
-                15.0,
-                22.0,
-                15.0,
-                13.0
-              ]
-            ]
-          },
-          "id": "eurydice",
-          "locked_if": "clue.eurydice",
-          "locked_text": "orpheus.choice.eurydice.locked",
-          "next": "inspect.eurydice",
-          "set": [
-            "clue.eurydice = true"
-          ],
-          "text": "orpheus.choice.eurydice"
-        },
         {
           "hotspot": {
             "rects": [
@@ -96,75 +77,29 @@
       "steps": []
     },
     {
-      "id": "inspect.eurydice",
-      "next": "inspect",
-      "steps": [
-        {
-          "speaker": "俄",
-          "text": "orpheus.inspect.eurydice.1"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.inspect.eurydice.2"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.inspect.eurydice.3"
-        }
-      ]
-    },
-    {
       "id": "inspect.lyre",
       "next": "inspect",
       "steps": [
         {
           "cues": [
             {
-              "alpha": 0.18,
-              "color": "#e7cf8a",
-              "duration": 0.2,
-              "type": "flash"
+              "action": "show",
+              "id": "lyre",
+              "position": [
+                202.0,
+                174.0
+              ],
+              "scale": 1.2,
+              "type": "prop"
             },
             {
-              "duration": 0.35,
-              "type": "wait"
+              "duration": 0.25,
+              "scale": 1.12,
+              "type": "zoom"
             }
           ],
           "speaker": "俄",
           "text": "orpheus.inspect.lyre.1"
-        },
-        {
-          "cues": [
-            {
-              "duration": 0.35,
-              "strength": 4.0,
-              "type": "shake"
-            },
-            {
-              "alpha": 0.2,
-              "color": "#9b8fb5",
-              "duration": 0.2,
-              "type": "flash"
-            },
-            {
-              "id": "orpheus_turn",
-              "type": "sprite"
-            },
-            {
-              "delay": 1.0,
-              "id": "orpheus_front",
-              "if": "not named",
-              "type": "sprite"
-            },
-            {
-              "delay": 1.0,
-              "id": "orpheus_revealed",
-              "if": "named",
-              "type": "sprite"
-            }
-          ],
-          "speaker": "俄",
-          "text": "orpheus.inspect.lyre.2"
         }
       ]
     },
@@ -247,20 +182,8 @@
               "type": "prop"
             }
           ],
-          "speaker": "圣",
+          "speaker": "俄",
           "text": "orpheus.potion.react.1"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.potion.react.2"
-        },
-        {
-          "speaker": "圣",
-          "text": "orpheus.potion.react.3"
-        },
-        {
-          "speaker": "俄",
-          "text": "orpheus.potion.react.4"
         }
       ]
     },
@@ -436,10 +359,6 @@
   "state": {
     "flags": {
       "callout.done": {
-        "default": false,
-        "type": "bool"
-      },
-      "clue.eurydice": {
         "default": false,
         "type": "bool"
       },

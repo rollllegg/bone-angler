@@ -34,6 +34,22 @@ const STORY_SHADOWS := {
 	"anubis": preload("res://assets/art/story/sprites/anubis_shadow.png"),
 	"anubis_turn": preload("res://assets/art/story/sprites/anubis_turn_shadow.png"),
 }
+const PROP_FREE_SPRITES := {
+	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise_no_prop.png"),
+	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey_no_prop.png"),
+	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front_no_prop.png"),
+	"orpheus_revealed": preload("res://assets/art/story/sprites/orpheus_revealed_no_prop.png"),
+}
+const PROP_FREE_SHADOWS := {
+	"wukong_disguise": preload("res://assets/art/story/sprites/wukong_disguise_no_prop_shadow.png"),
+	"wukong_monkey": preload("res://assets/art/story/sprites/wukong_monkey_no_prop_shadow.png"),
+	"orpheus_front": preload("res://assets/art/story/sprites/orpheus_front_no_prop_shadow.png"),
+	"orpheus_revealed": preload("res://assets/art/story/sprites/orpheus_revealed_no_prop_shadow.png"),
+}
+const CARRIED_PROPS := {
+	"wukong_disguise": "staff", "wukong_monkey": "staff",
+	"orpheus_front": "lyre", "orpheus_revealed": "lyre",
+}
 const STORY_TURNS := {
 	"wukong_disguise": "wukong_disguise_turn",
 	"wukong_monkey": "wukong_turn",
@@ -122,6 +138,18 @@ func clear_story_sprite() -> void:
 
 func has_story_sprite() -> bool:
 	return story_sprite != ""
+
+
+func is_showing_held_prop() -> bool:
+	return story_props != null and CARRIED_PROPS.has(story_sprite) and story_props.has_prop(str(CARRIED_PROPS[story_sprite]))
+
+
+func get_story_texture() -> Texture2D:
+	return PROP_FREE_SPRITES.get(story_sprite, FRONT) if is_showing_held_prop() else STORY_SPRITES.get(story_sprite, FRONT)
+
+
+func get_story_shadow() -> Texture2D:
+	return PROP_FREE_SHADOWS.get(story_sprite) if is_showing_held_prop() else STORY_SHADOWS.get(story_sprite)
 
 
 func is_story_sprite_flipped() -> bool:
@@ -250,11 +278,11 @@ func _draw() -> void:
 		var opacity := 1.0 if departure_elapsed < 0.0 else smoothstep(TURN_DURATION, COUNTER_CLEAR_TIME, departure_elapsed)
 		var texture: Texture2D = DROWNED_FRONT if selected.case_id == Data.DROWNED_LYRE_PLAYER else FRONT
 		if story_sprite != "" and selected.has("story_case"):
-			texture = STORY_SPRITES.get(story_sprite, FRONT)
+			texture = get_story_texture()
 		var flip := -START_SCALE if story_sprite_flip else START_SCALE
 		draw_set_transform(COUNTER + Vector2(0, roundf(sin(clock * 2.0))), 0.0, Vector2(flip, START_SCALE))
 		if story_sprite != "":
-			var shadow: Texture2D = STORY_SHADOWS.get(story_sprite)
+			var shadow := get_story_shadow()
 			if shadow != null:
 				draw_texture(shadow, GUEST_OFFSET, Color(1, 1, 1, 0.35 * opacity))
 		draw_texture(texture, GUEST_OFFSET, Color(1, 1, 1, opacity))

@@ -63,6 +63,17 @@ func _run() -> void:
 	_check(not saved_soul.is_empty(), "save contains the story soul")
 	_check(saved_soul.get("story_state", {}).has("flags"), "save contains the runtime snapshot")
 
+	# A save from the retired observer implementation must load as an ordinary guest.
+	for entry in saved_souls:
+		if int(entry.get("id", 0)) == 5:
+			_check(not entry.has("fixed_stats") and not entry.has("anubis_disguise"), "new saves do not write observer flags")
+			entry["stats"] = [10, 10, 10]
+			entry["before"] = [10, 10, 10]
+			entry["fee"] = 40
+			entry["fixed_stats"] = true
+			entry["anubis_disguise"] = true
+	_check(SaveSlots.write(directory, 0, payload), "legacy observer fixture is written")
+
 	_check(demo.load_progress(0), "saved slot loads")
 	await process_frame
 	var restored_id := -1
@@ -79,6 +90,20 @@ func _run() -> void:
 	_check(restored.get_node_id() == "inspect" and not restored.visible_choices().is_empty(), "load restores the choice hub")
 	demo.shop.select_guest(restored_id)
 	_check(demo.shop.story_sprite == "wukong_monkey" and demo._story_action_button.text == "拒绝入境", "load restores the revealed portrait and refusal action")
+
+	var ordinary: Dictionary = demo.session.get_soul(5)
+	_check(not ordinary.has("fixed_stats") and not ordinary.has("anubis_disguise") and not ordinary.has("story_case"), "loading retires the old observer flags")
+	_check(ordinary.stats == Vector3i(10, 10, 10), "migration preserves saved guest attributes")
+	_check(int(ordinary.fee) == demo.session.service_fee(ordinary.before), "migration restores ordinary service pricing")
+	demo.session._add_potion("test", "旧存档测试药", Vector3i(-1, -1, -1), -1, 0)
+	var potion_id := int(demo.session.potions.back().id)
+	_check(demo.session.preview(5, false, potion_id).after == Vector3i(9, 9, 9), "migrated guest previews normal potion effects")
+	_check(demo.session.serve(5, false, potion_id) and ordinary.stats == Vector3i(9, 9, 9), "migrated guest's attributes change after drinking")
+	ordinary.stats = Vector3i.ZERO
+	_check(not demo.session.can_release(5), "migrated guest must meet the ordinary requirements")
+	_check(demo.save_progress(0), "migrated save can be written again")
+	for entry in SaveSlots.read(save_path).get("souls", []):
+		_check(not entry.has("fixed_stats") and not entry.has("anubis_disguise"), "resaving removes legacy observer flags")
 
 	demo.persist_save = false
 	demo.free()

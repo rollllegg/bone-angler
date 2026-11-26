@@ -1,0 +1,35 @@
+{
+  "id": "staff",
+  "kind": "prop",
+  "prompt": "Use case: precise-object-edit / background-extraction. Edit ONLY this existing diagonal red-and-gold pixel-art staff sprite. Remove the residual neutral white/gray background specks on the upper-right tip and lower-left tip, replacing stray pixels outside the staff with genuine transparent alpha. Preserve the staff's exact full silhouette, diagonal lower-left to upper-right orientation, length, red and gold design, dark brown outline and warm golden highlights. No pale white or gray outline, no white specular dots, no extra objects, no character, no ground, no cast shadow, no text. Keep the same 48x64 logical pixel canvas and original placement, crisp nearest-neighbor pixel blocks, no antialiasing. Output a transparent PNG, with all original padding transparent.",
+  "source": "game/art/source/story/prop-showcase-v2/staff_clean/aligned-v2.perfect.png",
+  "source_sha256": "07dd34a7739bcb274f5c3c2c9284dba677e02a1f46d5aa3f35ea740c8e73d3a5",
+  "input_size": [
+    48,
+    64
+  ],
+  "output": "game/assets/art/story/props/staff_clean.png",
+  "output_sha256": "d31c77ab2d7e67bc49d8d92d3e190d0a9d3a54a21903f24288208fbdd403890b",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
+  "threshold": 245,
+  "min_component": 1,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
+  "shadow": false,
+  "palette": 0,
+  "bbox": [
+    0,
+    7,
+    46,
+    57
+  ],
+  "processed_at_utc": "2026-11-26T11:10:59.852217+00:00",
+  "keep_canvas": true
+}

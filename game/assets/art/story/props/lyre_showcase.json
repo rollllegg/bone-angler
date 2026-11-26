@@ -1,0 +1,34 @@
+{
+  "id": "lyre",
+  "kind": "prop",
+  "prompt": "Use case: precise-object-edit / background-extraction. Edit target: the attached tiny pixel-art golden lyre. Create a clean standalone inventory/held-prop sprite for this same 2D pixel-art game. Preserve its front-facing symmetric golden U-shaped lyre silhouette, dark brown pixel outline, gold shading, small lower soundbox, and a few thin ivory strings. Critical change: remove ALL white infill between the individual strings and inside the frame; every gap between strings and the frame must be genuinely transparent alpha, exactly like the surrounding background. The strings themselves remain visible as separate narrow ivory vertical lines. Only the lyre, no character, hands, body, ground, shadows, panel, text, watermark, or other objects. Keep the full instrument uncropped and centered with transparent padding. Crisp chunky low-resolution pixel art designed for a 40x40 game sprite, enlarged with nearest-neighbor pixel blocks; limited warm gold/brown/ivory palette. No antialiasing, no smooth gradients. Transparent PNG with real transparency both outside and through the instrument.",
+  "source": "game/art/source/story/lyre-showcase-v1/raw.perfect.png",
+  "source_sha256": "c52a07deb37325ae05d9234ba5493a8a8f613d54d8fa6f34c08ca9e6b8b1377c",
+  "input_size": [
+    41,
+    40
+  ],
+  "output": "game/assets/art/story/props/lyre_showcase.png",
+  "output_sha256": "7906308f2e53f9b0616273c3496b89ebce20b928c35fb713c70c4f482cee5c98",
+  "output_size": [
+    40,
+    40
+  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
+  "threshold": 245,
+  "min_component": 12,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
+  "shadow": false,
+  "palette": 16,
+  "bbox": [
+    9,
+    3,
+    32,
+    37
+  ],
+  "processed_at_utc": "2026-11-26T10:30:14.382104+00:00"
+}

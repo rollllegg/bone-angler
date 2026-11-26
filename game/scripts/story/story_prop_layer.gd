@@ -1,10 +1,9 @@
 extends RefCounted
-## Holds story prop state. pixel_shop draws the layers so a staff or tail can
-## sit behind the guest while held props stay in front.
+## Holds story prop state. Held objects are drawn in front of the guest.
 
 const TEXTURES := {
-	"lyre": preload("res://assets/art/story/props/lyre.png"),
-	"staff": preload("res://assets/art/story/props/staff.png"),
+	"lyre": preload("res://assets/art/story/props/lyre_showcase.png"),
+	"staff": preload("res://assets/art/story/props/staff_clean.png"),
 	"tail": preload("res://assets/art/story/props/tail.png"),
 	"coins": preload("res://assets/art/story/props/coins.png"),
 	"bowl": preload("res://assets/art/story/props/bowl.png"),
@@ -14,7 +13,7 @@ const TEXTURES := {
 	"scale": preload("res://assets/art/story/props/scale.png"),
 }
 
-const BEHIND := ["staff", "tail", "cloud"]
+const BEHIND := ["tail", "cloud"]
 
 var _props: Dictionary = {}
 

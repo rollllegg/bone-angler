@@ -11,35 +11,6 @@
       "duration": 0.25
     }
   ],
-  "orpheus.inspect.lyre.2": [
-    {
-      "type": "shake",
-      "strength": 4,
-      "duration": 0.35
-    },
-    {
-      "type": "flash",
-      "color": "#9b8fb5",
-      "alpha": 0.2,
-      "duration": 0.2
-    },
-    {
-      "type": "sprite",
-      "id": "orpheus_turn"
-    },
-    {
-      "type": "sprite",
-      "id": "orpheus_front",
-      "if": "not named",
-      "delay": 1.0
-    },
-    {
-      "type": "sprite",
-      "id": "orpheus_revealed",
-      "if": "named",
-      "delay": 1.0
-    }
-  ],
   "orpheus.identify.1": [
     {
       "type": "sprite",
@@ -87,14 +58,19 @@
   ],
   "orpheus.inspect.lyre.1": [
     {
-      "type": "flash",
-      "color": "#e7cf8a",
-      "alpha": 0.18,
-      "duration": 0.2
+      "type": "prop",
+      "id": "lyre",
+      "action": "show",
+      "position": [
+        202,
+        174
+      ],
+      "scale": 1.2
     },
     {
-      "type": "wait",
-      "duration": 0.35
+      "type": "zoom",
+      "scale": 1.12,
+      "duration": 0.25
     }
   ]
 }

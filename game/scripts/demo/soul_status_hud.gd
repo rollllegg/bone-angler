@@ -80,8 +80,7 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 	requirements = limits
 	var has_soul := not soul.is_empty()
 	var hidden := soul.has("story_case")
-	var fixed := bool(soul.get("fixed_stats", false))
-	var has_preview := has_soul and not hidden and not fixed and not preview.is_empty()
+	var has_preview := has_soul and not hidden and not preview.is_empty()
 	var legend := PackedStringArray(["第 %d 天" % day])
 
 	if not has_soul:
@@ -94,7 +93,7 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 		_state_label.add_theme_color_override("font_color", UI.GOLD)
 	else:
 		_name_label.text = str(soul.name)
-		var ready := fixed or Session.meets_requirements(soul.stats, requirements)
+		var ready := Session.meets_requirements(soul.stats, requirements)
 		if has_preview:
 			var will_ready := Session.meets_requirements(preview.after, requirements)
 			_state_label.text = "预览·达标" if will_ready else "预览中"
@@ -110,11 +109,6 @@ func set_state(selected_soul: Dictionary, dose_preview: Dictionary, day: int, li
 		if hidden:
 			_bar_labels[index].text = "%s ?" % Data.STAT_NAMES[index]
 			_status_labels[index].text = ""
-			continue
-		if fixed:
-			_bar_labels[index].text = "%s %d / 10" % [Data.STAT_NAMES[index], int(soul.stats[index])]
-			_status_labels[index].text = "免检"
-			_status_labels[index].add_theme_color_override("font_color", UI.MUTED)
 			continue
 		var lower := requirements[0][index]
 		var upper := requirements[1][index]

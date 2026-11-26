@@ -80,9 +80,9 @@ func _build_controls() -> void:
 		"特殊来客可点击按钮呼唤真名，用 A–Z 输入。",
 	])
 	_control_card("炼药台", Rect2(540, 130, 494, 174), [
-		"Shift   切换页签（提炼、复方、强化）",
-		"WASD   选卡片     Space   提炼／放入／强化",
-		"F   配制复方     C   撤回槽位",
+		"Shift   切换页签（纯炼、强化）",
+		"WASD   选卡片     Space   炼制／强化",
+		"F   三份同种原液炼药     C   返回",
 		"X   切换强化属性     V   切换增减 1 点",
 	])
 	_control_card("市场", Rect2(540, 312, 494, 135), [
@@ -95,7 +95,7 @@ func _build_controls() -> void:
 		"G   打开设置和操作菜单",
 		"Esc / C   关闭当前菜单",
 		"图鉴内 Q / E   换页     WASD / 方向键   选择",
-		"配方页 Shift   切换筛选",
+		"成品页 Shift   切换筛选",
 	])
 
 

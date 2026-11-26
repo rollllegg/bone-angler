@@ -177,6 +177,10 @@ func _validate_case(graph_data: Dictionary, world_decl: Dictionary) -> void:
 		node_ids[id] = node
 	if not node_ids.has(str(graph_data.get("entry", ""))):
 		_error("%s: entry node '%s' does not exist" % [case_id, str(graph_data.get("entry", ""))])
+	if graph_data.has("initial_choices"):
+		var initial_id := str(graph_data.initial_choices)
+		if not node_ids.has(initial_id) or not node_ids.get(initial_id, {}).has("choices"):
+			_error("%s: initial_choices must name a choice node" % case_id)
 
 	var outcomes: Dictionary = graph_data.get("outcomes", {})
 	for outcome_id in outcomes.keys():

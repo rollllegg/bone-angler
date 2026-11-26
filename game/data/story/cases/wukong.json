@@ -14,6 +14,7 @@
   "entry": "arrival",
   "fee": 60.0,
   "id": "wukong",
+  "initial_choices": "inspect",
   "nodes": [
     {
       "id": "arrival",
@@ -62,36 +63,6 @@
             "clue.photo = 1"
           ],
           "text": "wukong.choice.photo"
-        },
-        {
-          "hotspot": {
-            "rects": [
-              [
-                26.0,
-                37.0,
-                10.0,
-                8.0
-              ]
-            ],
-            "variants": {
-              "wukong_monkey": [
-                [
-                  22.0,
-                  48.0,
-                  8.0,
-                  8.0
-                ]
-              ]
-            }
-          },
-          "id": "tail",
-          "locked_if": "clue.tail != 0",
-          "locked_text": "wukong.choice.tail.locked",
-          "next": "inspect.tail",
-          "set": [
-            "clue.tail = 1"
-          ],
-          "text": "wukong.choice.tail"
         },
         {
           "hotspot": {
@@ -164,45 +135,29 @@
       ]
     },
     {
-      "id": "inspect.tail",
-      "next": "inspect",
-      "steps": [
-        {
-          "cues": [
-            {
-              "action": "show",
-              "id": "tail",
-              "type": "prop"
-            },
-            {
-              "duration": 0.3,
-              "strength": 3.0,
-              "type": "shake"
-            },
-            {
-              "action": "hide",
-              "delay": 0.8,
-              "id": "tail",
-              "type": "prop"
-            },
-            {
-              "duration": 0.5,
-              "type": "wait"
-            }
-          ],
-          "speaker": "孙",
-          "text": "wukong.inspect.tail.1"
-        }
-      ]
-    },
-    {
       "id": "inspect.staff",
       "next": "inspect",
       "steps": [
         {
           "cues": [
             {
-              "duration": 0.35,
+              "action": "show",
+              "id": "staff",
+              "position": [
+                211.0,
+                169.0
+              ],
+              "scale": 1.25,
+              "type": "prop"
+            },
+            {
+              "alpha": 0.18,
+              "color": "#e7cf8a",
+              "duration": 0.2,
+              "type": "flash"
+            },
+            {
+              "duration": 0.25,
               "scale": 1.12,
               "type": "zoom"
             }
@@ -213,14 +168,18 @@
         {
           "cues": [
             {
-              "alpha": 0.25,
-              "color": "#e7cf8a",
-              "duration": 0.18,
-              "type": "flash"
+              "action": "show",
+              "id": "staff",
+              "position": [
+                211.0,
+                169.0
+              ],
+              "scale": 1.25,
+              "type": "prop"
             },
             {
-              "duration": 0.3,
-              "scale": 1.0,
+              "duration": 0.25,
+              "scale": 1.12,
               "type": "zoom"
             }
           ],
@@ -449,10 +408,6 @@
         "type": "int"
       },
       "clue.staff": {
-        "default": 0.0,
-        "type": "int"
-      },
-      "clue.tail": {
         "default": 0.0,
         "type": "int"
       },

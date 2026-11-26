@@ -1,0 +1,63 @@
+extends RefCounted
+## Approved fixed medicines, brewing distributions and guest templates.
+
+const POTIONS := {
+	"medicine_01": {"id": "medicine_01", "name": "启明药", "tier": 1, "effect": Vector3i(2, 0, 0), "category": "智慧增加", "reaction": ""},
+	"medicine_02": {"id": "medicine_02", "name": "暖心药", "tier": 1, "effect": Vector3i(0, 2, 0), "category": "情感增加", "reaction": ""},
+	"medicine_03": {"id": "medicine_03", "name": "定志药", "tier": 1, "effect": Vector3i(0, 0, 2), "category": "意志增加", "reaction": ""},
+	"medicine_04": {"id": "medicine_04", "name": "寂念药", "tier": 1, "effect": Vector3i(-2, 0, 0), "category": "智慧抑制", "reaction": ""},
+	"medicine_05": {"id": "medicine_05", "name": "忘情药", "tier": 1, "effect": Vector3i(0, -2, 0), "category": "情感抑制", "reaction": ""},
+	"medicine_06": {"id": "medicine_06", "name": "息执药", "tier": 1, "effect": Vector3i(0, 0, -2), "category": "意志抑制", "reaction": ""},
+	"medicine_07": {"id": "medicine_07", "name": "明识药", "tier": 2, "effect": Vector3i(4, 0, 1), "category": "智慧增加", "reaction": ""},
+	"medicine_08": {"id": "medicine_08", "name": "通情药", "tier": 2, "effect": Vector3i(1, 4, 0), "category": "情感增加", "reaction": ""},
+	"medicine_09": {"id": "medicine_09", "name": "明志药", "tier": 2, "effect": Vector3i(0, 1, 4), "category": "意志增加", "reaction": ""},
+	"medicine_10": {"id": "medicine_10", "name": "镇魂药", "tier": 2, "effect": Vector3i(-2, -1, -1), "category": "智慧抑制", "reaction": ""},
+	"medicine_11": {"id": "medicine_11", "name": "洞识药", "tier": 3, "effect": Vector3i(5, 4, 4), "category": "智慧增加", "reaction": ""},
+}
+
+const SOURCES := {
+	"灰鳞鱼": {"essence": "灰鳞原液", "tier": 1, "outcomes": [["medicine_01", 70], ["medicine_07", 30]]},
+	"冥河鲫": {"essence": "冥河原液", "tier": 1, "outcomes": [["medicine_02", 70], ["medicine_08", 30]]},
+	"幽灯鱼": {"essence": "幽灯原液", "tier": 1, "outcomes": [["medicine_03", 70], ["medicine_09", 30]]},
+	"墨眼鳉": {"essence": "墨眼原液", "tier": 1, "outcomes": [["medicine_04", 70], ["medicine_10", 30]]},
+	"泪纹鲦": {"essence": "泪纹原液", "tier": 1, "outcomes": [["medicine_05", 70], ["medicine_10", 30]]},
+	"回声鳊": {"essence": "回声原液", "tier": 1, "outcomes": [["medicine_06", 70], ["medicine_10", 30]]},
+	"镜骨鲈": {"essence": "镜骨原液", "tier": 2, "outcomes": [["medicine_07", 80], ["medicine_11", 20]]},
+	"链颌鱼": {"essence": "链颌原液", "tier": 2, "outcomes": [["medicine_09", 80], ["medicine_11", 20]]},
+	"渡魂鲶": {"essence": "渡魂原液", "tier": 2, "outcomes": [["medicine_08", 80], ["medicine_11", 20]]},
+	"负碑鳢": {"essence": "负碑原液", "tier": 2, "outcomes": [["medicine_10", 80], ["medicine_11", 20]]},
+	"巨刺灰鳞鱼": {"essence": "巨刺原液", "tier": 3, "outcomes": [["medicine_11", 100]]},
+}
+
+const GUESTS := [
+	{"name": "忘了归途的旅人", "defect": Vector3i(-1, 0, 0), "sample": Vector3i(5, 9, 7), "route": ["medicine_01"]},
+	{"name": "弄丢钥匙的锁匠", "defect": Vector3i(-1, 0, 0), "sample": Vector3i(4, 9, 7), "route": ["medicine_01"]},
+	{"name": "只记得门牌号的送货人", "defect": Vector3i(-1, 0, 0), "sample": Vector3i(5, 8, 7), "route": ["medicine_01"]},
+	{"name": "对旧信无动于衷的邮差", "defect": Vector3i(0, -1, 0), "sample": Vector3i(8, 5, 7), "route": ["medicine_02"]},
+	{"name": "只差一句安慰的裁缝", "defect": Vector3i(0, -1, 0), "sample": Vector3i(8, 6, 6), "route": ["medicine_02"]},
+	{"name": "收起风筝的纸匠", "defect": Vector3i(0, -1, 0), "sample": Vector3i(8, 5, 4), "route": ["medicine_02"]},
+	{"name": "迟迟不肯渡河的船工", "defect": Vector3i(0, 0, -1), "sample": Vector3i(8, 9, 2), "route": ["medicine_03"]},
+	{"name": "走错站台的检票员", "defect": Vector3i(0, 0, -1), "sample": Vector3i(7, 9, 3), "route": ["medicine_03"]},
+	{"name": "还在等开场的报幕员", "defect": Vector3i(0, 0, -1), "sample": Vector3i(6, 9, 2), "route": ["medicine_03"]},
+	{"name": "凡事都要算到尽头的占卜师", "defect": Vector3i(1, 0, 0), "sample": Vector3i(10, 7, 7), "route": ["medicine_04"]},
+	{"name": "把账簿带过河的伙计", "defect": Vector3i(1, 0, 0), "sample": Vector3i(9, 7, 5), "route": ["medicine_04"]},
+	{"name": "听见挽歌便止不住哭的乐师", "defect": Vector3i(0, 1, 0), "sample": Vector3i(6, 10, 4), "route": ["medicine_05"]},
+	{"name": "舍不得拆信的抄写员", "defect": Vector3i(0, 1, 0), "sample": Vector3i(7, 10, 6), "route": ["medicine_05"]},
+	{"name": "怕忘了潮声的采珠人", "defect": Vector3i(0, 1, 0), "sample": Vector3i(6, 10, 7), "route": ["medicine_05"]},
+	{"name": "死守已经作废命令的卫兵", "defect": Vector3i(0, 0, 1), "sample": Vector3i(6, 7, 9), "route": ["medicine_06"]},
+	{"name": "迟迟不熄炉火的面包师", "defect": Vector3i(0, 0, 1), "sample": Vector3i(7, 8, 8), "route": ["medicine_06"]},
+	{"name": "等不到换班的守塔人", "defect": Vector3i(0, 0, 1), "sample": Vector3i(6, 9, 8), "route": ["medicine_06"]},
+	{"name": "记不住曲调的吹笛人", "defect": Vector3i(-1, 0, -1), "sample": Vector3i(2, 8, 3), "route": ["medicine_07"]},
+	{"name": "找不到旧地图的测绘员", "defect": Vector3i(-1, 0, -1), "sample": Vector3i(3, 9, 3), "route": ["medicine_07"]},
+	{"name": "不敢开口的证人", "defect": Vector3i(-1, -1, 0), "sample": Vector3i(5, 3, 6), "route": ["medicine_08"]},
+	{"name": "抱着空盆的花匠", "defect": Vector3i(-1, -1, 0), "sample": Vector3i(5, 4, 5), "route": ["medicine_08"]},
+	{"name": "忘了把伞还回去的客人", "defect": Vector3i(0, -1, -1), "sample": Vector3i(6, 6, 2), "route": ["medicine_09"]},
+	{"name": "把每件旧事都反复推演的账房", "defect": Vector3i(1, 1, 1), "sample": Vector3i(10, 10, 8), "route": ["medicine_10"]},
+	{"name": "记得每一场雨的瓦匠", "defect": Vector3i(1, 1, 0), "sample": Vector3i(10, 10, 7), "route": ["medicine_10"]},
+	{"name": "忘了自己为何守誓的人", "defect": Vector3i(-1, -1, -1), "sample": Vector3i(1, 3, 1), "route": ["medicine_11"]},
+	{"name": "仍在清点旧货的仓管", "defect": Vector3i(-1, -1, -1), "sample": Vector3i(2, 4, 3), "route": ["medicine_11"]},
+	{"name": "害怕钟声停下的敲钟人", "defect": Vector3i(-1, -1, -1), "sample": Vector3i(3, 5, 1), "route": ["medicine_11"]},
+	{"name": "一想起冤情就慌了神的守门人", "defect": Vector3i(-1, 1, -1), "sample": Vector3i(3, 10, 3), "route": ["medicine_07", "medicine_05"]},
+	{"name": "执意守着空城的将领", "defect": Vector3i(0, -1, 1), "sample": Vector3i(7, 6, 9), "route": ["medicine_02", "medicine_06"]},
+	{"name": "在桥下念判词的书记", "defect": Vector3i(1, -1, 0), "sample": Vector3i(9, 6, 6), "route": ["medicine_04", "medicine_02"]},
+]

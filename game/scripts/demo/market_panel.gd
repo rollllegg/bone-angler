@@ -398,8 +398,9 @@ func _rebuild_catalog() -> void:
 			"desc": Data.bait_hint(i, true),
 			"stock_text": "×%d" % fishing.bait_stock[i],
 			"unit_price": int(Data.BAIT_PRICES[i]),
-			"available": true,
+			"available": i != Data.VARIANT_BAIT or fishing.variant_craft_unlocked,
 		})
+	_catalog.append({"key": "craft:variant", "kind": "craft", "filter": Filter.BAIT, "category_name": "异刺工艺", "icon": UI.ICON_WRENCH, "preview_icon": Data.fish_texture(Data.VARIANT, 3), "name": "异刺工艺", "desc": "一次性解锁异刺拟饵购买。需拥有深水长杆，无其他工艺前置。", "stock_text": "已解锁" if fishing.variant_craft_unlocked else "需深水长杆", "unit_price": Data.VARIANT_CRAFT_COST, "available": fishing.can_unlock_variant_craft()})
 	var durability_text := "%d / %d" % [fishing.durability(), Data.GRIP_CAPACITY]
 	_catalog.append({
 		"key": "repair:quick",
@@ -556,6 +557,9 @@ func refresh() -> void:
 		if kind == "bait":
 			_detail_meta.text = "当前库存 %s　｜　单价 %d" % [selected["stock_text"], int(selected["unit_price"])]
 			action_button.text = "确认购买 ×%d" % selected_quantity
+		elif kind == "craft":
+			_detail_meta.text = str(selected["stock_text"])
+			action_button.text = "解锁异刺工艺" if bool(selected["available"]) else str(selected["stock_text"])
 		elif kind == "device":
 			_detail_meta.text = "状态：%s" % selected["stock_text"]
 			action_button.text = "确认购买钓具" if bool(selected["available"]) else "已拥有该钓具"
@@ -636,6 +640,10 @@ func _execute_selected() -> void:
 				_status.text = "购入 %s ×%d，已自动装配到当前钓组。" % [Data.BAITS[idx], selected_quantity]
 			else:
 				_status.text = "购入 %s ×%d（可在河岸右侧「鱼饵」槽切换）。" % [Data.BAITS[idx], selected_quantity]
+	elif kind == "craft":
+		if fishing.unlock_variant_craft():
+			_audio.play(Audio.Cue.PURCHASE)
+			_status.text = "异刺工艺已解锁，可购买异刺拟饵。"
 	elif kind == "repair":
 		if fishing.repair(bool(selected["full"])):
 			_audio.play(Audio.Cue.PURCHASE)

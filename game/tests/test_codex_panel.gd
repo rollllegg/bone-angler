@@ -118,67 +118,39 @@ func _check_discoveries() -> void:
 	var codex := _demo._codex
 	var session := _demo.session
 	_tap(KEY_TAB)
-	_check(codex._entry_ids.size() == Data.FISH.size() and codex._progress.text == "鱼类 0 / 12" and codex._selection == 0 and codex.nav_focus == codex.NavFocus.GRID, "All 12 fish start locked and open directly in the grid")
-	var picture := codex._detail.find_child("SpecimenIcon", true, false) as TextureRect
-	_check(picture != null and picture.modulate.is_equal_approx(SILHOUETTE) and _detail_text().count("？？？") >= 4 and not _detail_text().contains("灰鳞"), "Locked fish use silhouettes and hide all values")
-	await _capture("00-locked-fish")
+	_check(codex._entry_ids.size() == 12 and codex._progress.text == "鱼类 0 / 12", "All fish begin undiscovered despite starting materials")
 	_tap(KEY_D)
-	_check(codex._selection == 1, "D moves right in the fish grid")
 	_tap(KEY_S)
-	_check(codex._selection == 4, "S moves down one row in the 3-column grid")
-	_tap(KEY_A)
-	_check(codex._selection == 3, "A moves left in the fish grid")
-	_tap(KEY_W)
-	_check(codex._selection == 0, "W moves up one row in the fish grid")
+	_check(codex._selection == 4, "WASD moves through the three-column fish grid")
 	_tap(KEY_E)
-	_check(codex._recipe_page and codex.nav_focus == codex.NavFocus.GRID and codex._entry_ids.size() == Data.RECIPES.size() and codex._progress.text == "配方 0 / 78" and codex._selection == 0 and _detail_text().count("？？？") >= 3, "E switches directly into the recipe grid and all 78 compound recipes start locked")
+	_check(codex._source_page and codex._entry_ids.size() == 11, "E opens the dedicated source page")
+	_tap(KEY_E)
+	_check(codex._recipe_page and codex._entry_ids.size() == 11 and codex._progress.text == "成品 0 / 11", "The third page contains eleven fixed medicines")
 	_tap(KEY_W)
-	_check(codex.nav_focus == codex.NavFocus.FILTER, "W from the top row of recipes moves focus onto the sub-filter bar")
-	await _capture("01b-locked-recipe")
+	_check(codex.nav_focus == codex.NavFocus.FILTER, "Up from the top medicine row selects filters")
 	_tap(KEY_S)
-	_check(codex.nav_focus == codex.NavFocus.GRID, "S returns from the sub-filter bar to the recipe grid")
-	_tap(KEY_Q)
-	_check(not codex._recipe_page and codex.nav_focus == codex.NavFocus.GRID, "Q switches directly back to the fish grid")
+	_check(codex.nav_focus == codex.NavFocus.GRID, "Down returns to the medicine grid")
 	_tap(KEY_TAB)
-
 	session.record_catch({"species": 0, "size": 1, "cm": 4.5})
 	session.record_catch({"species": 0, "size": 2, "cm": 8.5})
 	session.record_catch({"species": 0, "size": 0, "cm": 1.2})
-	session.record_catch({"species": Data.VARIANT, "size": 3, "cm": 34.0})
 	session.record_catch({"species": Data.LANTERN, "size": 0, "cm": 17.0})
-	_check(session.refine(int(session.catches.back().id)) and session.concentrate == 1, "A condensed lantern fish can be refined")
-	session.essences[0] = 1
-	session.essences[4] = 1
-	_check(session.mix(4, 0), "Mixing real essences unlocks the canonical unordered recipe")
+	_check(session.concentrate == 1 and session.catches.is_empty(), "Fish automatically bank materials and the lantern bonus")
+	_check(session.brew(0), "Three materials produce a fixed medicine")
+	var id: String = session.potions[-1].kind
 	_tap(KEY_TAB)
-	_check(codex._unseen.visible and session.has_unseen_codex(), "Unseen unlocks show the breathing bookmark badge")
+	codex._set_codex_page(0)
 	var detail := _detail_text()
-	_check(codex._progress.text == "鱼类 3 / 12" and detail.contains("灰鳞鱼") and detail.contains("累计捕获 3 次") and detail.contains("8.5 cm"), "A fish shows its cumulative count and largest measured length")
-	_check(detail.contains("浅水 权重 25（21.7%）") and detail.contains("深水 不出") and detail.contains("属性饵 ×3") and detail.contains("智慧饵") and detail.contains("灰鳞原液") and detail.contains("智慧 +1"), "Fish detail uses real water weights, bait matching, and essence effects")
-	_check(not session.codex_fish[Data.FISH[0].id].is_new and not codex._entry_badges[0].visible, "Viewing a fish clears its NEW badge")
+	_check(detail.contains("灰鳞鱼") and detail.contains("累计捕获 3 次") and detail.contains("8.5 cm"), "Fish retain count and measured length independently of material use")
+	_check(detail.contains("浅水 权重 25（25.0%）") and detail.contains("1级材料"), "Fish detail uses the revised weights and material grade")
 	await _capture("02-fish")
-	_tap(KEY_D)
-	_tap(KEY_D)
-	_check(codex._selection == 2 and _detail_text().contains("凝魂幽灯鱼：提炼另产浓缩的灵魂 ×1"), "Refining the small lantern fish retains its special entry")
-	_tap(KEY_W)
-	_tap(KEY_A)
-	_check(codex._selection == Data.VARIANT and _detail_text().contains("深水 + 异刺指骨拟饵（20% 触发）"), "Variant detail displays the configured trigger")
-	_tap(KEY_E)
-	_tap(KEY_W)
-	_check(codex.nav_focus == codex.NavFocus.FILTER, "W moves up to recipe sub-filters")
-	_tap(KEY_D)
-	_tap(KEY_D)
-	detail = _detail_text()
-	_check(codex._progress.text == "配方 1 / 78" and codex._entry_ids.size() == 1 and detail.contains("澄心药") and detail.contains("灰鳞原液") and detail.contains("渡魂原液"), "A/D on the sub-filter bar selects Special Neutralization and lists the unlocked combination")
-	_check(detail.contains("智慧\n+1") and detail.contains("情感\n+3") and detail.contains("意志\n+2") and detail.contains("中和渡魂原液智慧负值"), "Recipe detail shows all three real effects and the reaction")
-	_check(not session.has_unseen_codex() and not codex._unseen.visible, "Viewing the last new entry clears the bookmark badge")
-	_tap(KEY_D)
-	_check(codex._entry_ids.size() == 1, "The raise-wisdom filter includes the unlocked positive recipe")
-	_tap(KEY_D)
-	_check(codex._entry_ids.is_empty(), "The lower-wisdom filter keeps locked and unmatched recipes out")
-	_tap(KEY_A)
-	_tap(KEY_S)
-	_check(codex.nav_focus == codex.NavFocus.GRID and codex._entry_ids.size() == 1, "A moves back to raise-wisdom and S enters the recipe grid")
+	codex._open_source(0)
+	_check(_detail_text().contains(Data.POTIONS[id].name) and _detail_text().contains("概率待发现"), "A source reveals only the outcome actually brewed")
+	await _capture("02b-source")
+	codex._set_codex_page(2)
+	codex._set_filter_from_bar(1)
+	_check(codex._entry_ids == [id], "Discovered filter shows the actual finished medicine")
+	_check(_detail_text().contains(Data.POTIONS[id].name) and _detail_text().contains("固定药效"), "Medicine detail shows its standard effect and source links")
 	_tap(KEY_TAB)
 
 
@@ -210,7 +182,7 @@ func _check_guest_and_guards() -> void:
 	_tap(KEY_S)
 	await _capture("03-reception-recipe")
 	_tap(KEY_TAB)
-	_demo.shop.select_guest(5)
+	_demo.shop.select_guest(6)
 	_demo._story_action()
 	_check(_demo.story_panel.is_typing(), "The story true-name challenge is active")
 	_tap(KEY_TAB)
@@ -220,35 +192,26 @@ func _check_guest_and_guards() -> void:
 
 func _check_save_compatibility() -> void:
 	var session := _demo.session
-	var recipe := Data.recipe_key(0, 4)
-	session.catches.clear()
-	session.potions.clear()
-	session.record_catch({"species": Data.STILLFIN, "size": 1, "cm": 14.0})
-	_check(_demo.save_progress(0) and _demo.load_progress(0), "A current save round-trips")
-	_check(session.codex_fish[Data.FISH[0].id].caught == 3 and session.codex_fish[Data.FISH[0].id].max_cm == 8.5 and session.codex_fish[Data.FISH[Data.LANTERN].id].condensed, "Fish history survives after the inventory is gone")
-	_check(session.codex_recipes.has(recipe) and not session.codex_recipes[recipe].is_new, "Recipe history and read flags survive after the potion is used")
-	_check(session.codex_fish[Data.FISH[Data.STILLFIN].id].is_new and session.has_unseen_codex(), "Unread discoveries survive a save round-trip")
-
-	var essences := [0, 0, 0, 0, 0, 0, 0, 0, 0, 2]
-	var old_save := {
-		"coins": 40, "released_count": 0, "essences": essences,
-		"catches": [{"species": Data.LANTERN, "size": 0, "cm": 16.4}],
-		"potions": [
-			{"kind": Data.RECIPES[recipe].id, "effect": [2, 3, 2], "attribute": 0, "adjustment": 1},
-			{"kind": Data.FISH[3].id, "effect": [2, -1, 3], "attribute": 0, "adjustment": 1},
-		],
-	}
-	_check(SaveSlots.write(_demo.save_directory, 1, old_save) and _demo.load_progress(1), "A save without codex fields still loads")
-	var fish := session.codex_fish
-	_check(fish[Data.FISH[Data.LANTERN].id].condensed and fish[Data.FISH[Data.LANTERN].id].max_cm == 16.4, "Legacy catches preserve measured size and condensed status")
-	_check(fish[Data.FISH[9].id].caught == 1 and fish[Data.FISH[9].id].max_cm == 0.0 and fish.has(Data.FISH[3].id), "Raw and strengthened essences infer a catch but no invented length")
-	_check(session.codex_recipes.has(recipe) and fish.has(Data.FISH[0].id) and fish.has(Data.FISH[4].id) and not fish.has(Data.FISH[Data.VARIANT].id), "Legacy potions unlock only their recipe and proven ingredients")
+	var history := session.codex_fish.duplicate(true)
+	var known := session.codex_sources.duplicate(true)
+	_check(_demo.save_progress(0) and _demo.load_progress(0), "Current rules save and reload")
+	_check(session.codex_fish == history and session.codex_sources == known, "Catch history and per-source probabilities survive material consumption")
+	var old_save := {"coins": 40, "released_count": 0, "essences": [0,0,0,0,0,0,0,1,0,0,0,2], "catches": [{"species": Data.LANTERN, "size": 0, "cm": 16.4}], "potions": [{"id": 30, "kind": "potion_08", "name": "暖心药", "effect": [0,4,0], "attribute": -1, "adjustment": 0}]}
+	_check(SaveSlots.write(_demo.save_directory, 1, old_save) and _demo.load_progress(1), "A pre-redesign save migrates")
+	_check(session.catches.is_empty() and session.essences[7] == 3 and session.essences[Data.STILLFIN] == 0, "Old fish and shared tails convert once")
+	_check(session.potions[0].kind == "medicine_02" and session.potions[0].effect == Vector3i(0,2,0), "Old same-name medicines adopt the approved fixed values")
+	_check(session.starter_supply_claimed and session.upper_supply_claimed, "Old saves cannot re-claim the new one-time grants")
+	old_save.potions = [{"kind": "potion_08", "effect": [0,4,0]}, {"kind": "potion_14", "effect": [0,0,4]}]
+	_check(SaveSlots.write(_demo.save_directory, 1, old_save) and _demo.load_progress(1), "Older unnamed doses also migrate")
+	_check(session.potions[0].kind == "medicine_02" and session.potions[1].kind == "medicine_03" and session.potions[0].id != session.potions[1].id, "Legacy names and missing item IDs normalize without collisions")
 
 
 func _detail_text() -> String:
 	var labels := PackedStringArray()
 	for label in _demo._codex._detail.find_children("*", "Label", true, false):
 		labels.append(label.text)
+	for button in _demo._codex._detail.find_children("*", "Button", true, false):
+		labels.append(button.text)
 	return "\n".join(labels)
 
 

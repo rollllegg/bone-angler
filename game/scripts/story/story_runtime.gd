@@ -105,7 +105,7 @@ func is_identity_revealed() -> bool:
 
 func visible_choices() -> Array:
 	var result: Array = []
-	var node := _node(node_id)
+	var node := _choice_node()
 	for choice in node.get("choices", []):
 		if choice.has("if") and not _test(str(choice.if)):
 			continue
@@ -129,7 +129,7 @@ func visible_choices() -> Array:
 func choose(choice_id: String) -> bool:
 	if closed or callout_active:
 		return false
-	var node := _node(node_id)
+	var node := _choice_node()
 	for choice in node.get("choices", []):
 		if str(choice.get("id", "")) != choice_id:
 			continue
@@ -147,7 +147,15 @@ func choose(choice_id: String) -> bool:
 func is_awaiting_choice() -> bool:
 	if closed or callout_active or judgment_active or is_awaiting_judgment():
 		return false
-	return _node(node_id).has("choices") and step_index >= steps.size()
+	return _choice_node().has("choices") and (step_index >= steps.size() or _has_initial_choices())
+
+
+func _has_initial_choices() -> bool:
+	return node_id == str(case_data.get("entry", "")) and str(case_data.get("initial_choices", "")) != ""
+
+
+func _choice_node() -> Dictionary:
+	return _node(str(case_data.initial_choices)) if _has_initial_choices() else _node(node_id)
 
 
 func has_pending_steps() -> bool:
@@ -293,7 +301,7 @@ func can_callout() -> bool:
 		return false
 	if bool(flags.get("callout.done", false)):
 		return false
-	return _node(node_id).has("choices")
+	return _choice_node().has("choices")
 
 
 func get_callout_button_text() -> String:

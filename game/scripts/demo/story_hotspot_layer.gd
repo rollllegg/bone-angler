@@ -105,6 +105,7 @@ func refresh(story) -> void:
 	show()
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	queue_redraw()
+	_set_hover(get_local_mouse_position())
 
 
 func _gui_input(event: InputEvent) -> void:

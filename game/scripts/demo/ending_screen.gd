@@ -71,7 +71,7 @@ func _sprite_rect(texture: Texture2D, rect: Rect2) -> TextureRect:
 	return view
 
 
-func show_ending(lines: PackedStringArray, anubis: bool) -> void:
+func show_ending(lines: PackedStringArray, anubis: bool, story_lab: bool = false) -> void:
 	if _active or lines.is_empty():
 		return
 	_active = true
@@ -84,6 +84,7 @@ func show_ending(lines: PackedStringArray, anubis: bool) -> void:
 	_anubis_turn.modulate.a = 0.0
 	_scale.visible = anubis
 	_text.text = "\n".join(lines)
+	_hint.text = "空格 / 点击　返回标题" + ("　　N 重置剧情测试" if story_lab else "")
 	_text.visible_ratio = 0.0
 	_hint.modulate.a = 0.0
 	modulate.a = 0.0
@@ -108,6 +109,16 @@ func show_ending(lines: PackedStringArray, anubis: bool) -> void:
 
 func is_active() -> bool:
 	return _active
+
+
+func close() -> void:
+	if _tween != null and _tween.is_valid():
+		_tween.kill()
+	if _turn_tween != null and _turn_tween.is_valid():
+		_turn_tween.kill()
+	_active = false
+	hide()
+	set_process_input(false)
 
 
 func advance() -> void:

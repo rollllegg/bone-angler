@@ -136,12 +136,12 @@ func _model_checks(fishing) -> void:
 	_check(fishing.phase == Fishing.Phase.ESCAPED, "Capture time limit also applies during a hold")
 	_prepare(fishing, Fishing.Action.HOLD)
 	fishing.target = 1
-	var catches: int = fishing.session.catches.size()
+	var catches: int = _caught_count(fishing.session)
 	_press_at_line(fishing)
-	_check(fishing.session.catches.size() == catches, "Hold head cannot prematurely award a fish")
+	_check(_caught_count(fishing.session) == catches, "Hold head cannot prematurely award a fish")
 	fishing.advance(fishing.remaining)
 	fishing.release_direction(0)
-	_check(fishing.phase == Fishing.Phase.CAUGHT and fishing.session.catches.size() == catches + 1, "Completed hold commits one fish exactly once")
+	_check(fishing.phase == Fishing.Phase.CAUGHT and _caught_count(fishing.session) == catches + 1, "Completed hold commits one fish exactly once")
 	_prepare(fishing, Fishing.Action.TAP)
 	fishing.locked = {"species": Data.VARIANT, "size": 3, "cm": 35.0}
 	fishing._start_fish_capture()
@@ -162,7 +162,7 @@ func _all_captures(fishing) -> void:
 				_prepare(fishing, Fishing.Action.TAP)
 				fishing.locked = {"species": species, "size": size, "cm": 50.0}
 				fishing._start_fish_capture()
-				var catches: int = fishing.session.catches.size()
+				var catches: int = _caught_count(fishing.session)
 				var guard := 0
 				while fishing.is_busy() and guard < 100:
 					guard += 1
@@ -175,7 +175,7 @@ func _all_captures(fishing) -> void:
 							fishing.release_direction(fishing.get_expected_direction())
 						_:
 							fishing.advance(fishing.remaining)
-				_check(fishing.phase == Fishing.Phase.CAUGHT and fishing.mistakes == 0 and fishing.session.catches.size() == catches + 1, "Species %d size %d perfect=%s captures within the time budget without errors or duplicate inventory" % [species, size, perfect])
+				_check(fishing.phase == Fishing.Phase.CAUGHT and fishing.mistakes == 0 and _caught_count(fishing.session) == catches + 1, "Species %d size %d perfect=%s captures within the time budget without errors or duplicate inventory" % [species, size, perfect])
 
 
 func _live_checks() -> void:
@@ -308,3 +308,10 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures += 1
 		push_error("FAIL: " + message)
+
+
+func _caught_count(session) -> int:
+	var total := 0
+	for entry in session.codex_fish.values():
+		total += int(entry.caught)
+	return total

@@ -29,50 +29,48 @@
 
 ## orpheus
 
-- 终端路径：120
-- 演出覆盖：5 / 11 个 step，17 条 cue
-- 叫破身份：20 / 120
-- 迷茫为正：80 / 120
+- 终端路径：48
+- 演出覆盖：4 / 4 个 step，12 条 cue
+- 叫破身份：8 / 48
+- 迷茫为正：32 / 48
 
 ### 结局分布
 
 | 结局 | 路径数 |
 | --- | ---: |
-| accepted.clear | 10 |
-| accepted.confused | 40 |
-| accepted.reunion | 10 |
-| refused | 60 |
+| accepted.clear | 4 |
+| accepted.confused | 16 |
+| accepted.reunion | 4 |
+| refused | 24 |
 
 ### 选项覆盖
 
 | 选择 | 出现次数 |
 | --- | ---: |
-| admit | 60 |
-| eurydice | 72 |
-| lyre | 72 |
-| refuse | 60 |
+| admit | 24 |
+| lyre | 24 |
+| refuse | 24 |
 
 ## wukong
 
-- 终端路径：260
-- 演出覆盖：7 / 7 个 step，19 条 cue
-- 叫破身份：64 / 260
-- 大闹冥府：256 / 260
+- 终端路径：84
+- 演出覆盖：6 / 6 个 step，17 条 cue
+- 叫破身份：20 / 84
+- 大闹冥府：80 / 84
 
 ### 结局分布
 
 | 结局 | 路径数 |
 | --- | ---: |
-| admitted | 128 |
+| admitted | 40 |
 | calm | 4 |
-| refused | 128 |
+| refused | 40 |
 
 ### 选项覆盖
 
 | 选择 | 出现次数 |
 | --- | ---: |
-| admit | 128 |
-| photo | 176 |
-| refuse | 128 |
-| staff | 176 |
-| tail | 176 |
+| admit | 40 |
+| photo | 48 |
+| refuse | 40 |
+| staff | 48 |

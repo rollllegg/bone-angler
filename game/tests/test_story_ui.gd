@@ -4,7 +4,7 @@ extends SceneTree
 const Audio := preload("res://scripts/demo/demo_audio.gd")
 const CLICK_SOUND := preload("res://assets/audio/ui_click.wav")
 const WUKONG_LINE := "喂，你这妖精，还不赶快放俺老s……俺史密斯过去。"
-const ORPHEUS_LINE := "……"
+const ORPHEUS_LINE := "欧律狄刻......"
 
 var _demo
 var _checks := 0
@@ -33,25 +33,29 @@ func _run() -> void:
 	_check(not _demo._story_action_button.visible, "Ordinary guests show only the existing release button")
 	_check(not _demo.soul_hud._bar_labels[0].text.contains("?"), "Ordinary guest attributes stay visible")
 	_arrive(1)
-	_check(str(session.souls[4].get("story_case", "")) == "wukong", "Wukong is the fifth guest on day one")
-	_demo.shop.select_guest(5)
-	_check_reception(WUKONG_LINE, "史密斯", "wukong_disguise")
-	var wukong = session.get_story_runtime(5)
-	_check(wukong.has_pending_steps() and not _demo.story_hotspots.visible, "The arrival line is read before the hotspot layer opens")
-	_arrive(1)
-	var observer: Dictionary = session.souls[5]
-	_check(not observer.name.is_empty() and observer.stats == Vector3i(10, 10, 10) and bool(observer.get("fixed_stats", false)), "The last guest is the disguised observer")
-	_check(session.can_release(int(observer.id)), "The observer has no stat requirement")
-	_demo.shop.select_guest(int(observer.id))
+	var ordinary: Dictionary = session.souls[4]
+	_check(not ordinary.name.is_empty() and not ordinary.has("story_case") and not ordinary.has("fixed_stats") and not ordinary.has("anubis_disguise"), "The fifth guest is an ordinary NPC")
+	_check(not session.can_release(int(ordinary.id)), "The fifth guest must meet the ordinary requirements")
+	_demo.shop.select_guest(int(ordinary.id))
 	_demo._refresh_shared()
-	_check(_demo.soul_hud._state_label.text == "可放行" and _demo.soul_hud._status_labels[0].text == "免检", "The observer HUD shows the requirement exemption")
-	_demo.shop.select_guest(5)
+	_check(_demo.soul_hud._state_label.text == "待调配", "The fifth guest HUD shows that medicine is required")
+	for axis in 3:
+		if session.requirements[0][axis] > 0 or session.requirements[1][axis] < 10:
+			_check(_demo.soul_hud._status_labels[axis].text != "免检", "The fifth guest HUD checks each required attribute")
+	_arrive(1)
+	_check(str(session.souls[5].get("story_case", "")) == "wukong", "Wukong is the sixth and final guest on day one")
+	_demo.shop.select_guest(6)
+	_check_reception(WUKONG_LINE, "史密斯", "wukong_disguise")
+	var wukong = session.get_story_runtime(6)
+	_check(wukong.has_pending_steps() and _demo.story_hotspots.visible, "Investigation is available during the greeting")
+	_check(_demo._dialog_hint.visible and _demo._dialog_hint.text == "F 继续", "The speech bubble shows its F prompt")
+	_press(KEY_SPACE)
+	_check(wukong.get_node_id() == "arrival", "Space does not advance dialogue")
 	await _capture("story-reception-wukong.png")
 
-	_advance_story()
-	_check(wukong.is_awaiting_choice() and _demo.story_hotspots.visible, "Finishing the greeting opens the portrait hotspots")
-	_check(_demo.story_hotspots._entries.size() == 3, "Wukong exposes three investigation hotspots")
-	_check(_hotspot_ids() == ["photo", "tail", "staff"], "Wukong hotspots are face, tail and staff")
+	_check(wukong.is_awaiting_choice() and _demo.story_hotspots.visible, "The greeting does not gate portrait hotspots")
+	_check(_demo.story_hotspots._entries.size() == 2, "Wukong exposes two investigation hotspots")
+	_check(_hotspot_ids() == ["photo", "staff"], "Wukong has face and staff hotspots, with no tail investigation")
 	for entry in _demo.story_hotspots._entries:
 		_check(not entry["rects"].is_empty() and entry["rects"][0].size.x > 0.0, "Hotspot %s has a screen rect" % entry["id"])
 	_demo._codex_tab()
@@ -61,15 +65,17 @@ func _run() -> void:
 	_check(not session.paused and _demo.story_hotspots.visible, "Closing the field guide restores the hotspots")
 	await _capture("story-hotspots-wukong.png")
 
-	# Click the tail hotspot through the layer itself.
-	_click_hotspot("tail")
-	_check(wukong.get_node_id() == "inspect.tail", "Clicking the tail opens its inspection")
-	_check(_demo._dialog.text.begins_with("史密斯：") and _demo._dialog.text.contains("尾巴"), "Tail inspection shows the authored line")
+	# Investigate directly from the greeting, without advancing it first.
+	_click_hotspot("photo")
+	_check(wukong.get_node_id() == "inspect.photo", "Clicking the face directly opens its inspection")
+	_check(_demo._dialog.text == "你说俺脸上有毛……哈哈，俺天生毛长得快，死前没洁面。", "Inspection dialogue has no speaker prefix")
 	_check(not _demo.story_hotspots.visible, "Hotspots hide while the inspection line plays")
+	_press(KEY_SPACE)
+	_check(wukong.get_node_id() == "inspect.photo", "Space cannot dismiss an investigation line")
 	_advance_story()
-	_check(wukong.is_awaiting_choice() and _demo.story_hotspots.visible, "Finishing the inspection returns to the hotspots")
-	_check(_hotspot_locked("tail"), "The inspected tail stays visible and marked as investigated")
-	_click_hotspot("tail")
+	_check(wukong.is_awaiting_choice() and _demo.story_hotspots.visible and not _demo._dialog_hint.visible, "F finishes the inspection and hides the continuation prompt")
+	_check(_hotspot_locked("photo"), "The inspected face stays visible and marked as investigated")
+	_click_hotspot("photo")
 	_check(wukong.get_node_id() == "inspect", "Clicking an investigated hotspot does nothing")
 	await _capture("story-hotspots-investigated.png")
 
@@ -82,25 +88,30 @@ func _run() -> void:
 	_check(not wukong.has_fed_potion() and session.potions.size() == 1, "F does not serve a potion")
 	_press(KEY_SPACE)
 	_check(wukong.has_fed_potion() and session.potions.is_empty(), "Space serves the selected potion once")
-	_check(_demo._dialog.text.begins_with("史密斯：") and _demo._dialog.text.contains("俺已成正法"), "Potion reaction is displayed")
+	_check(_demo._dialog.text.begins_with("俺已成正法") and _demo._dialog_hint.visible, "Potion reaction is displayed without a speaker prefix")
 	_check(_demo.soul_hud.preview.is_empty(), "Giving medicine keeps the hidden attributes")
 	_advance_story()
 	_check(wukong.is_awaiting_choice(), "Potion reaction returns to the investigation")
 
 	_click_hotspot("staff")
 	_check(wukong.get_node_id() == "inspect.staff", "Clicking the staff opens its inspection")
+	_check(_demo.story_stage.get_prop_ids().has("staff") and _demo.shop.story_props.layer_for("staff") == "front", "Wukong takes out the standalone staff in front of himself")
+	_check(_demo.shop.get_story_texture() == _demo.shop.PROP_FREE_SPRITES["wukong_disguise"], "showing the staff removes it from Wukong's back")
+	await _capture("story-wukong-staff.png")
 	_advance_story()
+	_check(_demo.story_stage.get_prop_ids().has("staff"), "The whole staff stays visible through its description")
+	_demo.shop.select_guest(int(ordinary.id))
+	_check(_demo.story_stage.get_prop_ids().is_empty(), "Switching guests clears the displayed object")
+	_demo.shop.select_guest(6)
+	_check(_demo.story_stage.get_prop_ids().has("staff"), "Returning to the second line restores the displayed staff")
 	_advance_story()
-	_check(wukong.is_awaiting_choice() and _hotspot_locked("staff"), "Staff inspection finishes and locks its hotspot")
-	_click_hotspot("photo")
-	_check(wukong.get_node_id() == "inspect.photo", "Clicking the face opens its inspection")
-	_advance_story()
-	_check(wukong.is_awaiting_choice() and _hotspot_locked("photo"), "Face inspection finishes and locks its hotspot")
+	_check(wukong.is_awaiting_choice() and _hotspot_locked("staff") and not _demo.story_stage.get_prop_ids().has("staff"), "Finishing the description puts the staff away")
+	_check(_demo.shop.get_story_texture() == _demo.shop.STORY_SPRITES["wukong_disguise"], "putting the staff away restores Wukong's carried sprite")
 	_check(_demo.story_hotspots._entries.all(func(entry: Dictionary) -> bool: return bool(entry["locked"])), "All investigated hotspots stay visible")
 
 	_press(KEY_D)
-	_check(_demo.shop.selected_id != 5 and not _demo._story_action_button.visible and not session.get_soul(_demo.shop.selected_id).has("story_case"), "D switches back to normal reception")
-	_demo.shop.select_guest(5)
+	_check(_demo.shop.selected_id != 6 and not _demo._story_action_button.visible and not session.get_soul(_demo.shop.selected_id).has("story_case"), "D switches back to normal reception")
+	_demo.shop.select_guest(6)
 	_demo._story_action_button.pressed.emit()
 	_check(_demo.story_panel.visible and _demo.story_panel.is_typing() and session.story_open, "Clicking true name starts the typing challenge")
 	_check(_demo.story_panel._bubbles.get_child_count() == 9 and _bubble_letter(0) == "·", "Wukong has nine hidden letters")
@@ -123,7 +134,7 @@ func _run() -> void:
 	_check(wukong.is_awaiting_choice() and _demo.story_hotspots.visible, "Revealed Wukong keeps his portrait hotspots")
 	await _capture("story-hotspots-wukong-revealed.png")
 	_demo._story_action_button.pressed.emit()
-	_check(session.get_soul(5).is_empty() and session.rejected_count == 1, "The new action refuses and removes Wukong")
+	_check(session.get_soul(6).is_empty() and session.rejected_count == 1, "The new action refuses and removes Wukong")
 	_check(session.story_state.ledger[0].who == "孙悟空", "The ledger records the revealed name")
 
 	_finish_ordinary_guests()
@@ -147,24 +158,20 @@ func _run() -> void:
 	_demo.shop.select_guest(12)
 	_check_reception(ORPHEUS_LINE, "亚历克斯", "orpheus_front")
 	var orpheus = session.get_story_runtime(12)
-	_advance_story()
-	_check(orpheus.is_awaiting_choice() and _demo.story_hotspots.visible, "Orpheus opens his portrait hotspots")
-	_check(_demo.story_hotspots._entries.size() == 2, "Orpheus exposes face and lyre hotspots")
-	_check(_hotspot_ids() == ["eurydice", "lyre"], "Orpheus hotspots are face and lyre")
+	_check(orpheus.is_awaiting_choice() and _demo.story_hotspots.visible, "Orpheus immediately offers investigation")
+	_check(_demo.story_hotspots._entries.size() == 1, "Orpheus exposes only the lyre hotspot")
+	_check(_hotspot_ids() == ["lyre"], "Orpheus has no face investigation")
 	await _capture("story-hotspots-orpheus.png")
 
-	_click_hotspot("eurydice")
-	_check(orpheus.get_node_id() == "inspect.eurydice", "Clicking the face asks about Eurydice")
-	_advance_story()
-	_advance_story()
-	_advance_story()
-	_check(orpheus.is_awaiting_choice() and _hotspot_locked("eurydice"), "Face inspection returns and locks")
 	_click_hotspot("lyre")
 	_check(orpheus.get_node_id() == "inspect.lyre", "Clicking the lyre opens its inspection")
-	_advance_story()
+	_check(_demo._dialog.text == "你要看我的里拉琴？" and _demo.story_stage.get_prop_ids().has("lyre"), "The standalone lyre is shown with the requested line")
+	_check(_demo.shop.story_props.layer_for("lyre") == "front", "The whole lyre appears in front of the NPC")
+	_check(_demo.shop.get_story_texture() == _demo.shop.PROP_FREE_SPRITES["orpheus_front"], "showing the lyre removes the old instrument from Orpheus' back")
 	await _capture("story-orpheus-lyre.png")
 	_advance_story()
-	_check(orpheus.is_awaiting_choice() and _hotspot_locked("lyre"), "Lyre inspection returns and locks")
+	_check(orpheus.is_awaiting_choice() and _hotspot_locked("lyre") and not _demo.story_stage.get_prop_ids().has("lyre"), "F puts the lyre away and returns to investigation")
+	_check(_demo.shop.get_story_texture() == _demo.shop.STORY_SPRITES["orpheus_front"], "putting the lyre away restores Orpheus' carried sprite")
 
 	_demo._story_action_button.pressed.emit()
 	_check(_demo.story_panel._bubbles.get_child_count() == 7 and _bubble_letter(0) == "·", "Orpheus has seven hidden letters")
@@ -173,15 +180,14 @@ func _run() -> void:
 	await _capture("story-reception-orpheus-revealed.png")
 	_advance_story()
 	_check(orpheus.is_awaiting_choice(), "The true-name line returns to the investigation")
-	_check(_demo.story_hotspots.visible and _hotspot_ids() == ["eurydice", "lyre"], "Revealed Orpheus keeps his portrait hotspots")
+	_check(_demo.story_hotspots.visible and _hotspot_ids() == ["lyre"], "Revealed Orpheus keeps only his lyre hotspot")
 	await _capture("story-hotspots-orpheus-revealed.png")
 	session._add_potion("test", "极识药", Vector3i(10, 0, -4), -1, 0)
 	session.state_changed.emit()
 	_press(KEY_S)
 	_press(KEY_SPACE)
-	_check(orpheus.has_fed_potion(), "Giving Orpheus a potion preserves his reaction")
-	for _step in 4:
-		_advance_story()
+	_check(orpheus.has_fed_potion() and _demo._dialog.text == "......好吧", "Orpheus uses the requested short potion reaction")
+	_advance_story()
 	_check(orpheus.is_awaiting_choice() and not bool(orpheus.flags["confused"]), "The potion branch clears Orpheus' confusion")
 	_press(KEY_SHIFT)
 	_check(session.get_soul(12).is_empty() and orpheus.get_outcome_id() == "accepted.reunion", "Shift admits Orpheus and preserves the cross-day ending")
@@ -206,27 +212,27 @@ func _run() -> void:
 
 
 func _check_reception(line: String, alias: String, portrait: String) -> void:
-	_check(_demo._dialog.visible and _demo._dialog.text == "%s：%s" % [alias, line] and not _demo.story_panel.visible, "The only greeting uses the shared speech bubble")
+	_check(_demo._dialog.visible and _demo._dialog.text == line and not _demo.story_panel.visible, "The shared speech bubble shows only dialogue text")
 	_check(_demo.soul_hud.visible and _demo.soul_hud._name_label.text == alias, "The normal HUD displays the guest's alias")
 	_check(_demo.soul_hud._bar_labels.all(func(label: Label) -> bool: return label.text.ends_with(" ?")), "All three attributes are unknown")
 	_check(_demo._story_action_button.visible and _demo._story_action_button.text == "真名解放", "The extra bottom-right action is immediately available")
 	_check(_demo._release_button.get_rect().end.x <= _demo._story_action_button.position.x, "Release and true name buttons do not overlap")
 	_check(_demo.shop.story_sprite == portrait, "The guest portrait uses the story sprite")
-	_check(not _demo.story_hotspots.visible, "Hotspots wait until the greeting has been read")
+	_check(_demo.story_hotspots.visible, "Hotspots are available without advancing the greeting")
 
 
 func _check_reveal(runtime, name: String, portrait: String) -> void:
 	_check(runtime.is_identity_revealed() and not _demo.story_panel.visible, "Correct letters complete the challenge")
 	_check(_demo.shop.story_sprite == portrait and _demo.soul_hud._name_label.text == name, "The true portrait and name appear immediately")
 	_check(_demo._story_action_button.text == "拒绝入境", "Refusal replaces true name")
-	_check(_demo._dialog.text.begins_with(name + "："), "The true-name line is displayed")
+	_check(_demo._dialog.text == str(runtime.current_step().get("text", "")), "The true-name line has no speaker prefix")
 	_check(not _demo.story_hotspots.visible, "Hotspots stay hidden during the true-name line")
 
 
 func _advance_story() -> void:
 	if _demo.story_director.blocks_advance():
 		_demo.story_director.skip()
-	_demo._story_advance()
+	_press(KEY_F)
 
 
 func _click_hotspot(id: String) -> void:

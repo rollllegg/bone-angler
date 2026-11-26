@@ -19,8 +19,8 @@ const BOOKMARK_SHADE := Color("eadcc8")
 const UNKNOWN := "？？？"
 const SILHOUETTE := Color(0.08, 0.06, 0.12, 0.85)
 const GRID_COLUMNS := 3
-const FILTER_NAMES := ["全部", "已解锁", "特殊中和", "升智", "降智", "升情", "降情", "升意", "降意"]
-const FILTER_WIDTHS := [52, 66, 86, 52, 52, 52, 52, 52, 52]
+const FILTER_NAMES := ["全部", "已炼", "Ⅰ", "Ⅱ", "Ⅲ", "升智", "降智", "升情", "降情", "升意", "降意"]
+const FILTER_WIDTHS := [48, 48, 34, 34, 34, 43, 43, 43, 43, 43, 43]
 const SHALLOW_COLOR := Color("58c4b8")
 const DEEP_COLOR := Color("9c8df2")
 
@@ -52,6 +52,8 @@ var _empty_label: Label
 var _detail: Panel
 var _key_hint: Label
 var _recipe_page := false
+var _source_page := false
+var _page := 0
 var _filter := 0
 var _base_weights := Vector2i.ZERO
 var _max_weights := Vector2i(1, 1)
@@ -130,13 +132,13 @@ func _build_drawer() -> void:
 	_prev_page_button = UI.button(_drawer, "< Q", Rect2(20, 64, 52, 40), _switch_page.bind(false))
 	_prev_page_button.add_theme_font_size_override("font_size", 16)
 	_prev_page_button.accessibility_name = "选择鱼类图鉴"
-	for page in 2:
-		var tab := UI.tab_button(_drawer, ["鱼类图鉴", "配方图鉴"][page], Rect2(78 + page * 226, 64, 218, 40), _switch_page.bind(page == 1), page == 0)
+	for page in 3:
+		var tab := UI.tab_button(_drawer, ["鱼类", "原液", "成品药"][page], Rect2(78 + page * 150, 64, 142, 40), _set_codex_page.bind(page), page == 0)
 		tab.add_theme_font_size_override("font_size", 20)
 		_tabs.append(tab)
 	_next_page_button = UI.button(_drawer, "E >", Rect2(528, 64, 52, 40), _switch_page.bind(true))
 	_next_page_button.add_theme_font_size_override("font_size", 16)
-	_next_page_button.accessibility_name = "选择配方图鉴"
+	_next_page_button.accessibility_name = "选择下一页图鉴"
 
 	_filters = Control.new()
 	_filters.mouse_filter = MOUSE_FILTER_IGNORE
@@ -168,7 +170,7 @@ func _build_drawer() -> void:
 	_grid.add_theme_constant_override("h_separation", 8)
 	_grid.add_theme_constant_override("v_separation", 6)
 	_scroll.add_child(_grid)
-	_empty_label = UI.label(_list_surface, "当前筛选暂无已解锁配方", Rect2(20, 140, 520, 56), 20, UI.MUTED)
+	_empty_label = UI.label(_list_surface, "当前筛选暂无已发现成品", Rect2(20, 140, 520, 56), 20, UI.MUTED)
 	_empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_empty_label.hide()
 
@@ -413,23 +415,14 @@ func _set_nav_focus(next_focus: int) -> void:
 	_refresh_focus_visuals()
 
 
-func _switch_page(recipe_page: bool) -> void:
-	if _recipe_page != recipe_page:
-		_recipe_page = recipe_page
-		_selection = -1
-		_audio.play(Audio.Cue.UI_CLICK)
-		_rebuild_list()
-	_set_nav_focus(NavFocus.FILTER if (_recipe_page and _entry_ids.is_empty()) else NavFocus.GRID)
+func _switch_page(forward: bool) -> void:
+	_set_codex_page(posmod(_page + (1 if forward else -1), 3))
 
 
 func _set_filter_from_bar(index: int) -> void:
-	var changed := not _recipe_page or _filter != index
-	if changed:
-		_recipe_page = true
-		_filter = index
-		_selection = -1
-		_audio.play(Audio.Cue.RIG_SELECT)
-		_rebuild_list()
+	_filter = index
+	_set_codex_page(2)
+	_rebuild_list()
 	_set_nav_focus(NavFocus.FILTER)
 
 
@@ -458,10 +451,10 @@ func _refresh_focus_visuals() -> void:
 
 	match nav_focus:
 		NavFocus.GRID:
-			_key_hint.text = "Q 鱼类 / E 配方　WASD 选配方（首行 W 选小分类）　Tab 收起" if _recipe_page else "Q 鱼类 / E 配方　　WASD 选鱼种　　Tab 收起"
+			_key_hint.text = "Q / E 切图鉴　WASD 选成品　首行 W 筛选　Tab 收起" if _recipe_page else "Q / E 切图鉴　WASD 选择条目　Tab 收起"
 			_key_hint.add_theme_color_override("font_color", UI.MUTED)
 		NavFocus.FILTER:
-			_key_hint.text = "A / D 选小分类　　S / 空格 回配方列表　　Q / E 切图鉴"
+			_key_hint.text = "A / D 选分类　S / 空格 回成品列表　Q / E 切图鉴"
 			_key_hint.add_theme_color_override("font_color", UI.MINT)
 
 
@@ -501,12 +494,8 @@ func _set_filter(index: int) -> void:
 
 
 func _set_view(recipe_page: bool, filter_index: int) -> void:
-	if _recipe_page == recipe_page and _filter == filter_index:
-		return
-	_recipe_page = recipe_page
 	_filter = filter_index
-	_selection = -1
-	_audio.play(Audio.Cue.UI_CLICK)
+	_set_codex_page(2 if recipe_page else 0)
 	_rebuild_list()
 
 
@@ -528,29 +517,45 @@ func _layout_list() -> void:
 func _rebuild_list() -> void:
 	_layout_list()
 	for index in _tabs.size():
-		UI.set_tab_active(_tabs[index], (index == 1) == _recipe_page)
+		UI.set_tab_active(_tabs[index], index == _page)
 	var entries := _session.codex_recipes if _recipe_page else _session.codex_fish
-	_progress.text = "%s %d / %d" % ["配方" if _recipe_page else "鱼类", entries.size(), Data.RECIPES.size() if _recipe_page else Data.FISH.size()]
-
+	var discovered := entries.size()
+	if _source_page:
+		discovered = 0
+		for source in Data.essence_indices():
+			discovered += int(_source_unlocked(source))
+	_progress.text = "%s %d / %d" % [["鱼类", "原液", "成品"][_page], discovered, 11 if _page > 0 else Data.FISH.size()]
 	UI.clear_cards(_grid)
 	_entry_ids.clear()
 	_entry_buttons.clear()
 	_entry_badges.clear()
 	_entry_tags.clear()
 	_scroll.scroll_vertical = 0
-	_grid.add_theme_constant_override("v_separation", 6 if (_recipe_page or _guest.visible) else 8)
-
 	if _recipe_page:
-		var recipe_index := 0
-		for id in Data.RECIPES:
-			recipe_index += 1
+		var ordinal := 0
+		for id in Data.POTIONS:
+			ordinal += 1
 			if _matches_filter(id):
-				_add_recipe_tile(id, recipe_index, Data.RECIPES[id], entries.get(id, {}))
+				_add_recipe_tile(id, ordinal, Data.POTIONS[id], entries.get(id, {}))
+	elif _source_page:
+		for source in Data.essence_indices():
+			var data: Dictionary = Data.source_data(source)
+			var unlocked := _source_unlocked(source)
+			var card := UI.button(_grid, "", Rect2(0, 0, 172, 94), _click_entry.bind(_entry_ids.size()))
+			card.custom_minimum_size = Vector2(172, 94)
+			UI.icon_rect(card, UI.ICON_ESSENCE, Rect2(12, 10, 34, 34))
+			UI.label(card, data.essence if unlocked else UNKNOWN, Rect2(52, 8, 114, 30), 17, UI.CREAM)
+			UI.label(card, "%d级 · 库存 %d" % [data.tier, _session.essences[source]] if unlocked else "尚未获得", Rect2(12, 54, 154, 28), 15, UI.MUTED)
+			_entry_ids.append("source:%d" % source)
+			_entry_buttons.append(card)
+			var badge := Label.new()
+			card.add_child(badge)
+			_entry_badges.append(badge)
+			_entry_tags.append(null)
 	else:
 		for species in Data.FISH.size():
 			var fish: Dictionary = Data.FISH[species]
 			_add_fish_tile(fish.id, species, fish, entries.get(fish.id, {}))
-
 	_empty_label.visible = _entry_ids.is_empty()
 	_selection = -1
 	if not _entry_ids.is_empty():
@@ -568,12 +573,16 @@ func _matches_filter(id: String) -> bool:
 		return false
 	if _filter == 1:
 		return true
-	var recipe: Dictionary = Data.RECIPES[id]
-	if _filter == 2:
-		return not str(recipe.reaction).is_empty()
-	var axis := (_filter - 3) >> 1
+	var potion: Dictionary = Data.POTIONS[id]
+	if _filter <= 4:
+		return potion.tier == _filter - 1
+	var axis := (_filter - 5) >> 1
 	var direction := 1 if _filter % 2 == 1 else -1
-	return recipe.effect[axis] * direction > 0
+	var primary := 0
+	for index in range(1, 3):
+		if absi(potion.effect[index]) > absi(potion.effect[primary]):
+			primary = index
+	return primary == axis and potion.effect[axis] * direction > 0
 
 
 func _add_fish_tile(id: String, species: int, data: Dictionary, progress: Dictionary) -> void:
@@ -694,6 +703,8 @@ func _render_detail(animate: bool) -> void:
 		var empty_box := UI.pixel_panel(_detail, Rect2(16, 16, 528, 220), Color("181423"), Color("4a3f57"), UI.INK)
 		var prompt := UI.label(empty_box, "当前筛选暂无已解锁记录", Rect2(12, 0, 504, 220), 20, UI.MUTED)
 		prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	elif _source_page:
+		_show_source(int(_entry_ids[_selection].get_slice(":", 1)))
 	elif _recipe_page:
 		_show_recipe(_entry_ids[_selection])
 	else:
@@ -751,22 +762,11 @@ func _show_fish(id: String) -> void:
 		_add_water_card(14, 118, "浅水", int(fish.water[0]), _base_weights.x, _max_weights.x, SHALLOW_COLOR)
 		_add_water_card(286, 118, "深水", int(fish.water[1]), _base_weights.y, _max_weights.y, DEEP_COLOR)
 
-	# Bottom essence & 3-stat box (+ optional condensed lantern note)
-	var has_condensed := species == Data.LANTERN and bool(progress.get("condensed", false))
-	var eff_h := 40.0 if has_condensed else 64.0
-	var eff_card := UI.pixel_panel(_detail, Rect2(14, 174, 532, eff_h), Color("251e32"), Color("9e7b4f"), UI.INK)
-	var icon_y := 8.0 if has_condensed else 16.0
-	var icon_sz := 24.0 if has_condensed else 30.0
-	UI.icon_rect(eff_card, UI.ICON_ESSENCE, Rect2(12, icon_y, icon_sz, icon_sz))
-	UI.label(eff_card, fish.essence, Rect2(44 if has_condensed else 50, 0, 140, eff_h - 2.0), 18 if has_condensed else 20, UI.GOLD)
-	var eff_row := UI.make_effect_row(fish.effect, 19 if has_condensed else 21, 16 if has_condensed else 18, true)
-	eff_row.position = Vector2(196, 8 if has_condensed else 18)
-	eff_card.add_child(eff_row)
-
-	if has_condensed:
-		var note := UI.pixel_panel(_detail, Rect2(14, 217, 532, 24), Color("1d3236"), Color("63bfa7"), UI.INK)
-		var note_lbl := UI.label(note, "★ %s：提炼另产浓缩的灵魂 ×1" % Data.fish_name(species, 0), Rect2(12, 0, 508, 22), 14, UI.MINT)
-		note_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var source := Data.essence_source(species)
+	var data: Dictionary = Data.source_data(source)
+	var button := UI.button(_detail, "查看 %s · %d级材料 →" % [data.essence, data.tier], Rect2(14, 176, 532, 38), _open_source.bind(source))
+	button.add_theme_font_size_override("font_size", 18)
+	UI.label(_detail, "小／中／大：2／3／4份；巨刺3份。捕获即入库。", Rect2(16, 216, 530, 26), 15, UI.MUTED)
 
 
 func _show_locked_fish(species: int) -> void:
@@ -783,10 +783,10 @@ func _show_locked_fish(species: int) -> void:
 
 	_divider(_detail, Rect2(178, 56, 368, 2), Color("473d57"))
 	UI.label(_detail, "尚未在冥河捕获该鱼种", Rect2(178, 66, 368, 28), 18, UI.CREAM)
-	var tip := UI.label(_detail, "钓起后解锁水域权重、适配鱼饵与原液药效记录。", Rect2(178, 96, 368, 42), 15, UI.MUTED)
+	var tip := UI.label(_detail, "捕获后解锁水域、药材等级与原液入口。", Rect2(178, 96, 368, 42), 15, UI.MUTED)
 	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	var titles := ["水域与权重", "适配鱼饵", "原液药效"]
+	var titles := ["水域与权重", "适配鱼饵", "药材等级"]
 	for i in 3:
 		var slot := UI.pixel_panel(_detail, Rect2(14 + i * 181, 154, 170, 82), Color("191526"), Color("4a3f57"), UI.INK)
 		var t_lbl := UI.label(slot, titles[i], Rect2(8, 8, 154, 22), 14, Color(UI.GOLD, 0.75), false)
@@ -825,90 +825,29 @@ func _add_water_card(x: float, y: float, name: String, weight: int, total: int, 
 
 
 func _show_recipe(id: String) -> void:
-	var recipe: Dictionary = Data.RECIPES[id]
-	var unlocked := _session.codex_recipes.has(id)
-	var ordinal := _recipe_ordinal(id)
-	if not unlocked:
-		_show_locked_recipe(ordinal)
+	var potion: Dictionary = Data.POTIONS[id]
+	if not _session.codex_recipes.has(id):
+		_show_locked_recipe(_recipe_ordinal(id))
 		return
-
-	var parts := id.split("+")
-	var sp_a := Data.fish_index(parts[0])
-	var sp_b := Data.fish_index(parts[1])
-
-	# Left potion showcase
-	var frame := UI.panel(_detail, Rect2(14, 14, 96, 94), "wood_inset")
-	var icon := UI.icon_rect(frame, UI.ICON_POTION, Rect2(20, 20, 56, 56))
-	icon.name = "SpecimenIcon"
-	UI.label(frame, "#%02d" % ordinal, Rect2(7, 3, 40, 16), 12, Color(UI.MUTED, 0.75), false)
-
-	# Title + optional special neutralization pill
-	UI.label(_detail, recipe.name, Rect2(122, 12, 302, 34), 24, UI.GOLD)
-	var has_reaction := not str(recipe.reaction).is_empty()
-	if has_reaction:
-		var pill := UI.pixel_panel(_detail, Rect2(432, 16, 114, 28), Color("3c2b30"), UI.GOLD, UI.INK)
-		var pill_lbl := UI.label(pill, "★ 特殊中和", Rect2(0, 0, 114, 26), 14, UI.GOLD, false)
-		pill_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-	# Visual ingredient formula: [FishA + EssenceA] + [FishB + EssenceB]
-	_add_ingredient_chip(Rect2(122, 54, 196, 54), sp_a)
-	var plus := UI.label(_detail, "+", Rect2(321, 56, 26, 48), 24, UI.GOLD)
-	plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_add_ingredient_chip(Rect2(350, 54, 196, 54), sp_b)
-
-	# Middle 3-stat effect cards (clean single-row: icon + stat name + bold signed number)
-	for axis in 3:
-		var value: int = recipe.effect[axis]
-		var card := UI.pixel_panel(_detail, Rect2(14 + axis * 181, 118, 170, 62), Color("221c30"), _stat_border(axis, value), UI.INK)
-		var stat_icon := UI.icon_rect(card, UI.STAT_ICONS[axis], Rect2(14, 17, 26, 26))
-		if value == 0:
-			stat_icon.modulate = Color(1, 1, 1, 0.42)
-		var sign_str := "+%d" % value if value > 0 else str(value)
-		var col: Color = Data.STAT_COLORS[axis] if value > 0 else (UI.WARN if value < 0 else Color(UI.MUTED, 0.55))
-		UI.label(card, Data.STAT_NAMES[axis], Rect2(46, 0, 56, 60), 18, UI.CREAM if value != 0 else Color(UI.MUTED, 0.65))
-		var val_lbl := UI.label(card, sign_str, Rect2(98, 0, 58, 60), 25, col)
-		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-
-	# Bottom reaction / usage note bar
-	if has_reaction:
-		var note := UI.pixel_panel(_detail, Rect2(14, 190, 532, 46), Color("33262e"), UI.GOLD, UI.INK)
-		var badge := UI.pixel_panel(note, Rect2(10, 9, 86, 28), Color("4b3526"), UI.GOLD, UI.INK)
-		var b_lbl := UI.label(badge, "特殊中和", Rect2(0, 0, 86, 26), 14, UI.GOLD, false)
-		b_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var r_lbl := UI.label(note, str(recipe.reaction), Rect2(108, 0, 412, 44), 18, UI.GOLD)
-		r_lbl.clip_text = true
-	else:
-		var foot := UI.pixel_panel(_detail, Rect2(14, 190, 532, 46), Color("191525"), Color("483d57"), UI.INK)
-		var f_lbl := UI.label(foot, "原料：%s + %s" % [Data.FISH[sp_a].essence, Data.FISH[sp_b].essence], Rect2(14, 0, 504, 44), 16, UI.MUTED)
-		f_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UI.icon_rect(_detail, UI.ICON_POTION, Rect2(18, 16, 48, 48))
+	UI.label(_detail, "%s · %d级" % [potion.name, potion.tier], Rect2(82, 12, 460, 36), 24, UI.GOLD)
+	UI.label(_detail, potion.category + " · 以下为未经强化的固定药效", Rect2(82, 52, 460, 28), 15, UI.MUTED)
+	var effects := UI.make_effect_row(potion.effect, 30, 22, false)
+	effects.position = Vector2(24, 92)
+	_detail.add_child(effects)
+	var index := 0
+	for source in Data.essence_indices():
+		for outcome in Data.source_data(source).outcomes:
+			if outcome[0] == id:
+				var button := UI.button(_detail, Data.FISH[source].essence + " →", Rect2(14 + (index % 3) * 181, 152 + (index / 3) * 42, 170, 34), _open_source.bind(source))
+				button.add_theme_font_size_override("font_size", 15)
+				index += 1
 
 
 func _show_locked_recipe(ordinal: int) -> void:
-	var frame := UI.panel(_detail, Rect2(14, 14, 96, 128), "wood_inset")
-	var icon := UI.icon_rect(frame, UI.ICON_POTION, Rect2(20, 36, 56, 56))
-	icon.name = "SpecimenIcon"
-	icon.modulate = SILHOUETTE
-	UI.label(frame, "#%02d" % ordinal, Rect2(7, 4, 40, 16), 12, Color(UI.MUTED, 0.72), false)
-
-	UI.label(_detail, UNKNOWN, Rect2(124, 16, 240, 34), 26, UI.GOLD)
-	var lock_pill := UI.pixel_panel(_detail, Rect2(448, 19, 98, 28), Color("252034"), Color("5c526e"), UI.INK)
-	var lock_lbl := UI.label(lock_pill, "未配制", Rect2(0, 0, 98, 26), 14, UI.MUTED, false)
-	lock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-	_divider(_detail, Rect2(124, 56, 422, 2), Color("473d57"))
-	UI.label(_detail, "尚未配制过该双原液复方", Rect2(124, 66, 422, 28), 18, UI.CREAM)
-	var tip := UI.label(_detail, "在炼药台「配制复方」中组合两份原液以解锁配方详情。", Rect2(124, 96, 422, 42), 15, UI.MUTED)
-	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	var titles := ["所需原液原料", "复方三项药效"]
-	var values := [UNKNOWN + " + " + UNKNOWN, UNKNOWN]
-	for i in 2:
-		var slot := UI.pixel_panel(_detail, Rect2(14 + i * 272, 154, 260, 82), Color("191526"), Color("4a3f57"), UI.INK)
-		var t_lbl := UI.label(slot, titles[i], Rect2(10, 8, 240, 22), 14, Color(UI.GOLD, 0.75), false)
-		t_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_divider(slot, Rect2(20, 34, 220, 1), Color("3a3147"))
-		var v_lbl := UI.label(slot, values[i], Rect2(10, 42, 240, 30), 19, UI.MUTED)
-		v_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UI.icon_rect(_detail, UI.ICON_POTION, Rect2(24, 24, 62, 62)).modulate = SILHOUETTE
+	UI.label(_detail, "未发现成品 #%02d" % ordinal, Rect2(110, 24, 422, 42), 24, UI.GOLD)
+	UI.label(_detail, "在炼药台消耗三份同种原液炼制。\n首次炼出后解锁固定药效与原液入口。", Rect2(24, 112, 510, 90), 19, UI.MUTED)
 
 
 func _add_ingredient_chip(rect: Rect2, species: int) -> void:
@@ -984,7 +923,7 @@ func _compact_effect_text(effect: Vector3i) -> String:
 
 func _recipe_ordinal(id: String) -> int:
 	var idx := 1
-	for key in Data.RECIPES:
+	for key in Data.POTIONS:
 		if key == id:
 			return idx
 		idx += 1
@@ -999,3 +938,44 @@ func _animate_list() -> void:
 	_list_animation = create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_list_animation.tween_property(_scroll, "modulate:a", 1.0, 0.14)
 	_list_animation.tween_method(func(y: float) -> void: _scroll.position.y = roundf(y), 16.0, 8.0, 0.14)
+
+
+func _set_codex_page(page: int) -> void:
+	_page = clampi(page, 0, 2)
+	_recipe_page = _page == 2
+	_source_page = _page == 1
+	_audio.play(Audio.Cue.UI_CLICK)
+	_rebuild_list()
+	_set_nav_focus(NavFocus.GRID)
+
+
+func _source_unlocked(source: int) -> bool:
+	return _session.essences[source] > 0 or _session.codex_fish.has(Data.FISH[source].id) or (source == 7 and _session.codex_fish.has(Data.FISH[Data.STILLFIN].id)) or _session.codex_sources.has(Data.FISH[source].id)
+
+
+func _open_source(source: int) -> void:
+	_set_codex_page(1)
+	var index := _entry_ids.find("source:%d" % source)
+	_select_entry(index, false, false)
+
+
+func _show_source(source: int) -> void:
+	var data: Dictionary = Data.source_data(source)
+	if not _source_unlocked(source):
+		UI.label(_detail, "尚未获得该原液", Rect2(24, 30, 510, 40), 24, UI.GOLD)
+		UI.label(_detail, "捕获对应鱼种后，原液自动入库。", Rect2(24, 110, 510, 44), 19, UI.MUTED)
+		return
+	UI.icon_rect(_detail, UI.ICON_ESSENCE, Rect2(18, 16, 42, 42))
+	UI.label(_detail, "%s · %d级" % [data.essence, data.tier], Rect2(76, 12, 470, 36), 24, UI.GOLD)
+	var names := PackedStringArray()
+	for species in Data.FISH.size():
+		if Data.essence_source(species) == source:
+			names.append(Data.FISH[species].name)
+	UI.label(_detail, "来源：" + "、".join(names), Rect2(18, 62, 526, 28), 16, UI.CREAM)
+	UI.label(_detail, "每炉3份 → 1剂；尾料与成品跨日保留。", Rect2(18, 94, 526, 28), 16, UI.MUTED)
+	var row := 0
+	for outcome in data.outcomes:
+		var known: bool = _session.codex_sources.get(Data.FISH[source].id, {}).get(outcome[0], false)
+		var title: String = Data.POTIONS[outcome[0]].name if known else UNKNOWN
+		UI.label(_detail, "%s　%s" % [title, "%d%%" % outcome[1] if known else "概率待发现"], Rect2(24, 136 + row * 46, 510, 40), 21, UI.MINT if known else UI.MUTED)
+		row += 1

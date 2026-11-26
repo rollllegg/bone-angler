@@ -22,16 +22,23 @@ func _run() -> void:
 	for _guest in 6:
 		session.spawn_remaining = 0.0
 		session.advance(0.01)
-	_check(session.souls.size() == 6 and str(session.souls[4].get("story_case", "")) == "wukong", "Wukong is the fifth guest on day one")
-	var observer: Dictionary = session.souls[5]
-	_check(not observer.name.is_empty() and observer.stats == Vector3i(10, 10, 10) and bool(observer.get("fixed_stats", false)), "The last guest is the disguised observer")
-	_check(session.can_release(int(observer.id)), "The disguised observer has no stat requirement")
+	_check(session.souls.size() == 6 and str(session.souls[5].get("story_case", "")) == "wukong", "Wukong is the sixth and final guest on day one")
+	for index in 5:
+		var guest: Dictionary = session.souls[index]
+		_check(not guest.has("story_case") and not guest.has("anubis_disguise") and not guest.has("fixed_stats"), "day one's first five guests are ordinary NPCs")
+	var ordinary: Dictionary = session.souls[4]
+	_check(not session.can_release(int(ordinary.id)), "The fifth guest must meet ordinary stat requirements")
 	session._add_potion("test", "劣药", Vector3i(-5, -5, -5), -1, 0)
 	var bad_dose := int(session.potions[0]["id"])
-	_check(session.preview(int(observer.id), false, bad_dose).after == Vector3i(10, 10, 10), "Medicine cannot move the observer's attributes")
-	_check(session.serve(int(observer.id), false, bad_dose) and observer.stats == Vector3i(10, 10, 10), "The observer drinks without changing")
-	session.release_soul(int(observer.id))
-	_check(session.get_soul(int(observer.id)).is_empty(), "The observer leaves after a normal reception")
+	var before: Vector3i = ordinary.stats
+	var expected := (before + Vector3i(-5, -5, -5)).clamp(Vector3i.ZERO, Session.STAT_CEILING)
+	_check(session.preview(int(ordinary.id), false, bad_dose).after == expected and expected != before, "The fifth guest previews ordinary potion effects")
+	_check(session.serve(int(ordinary.id), false, bad_dose) and ordinary.stats == expected, "The fifth guest's attributes change after drinking")
+	_check(not session.can_release(int(ordinary.id)), "A guest below the requirements cannot be released")
+	ordinary.stats = session.requirements[0]
+	_check(session.can_release(int(ordinary.id)), "Meeting the requirements allows release")
+	session.release_soul(int(ordinary.id))
+	_check(session.get_soul(int(ordinary.id)).is_empty(), "The fifth guest leaves after ordinary reception")
 	var coins_before_story := session.coins
 	var story_soul: Dictionary = {}
 	for soul in session.souls:
@@ -207,7 +214,7 @@ func _check_day_three_guests(session: Session, expect_lyre_player: bool) -> void
 	if expect_lyre_player and not lyre_players.is_empty():
 		var guest: Dictionary = lyre_players[0]
 		_check(guest == session.souls[5] and guest.name == "殉情的琴手", "The lyre player is the sixth guest")
-		_check(guest.stats == Vector3i(8, 10, 0) and guest.before == guest.stats and not guest.has("story_case"), "The lyre player has visible stats and uses the regular admission rules")
+		_check(guest.stats == guest.stats.clamp(Vector3i.ONE, Vector3i.ONE * 10) and not session.is_eligible(guest.stats) and guest.before == guest.stats and not guest.has("story_case"), "The lyre player has visible stats and uses the regular admission rules")
 
 
 func _settle(runtime) -> void:

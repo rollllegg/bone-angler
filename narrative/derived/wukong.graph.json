@@ -52,10 +52,6 @@
         "type": "int",
         "default": 0
       },
-      "clue.tail": {
-        "type": "int",
-        "default": 0
-      },
       "clue.staff": {
         "type": "int",
         "default": 0
@@ -122,36 +118,6 @@
           }
         },
         {
-          "id": "tail",
-          "text": "wukong.choice.tail",
-          "locked_if": "clue.tail != 0",
-          "locked_text": "wukong.choice.tail.locked",
-          "set": [
-            "clue.tail = 1"
-          ],
-          "next": "inspect.tail",
-          "hotspot": {
-            "rects": [
-              [
-                26,
-                37,
-                10,
-                8
-              ]
-            ],
-            "variants": {
-              "wukong_monkey": [
-                [
-                  22,
-                  48,
-                  8,
-                  8
-                ]
-              ]
-            }
-          }
-        },
-        {
           "id": "staff",
           "text": "wukong.choice.staff",
           "locked_if": "clue.staff != 0",
@@ -207,16 +173,6 @@
         {
           "speaker": "孙",
           "text": "wukong.inspect.photo.1"
-        }
-      ],
-      "next": "inspect"
-    },
-    {
-      "id": "inspect.tail",
-      "steps": [
-        {
-          "speaker": "孙",
-          "text": "wukong.inspect.tail.1"
         }
       ],
       "next": "inspect"
@@ -367,5 +323,6 @@
         "wukong.end.calm.3"
       ]
     }
-  }
+  },
+  "initial_choices": "inspect"
 }

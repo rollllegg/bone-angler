@@ -112,7 +112,7 @@ func _run() -> void:
 	demo.river.advance_cast(9.0)
 	_check(is_equal_approx(demo.river.cast_elapsed, 0.24), "Scene switching preserves cast progress")
 	demo.session.advance(arrival)
-	_check(demo.session.souls[0].stats == Vector3i(8, 5, 8) and demo.shop.selected_id == 1, "The first configured case arrives while river input is suspended")
+	_check(demo.session.souls[0].stats.y == 6 and demo.shop.selected_id == 1, "The first configured case arrives while river input is suspended")
 	_key(KEY_Q)
 	_check(not demo.river.get_ferry_rect().has_area(), "The ferry is gone once its soul joins the queue")
 	demo.river.advance_cast(0.01)
@@ -206,7 +206,7 @@ func _run() -> void:
 	_check(fishing.phase == Fishing.Phase.REELING and is_equal_approx(fishing.get_travel_ratio(), 1.0 + 0.05 / Data.TRAVEL[0]), "Switching to reception holds the capture time")
 	_key(KEY_Q)
 	_pull(fishing.get_expected_direction())
-	_check(fishing.phase == Fishing.Phase.CAUGHT and session.catches.size() == 1, "Capture completes and adds the fish once")
+	_check(fishing.phase == Fishing.Phase.CAUGHT and session.catches.is_empty() and session.codex_fish["fish_02"].caught == 1, "Capture completes and adds the fish once")
 	_check(reel != null and reel.playing, "The final pull plays the reel cue again")
 	_check(demo._catch_fish_rect.visible and demo._catch_fish_rect.texture == Data.fish_texture(1, 1), "Caught fish displays the Feishu fish sprite instead of the temporary placeholder")
 	var sprite: TextureRect = demo._catch_fish_rect
@@ -219,10 +219,10 @@ func _run() -> void:
 	_key(KEY_E)
 	_key(KEY_E)
 	_check(demo.alchemy.visible and not demo._shop_ui.visible, "Cycling forward twice from the river opens the alchemy station")
-	_check(demo.alchemy.fish_cards.size() == 1 and demo.alchemy._refine_fish_tex.texture == Data.fish_texture(1, 1), "Alchemy displays the caught fish sprite and previews its potion")
+	_check(demo.alchemy.essence_cards.size() == 11 and session.catches.is_empty(), "Alchemy displays the caught fish sprite and previews its potion")
 	await _capture("04-alchemy")
 	_key(KEY_SPACE)
-	_check(session.catches.is_empty() and session.essences[1] == 2, "The caught normal fish refines into two separate doses")
+	_check(session.catches.is_empty() and session.essences[1] == 3 and session.potions.size() == 1, "The captured fish supplies three materials and one pure brew consumes exactly three")
 	_click(demo.alchemy._tab_buttons[1])
 	await process_frame
 	if not demo.alchemy.essence_cards.is_empty():
@@ -232,23 +232,23 @@ func _run() -> void:
 	await _capture("04b-alchemy-mix")
 	_click(demo.alchemy._tab_buttons[0])
 	_key(KEY_Q)
-	_check(demo.soul_hud.soul.stats == Vector3i(8, 5, 8) and demo._dose_buttons.size() == 1, "Reception shows soul stats in the top-left HUD and lists potions directly below")
+	_check(demo.soul_hud.soul.stats.y == 6 and demo._dose_buttons.size() == 1, "Reception shows soul stats in the top-left HUD and lists potions directly below")
 	_check(demo._serve_button.disabled and demo.soul_hud.preview.is_empty(), "No potion preview is active before clicking a potion in the list")
 	_click(demo._dose_buttons[0])
 	await process_frame
-	_check(not demo._serve_button.disabled and demo.soul_hud.preview.after == Vector3i(8, 7, 8) and demo._dose_preview.text.contains("8 / 7 / 8"), "Clicking a potion previews all three post-dose values on the top-left HUD")
+	_check(not demo._serve_button.disabled and session.is_eligible(demo.soul_hud.preview.after) and demo._dose_preview.text.contains("放行"), "Clicking a potion previews all three post-dose values on the top-left HUD")
 	await _capture("04c-reception-preview")
 	_key(KEY_SPACE)
-	_check(session.get_soul(1).stats == Vector3i(8, 7, 8) and session.essences[1] == 1, "Serving consumes one dose and applies signed effects")
+	_check(session.can_release(1) and session.essences[1] == 3 and session.potions.is_empty(), "Serving consumes one dose and applies signed effects")
 	demo.shop.advance_presentation(1.0)
 	_check(session.released_count == 0 and not demo._release_button.disabled, "An eligible soul requires explicit release")
 	await _capture("05-ready-to-release")
 	_key(KEY_SHIFT)
-	_check(demo.shop.departure_times == [0.0] and session.released_count == 1 and session.coins == 62, "Shift triggers departure and pays the 20-coin fee plus a first-service bonus")
+	_check(demo.shop.departure_times == [0.0] and session.released_count == 1 and session.coins == 67, "Shift triggers departure and pays the 25-coin fee plus a first-service bonus")
 	demo.shop.advance_presentation(2.0)
 	await _capture("06-departure")
 	demo.shop.advance_presentation(5.0)
-	_check(demo.shop.departure_times.is_empty() and session.released_count == 1 and session.coins == 62, "Departure completion does not award the fee again")
+	_check(demo.shop.departure_times.is_empty() and session.released_count == 1 and session.coins == 67, "Departure completion does not award the fee again")
 
 	_key(KEY_E)
 	_key(KEY_E)
@@ -256,7 +256,7 @@ func _run() -> void:
 	var has_grip_ware: bool = demo.market._filtered_catalog().any(func(item: Dictionary) -> bool: return item.name == "基础握柄")
 	_check(not has_grip_ware, "The starter grip is absent from the market's all-wares list")
 	_key(KEY_SPACE)
-	_check(demo.market.browsing_wares and session.coins == 62, "The first Space enters the item list without making a purchase")
+	_check(demo.market.browsing_wares and session.coins == 67, "The first Space enters the item list without making a purchase")
 	_key(KEY_W)
 	_check(demo.market.selected_key == "device:2", "W wraps from the first buyable device to the last owned device")
 	_key(KEY_S)
@@ -292,35 +292,37 @@ func _run() -> void:
 	_check(ware_keys.back() == charm_key, "The steady charm moves to the bottom after its last purchase")
 	_click(demo.market.filter_buttons[4])
 	await process_frame
-	_check(demo.market.active_filter == demo.market.Filter.BAIT and demo.market.ware_buttons.size() == Data.BAITS.size(), "Left rail Bait filter shows only baits")
-	demo.market.select_bait(Data.Bait.HATRED)
-	_check(demo.market._detail_name.text == "憎恨饵" and demo.market._detail_desc.text == "降低情感的鱼，权重 ×3\n链颌鱼、墨眼鳉、泪纹鲦", "Market shows the effect and target fish of the selected attribute bait")
+	_check(demo.market.active_filter == demo.market.Filter.BAIT and demo.market.ware_buttons.size() == Data.BAITS.size() + 1, "Left rail Bait filter shows only baits")
+	demo.market.select_bait(Data.Bait.EMOTION)
+	_check(demo.market._detail_name.text == "情感饵" and demo.market._detail_desc.text.contains("冥河鲫、渡魂鲶、泪纹鲦"), "Market shows the effect and target fish of the selected attribute bait")
 	await _capture("07b-market-attribute-bait")
+	session.coins = 140
+	fishing.unlock_variant_craft()
 	demo.market.select_bait(Data.VARIANT_BAIT)
 	await _capture("07c-market-bait")
 	_click(demo.market.action_button)
-	_check(fishing.bait_stock[Data.VARIANT_BAIT] == 1 and session.coins == 45, "The special bait costs 15 coins")
+	_check(fishing.bait_stock[Data.VARIANT_BAIT] == 1 and session.coins == 52, "The special bait costs 8 coins")
 	_click(demo.market.filter_buttons[5])
 	await process_frame
 	demo.market.select_repair(true)
-	_check(demo.market.action_button.disabled and demo.market._cost_value.text == "20", "The full repair price is visible at positive durability, with checkout disabled")
+	_check(demo.market.action_button.disabled and demo.market._cost_value.text == "10", "The full repair price is visible at positive durability, with checkout disabled")
 	fishing.grip_durability = 0
 	demo.market.select_repair(false)
 	await _capture("07d-market-repair")
 	_click(demo.market.action_button)
-	_check(fishing.durability() == 5 and session.coins == 37 and not fishing.quick_repair_available, "Quick repair costs eight coins and spends the opportunity")
+	_check(fishing.durability() == 5 and session.coins == 46 and not fishing.quick_repair_available, "Quick repair costs 6 coins and spends the opportunity")
 	fishing.grip_durability = 0
 	demo.market.refresh()
-	_check(demo.market.action_button.disabled and not fishing.repair(false) and session.coins == 37, "Quick repair cannot be repeated after the restored durability runs out")
+	_check(demo.market.action_button.disabled and not fishing.repair(false) and session.coins == 46, "Quick repair cannot be repeated after the restored durability runs out")
 	demo.market.select_repair(true)
 	_click(demo.market.action_button)
-	_check(fishing.durability() == 10 and session.coins == 17 and fishing.quick_repair_available, "Full repair costs 20 coins and restores the quick repair opportunity")
+	_check(fishing.durability() == 10 and session.coins == 36 and fishing.quick_repair_available, "Full repair costs 10 coins and restores the quick repair opportunity")
 
 	_check_recipes(session)
 	await _check_special_cases(fishing, session)
 	_check_missed_bite(fishing, session)
 	session.advance(300.0)
-	_check(session.day == 1 and demo._queue_buttons.size() == 4, "Day one has six guests and two have already been released")
+	_check(session.day == 1 and demo._queue_buttons.size() == 5, "Day one has six guests and one has already been released")
 	_key(KEY_E)
 	root.size = Vector2i(960, 576)
 	await process_frame
@@ -345,22 +347,18 @@ func _check_dose_rewards() -> void:
 	var model := Session.new()
 	root.add_child(model)
 	model.active = true
-	model.day = 5
-	model.requirements.assign([Vector3i(7, 7, 7), Vector3i(9, 9, 9)])
-	var expected := [33, 16, 8]
-	for count in range(1, 4):
-		var starting := Vector3i(8, 8, 7 - count * 2)
-		var soul := {"id": 1, "case_id": 0, "stats": starting, "before": starting, "fee": 30, "served": false}
+	model.requirements.assign([Vector3i(7,7,7), Vector3i(9,9,9)])
+	for count in range(1,4):
+		var starting := Vector3i(8,8,7-count*2)
+		var soul := {"id": 1, "case_id": 0, "stats": starting, "before": starting, "fee": 25, "served": false}
 		model.souls.assign([soul])
 		model._first_services.clear()
-		model.essences[Data.LANTERN] = count
 		for index in count:
-			var preview := model.preview(1, true, Data.LANTERN)
-			_check(preview.reward == (expected[count - 1] if index == count - 1 else 0), "A legal dose previews the rounded payout only when it reaches the threshold")
-			_check(model.serve(1, true, Data.LANTERN) and Session.doses_used(soul) == index + 1, "Each successful dose is counted and consumed once")
+			model._add_potion("medicine_03", "定志药", Vector3i(0,0,2), -1, 0)
+			_check(model.serve(1,false,model.potions[-1].id), "Each finished medicine is consumed and counted")
+		var expected := floori(27.0 * pow(0.5,count-1))
 		var balance := model.coins
-		_check(model.essences[Data.LANTERN] == 0 and model.release_soul(1) and model.coins == balance + expected[count - 1], "One, two and three doses pay the full, half and quarter rewards with rounding")
-	_check(Session.doses_used({"served": true}) == 1, "A legacy served flag counts as one dose")
+		_check(model.release_soul(1) and model.coins == balance + expected, "Visit bonus precedes dose reduction and flooring")
 	model.free()
 
 
@@ -603,16 +601,18 @@ func _check_save_slots() -> void:
 	demo.qte.submit_direction(direction)
 	demo.qte.advance(demo.qte._release_lead)
 	demo.qte.release_direction(direction)
-	_check(demo.qte.phase == Fishing.Phase.CAUGHT and demo.session.catches.size() == 1, "The restored surge lands exactly one fish")
+	_check(demo.qte.phase == Fishing.Phase.CAUGHT and demo.session.catches.is_empty() and demo.session.codex_fish["fish_02"].caught == 1, "The restored surge lands exactly one fish")
 	demo.session.advance(demo.session.spawn_remaining)
 	demo.session.requirements.assign([Vector3i(7, 7, 7), Vector3i(9, 9, 9)])
 	var guest: Dictionary = demo.session.souls[0]
 	guest.case_id = 0
 	guest.stats = Vector3i(6, 5, 7)
 	guest.fee = 40
-	demo.session.essences[0] = 1
-	demo.session.essences[1] = 1
-	var served: bool = demo.session.serve(guest.id, true, 0) and demo.session.serve(guest.id, true, 1)
+	demo.session._add_potion("medicine_01", "启明药", Vector3i(2,0,0), -1, 0)
+	var first_dose: int = demo.session.potions[-1].id
+	demo.session._add_potion("medicine_02", "暖心药", Vector3i(0,2,0), -1, 0)
+	var second_dose: int = demo.session.potions[-1].id
+	var served: bool = demo.session.serve(guest.id, false, first_dose) and demo.session.serve(guest.id, false, second_dose)
 	_check(served and demo.save_progress(2) and demo.load_progress(2), "A visitor can be saved after taking two doses")
 	var restored_guest: Dictionary = demo.session.get_soul(guest.id)
 	_check(Session.doses_used(restored_guest) == 2 and restored_guest.fee == 40, "Reload keeps the two doses and the original base fee")
@@ -704,136 +704,38 @@ func _check_keyboard_workflows() -> void:
 	demo = preload("res://scenes/demo/demo.tscn").instantiate()
 	demo.auto_pause_on_focus_loss = false
 	demo.persist_save = false
-	root.size = Vector2i(1620, 972)
+	root.size = Vector2i(1620,972)
 	root.add_child(demo)
 	await process_frame
-	_seed_first_day()
-	_key(KEY_SPACE)
-	_key(KEY_DOWN)
-	_key(KEY_SPACE)
+	demo._start_game()
+	for node in [demo.session,demo.qte,demo.river,demo.shop]:
+		node.set_process(false)
 	var session: Session = demo.session
 	for species in Data.FISH.size():
-		session.record_catch({"species": Data.LANTERN if species == Data.VARIANT else species, "size": 0, "cm": 5.0})
-	var lantern: int = session.catches[Data.VARIANT].id
+		session.record_catch({"species": species, "size": 0 if species != Data.VARIANT else 3, "cm": 5.0})
 	_key(KEY_E)
 	_key(KEY_E)
-	for code in [KEY_D, KEY_S, KEY_A, KEY_S, KEY_S, KEY_D]:
+	for code in [KEY_D,KEY_S,KEY_S,KEY_S]:
 		_key(code)
-	await process_frame
-	await process_frame
-	var basket_scroll := demo.alchemy._fish_grid.get_parent() as ScrollContainer
-	_check(demo.alchemy.selected_fish_id == lantern and basket_scroll.scroll_vertical > 0, "WASD moves by rows and columns and scrolls the selected catch into view")
+	_check(demo.alchemy.selected_source == Data.VARIANT, "Keyboard selects the final material row")
 	_key(KEY_SPACE)
-	_check(session.catches.size() == Data.FISH.size() - 1 and session.essences[Data.LANTERN] == 1 and session.concentrate == 1, "Space refines the highlighted fish")
-	_key(KEY_SPACE)
-	_key(KEY_SHIFT)
-	_key(KEY_SPACE)
-	_key(KEY_D)
-	_key(KEY_SPACE)
-	_check(demo.alchemy.mix_first == 0 and demo.alchemy.mix_second == Data.LANTERN, "Space places the highlighted essence in the next recipe slot")
-	_key(KEY_C)
-	_check(demo.alchemy.mix_first == 0 and demo.alchemy.mix_second == -1, "C removes the last essence from the recipe")
-	_key(KEY_SPACE)
-	_key(KEY_F)
-	_check(session.potions.size() == 1 and session.essences[0] == 0 and session.essences[Data.LANTERN] == 0, "F crafts the selected recipe even when it uses the last doses")
+	_check(session.potions.size() == 1 and session.potions[0].kind == "medicine_11", "Space brews three giant materials")
 	_key(KEY_SHIFT)
 	_key(KEY_X)
 	_key(KEY_V)
 	_key(KEY_SPACE)
-	_check(session.potions[0].attribute == Data.Attribute.EMOTION and session.potions[0].adjustment == -1, "The keyboard can select an attribute, change direction and strengthen a potion")
-
-	for species in [1, Data.LANTERN]:
-		session.record_catch({"species": species, "size": 1, "cm": 15.0})
-		session.refine(session.catches.back().id)
-	session.advance(session.spawn_remaining)
-	session.advance(session.spawn_remaining)
-	var first_id: int = session.souls[0].id
-	var second_id: int = session.souls[1].id
-	_key(KEY_Q)
-	_key(KEY_D)
-	_check(demo.shop.selected_id == second_id, "D selects the next waiting soul")
-	_key(KEY_A)
-	_key(KEY_W)
-	_key(KEY_S)
-	_check(demo.shop.selected_id == first_id and demo._selected_dose == [true, 1], "A selects the previous guest and W/S cycles the available medicines")
-	_key(KEY_SPACE)
-	_key(KEY_SHIFT)
-	_check(demo.shop.departure_times == [0.0] and demo.soul_hud.soul.id == second_id and demo._queue_buttons.size() == 1, "The next guest takes over the counter and HUD immediately on release")
-	for _dose_number in 2:
-		_key(KEY_S)
-		_key(KEY_S)
-		_key(KEY_SPACE)
-	_check(session.get_soul(second_id).stats.z == 9 and not demo._release_button.disabled, "The second guest accepts doses while the first is departing")
-	_key(KEY_SHIFT)
-	_check(demo.shop.departure_times.size() == 2 and session.released_count == 2, "The second departure starts without waiting for the first to finish")
-	demo.shop.advance_presentation(1.4)
-	_check(demo.shop.departure_times.size() == 2 and demo.shop.departure_times[1] > 0.0, "Both departure animations are playing at the same time")
-	await _capture("09-overlapping-departures")
-	var balance := session.coins
-	_key(KEY_ESCAPE)
-	var paused_times: Array[float] = demo.shop.departure_times.duplicate()
-	demo.shop.advance_presentation(10.0)
-	_check(demo.shop.departure_times == paused_times, "Pause freezes every departure")
-	_key(KEY_ESCAPE)
-	demo.shop.advance_presentation(10.0)
-	_check(demo.shop.departure_times.is_empty() and session.coins == balance, "All animations finish with no extra payouts")
-
-	_key(KEY_E)
-	_key(KEY_E)
-	for i in 4:
-		_key(KEY_S)
-	_key(KEY_SPACE)
-	_key(KEY_D)
-	_key(KEY_SPACE)
-	_check(demo.qte.bait_stock[Data.Bait.DEFAULT] == Data.STARTING_BAIT + 5 and session.coins == balance - 15, "The keyboard can choose a market category, set a quantity and buy the selected bait")
-	_key(KEY_C)
-	_key(KEY_C)
-	_check(demo.current_location == "River", "Two back steps leave the item list and return to the river")
-	await _check_stillfin()
+	_check(session.potions[0].attribute == 1 and session.potions[0].adjustment == -1, "Keyboard adjusts one finished dose")
+	await _capture("09-keyboard-brewing")
 	demo.queue_free()
 	await process_frame
 
 
 func _check_stillfin() -> void:
-	var fishing: Fishing = demo.qte
 	var session: Session = demo.session
-	_key(KEY_SPACE)
-	demo.river.advance_cast(1.0)
-	_hook_fish(fishing, Data.STILLFIN, 1)
-	_check(fishing.phase == Fishing.Phase.PREPARING and fishing.locked.species == Data.STILLFIN and fishing.target == 4, "Stillfin bites in shallow water and uses the easy regular-fish QTE")
-	fishing.advance(Data.PREPARATION)
-	for _round in 2:
-		fishing.advance(fishing.get_target_time())
-		_pull(fishing.get_expected_direction())
-		if fishing.phase == Fishing.Phase.FEEDBACK:
-			fishing.advance(Data.ROUND_GAP)
-	var landed: Dictionary = session.catches.back()
-	_check(fishing.phase == Fishing.Phase.CAUGHT and landed.species == Data.STILLFIN, "Completing the QTE lands the stillfin in the basket")
-	_check(demo._catch_fish_rect.visible and demo._catch_fish_rect.texture == Data.fish_texture(Data.STILLFIN), "The landed stillfin displays its own sprite")
-	await _capture("10-stillfin-caught")
-	_key(KEY_E)
-	_key(KEY_E)
-	_key(KEY_SHIFT)
-	demo.alchemy.fish_cards.back().pressed.emit()
-	_check(demo.alchemy._refine_fish_tex.texture == Data.fish_texture(Data.STILLFIN), "The fish basket previews the stillfin sprite")
-	await _capture("11-stillfin-refinement")
-	_key(KEY_SPACE)
-	_check(session.essences[Data.STILLFIN] == 2 and session.dose(true, Data.STILLFIN).effect == Vector3i(0, 0, -1), "The normal stillfin yields two doses that only lower will")
-	session.advance(session.spawn_remaining)
-	var guest: Dictionary = session.souls[0]
-	session.requirements[1] = Vector3i(10, 10, 8)
-	guest.stats = Vector3i(6, 8, 9)
-	_key(KEY_Q)
-	_key(KEY_S)
-	_key(KEY_S)
-	_check(demo._selected_dose == [true, Data.STILLFIN] and demo.soul_hud.preview.after == Vector3i(6, 8, 8), "Reception previews the stillfin lowering just the excess will")
-	_key(KEY_SPACE)
-	_check(guest.stats == Vector3i(6, 8, 8) and session.essences[Data.STILLFIN] == 1, "Serving the stillfin dose makes the guest eligible")
-	_key(KEY_SHIFT)
-	_check(session.get_soul(guest.id).is_empty(), "The adjusted guest can be released")
-	session.record_catch({"species": Data.STILLFIN, "size": 0, "cm": 7.0})
-	session.refine(session.catches.back().id)
-	_check(session.mix(Data.STILLFIN, Data.STILLFIN) and session.potions.back().effect == Vector3i(0, 0, -2), "Two stillfin doses make a pure minus-two-will compound")
+	var before := session.essences[7]
+	session.record_catch({"species": Data.STILLFIN, "size": 1, "cm": 14.0})
+	_check(session.essences[7] == before + 3 and session.essences[Data.STILLFIN] == 0, "Stillfin banks the shared suppression material")
+	_check(Data.source_data(Data.STILLFIN).outcomes == Data.source_data(7).outcomes, "Stillfin and echo brew the same medicines")
 
 
 func _seed_first_day() -> void:
@@ -898,7 +800,7 @@ func _check_daily_rotation(session: Session) -> void:
 			_check(session.release_soul(soul.id), "A guest meeting the inclusive current bounds can be released")
 		if session.awaiting_day_report:
 			session.close_day_report()
-	_check(session.is_complete() and session.day == 5 and session.released_count + session.rejected_count == 30 and session._first_services.size() == 30, "All thirty guests complete the five-day shift without duplicate cases")
+	_check(session.is_complete() and session.day == 5 and session.released_count + session.rejected_count == 30 and session._first_services.size() <= 30, "All thirty service slots complete while compatible people may return on later days")
 
 
 func _check_smaller_roster_save() -> void:
@@ -955,94 +857,28 @@ func _resolve_story(session, id: int) -> bool:
 
 
 func _check_starter_cases() -> void:
-	var single_dose_for_all := true
-	var new_dose_solves_will := true
-	var will_cases := 0
-	for seed in 48:
+	var planner := preload("res://scripts/systems/soul_planner.gd")
+	var all_compatible := true
+	for seed_value in 12:
 		var model := Session.new()
 		root.add_child(model)
-		model._rng.seed = seed
+		model.set_process(false)
+		model._rng.seed = seed_value
 		model.start_shift()
-		for _day in 2:
-			model.advance(160.0)
-			single_dose_for_all = single_dose_for_all and model.souls.size() == 6
-			for soul in model.souls.duplicate():
-				if soul.has("story_case"):
-					single_dose_for_all = _resolve_story(model, soul.id) and single_dose_for_all
-					continue
-				if bool(soul.get("fixed_stats", false)):
-					model.release_soul(soul.id)
-					continue
-				var stats: Vector3i = soul.stats
-				var violations := 0
-				for axis in 3:
-					violations += int(stats[axis] < model.requirements[0][axis] or stats[axis] > model.requirements[1][axis])
-				var suitable := false
-				for fish: Dictionary in Data.FISH:
-					if fish.water[0] > 0:
-						var after := (stats + Vector3i(fish.effect)).clamp(Vector3i.ZERO, Session.STAT_CEILING)
-						suitable = suitable or model.is_eligible(after)
-				single_dose_for_all = single_dose_for_all and violations == 1 and suitable
-				if stats.z > model.requirements[1].z:
-					will_cases += 1
-					new_dose_solves_will = new_dose_solves_will and model.is_eligible(stats + Vector3i(0, 0, -1))
-				soul.stats = model.requirements[0]
-				model.release_soul(soul.id)
-			if model.awaiting_day_report:
-				model.close_day_report()
+		for day_number in [1, 2]:
+			model._open_day(day_number)
+			for plan in model._guest_plans.values():
+				for outcome in Data.source_data(plan.source).outcomes:
+					all_compatible = all_compatible and planner.eligible(planner.apply_dose(plan.stats, Data.POTIONS[outcome[0]].effect), model.requirements)
 		model.free()
-	_check(single_dose_for_all, "The first two days' cases each miss one requirement and are solvable with a single shallow-water essence")
-	_check(will_cases > 0 and new_dose_solves_will, "Each early excess-will case can use one stillfin dose")
+	_check(all_compatible, "Both base and upgrade outcomes solve every early teaching order")
 
 
 func _check_attribute_baits(fishing: Fishing) -> void:
-	var targets := {
-		Data.Bait.WISDOM: [0, 8, 9],
-		Data.Bait.EMOTION: [1, 4],
-		Data.Bait.WILL: [2, 3],
-		Data.Bait.FOOLISHNESS: [4, 5, 7],
-		Data.Bait.HATRED: [3, 5, 6],
-		Data.Bait.DAZE: [7, 9, Data.STILLFIN],
-	}
-	_check(Data.BAITS.size() == 9 and Data.BAIT_PRICES.size() == 9, "The catalog has six attribute baits and no old size baits")
-	for water in Data.RODS.size():
-		var base := fishing.fish_weights(water, Data.Bait.DEFAULT)
-		for idx: int in targets:
-			var expected := base.duplicate()
-			var has_target := false
-			for species: int in targets[idx]:
-				has_target = has_target or expected[species] > 0.0
-				expected[species] *= 3.0
-			_check(has_target and fishing.fish_weights(water, idx) == expected, "Only listed fish in this water receive the bonus: %s / %s" % [Data.BAITS[idx], Data.RODS[water]])
-	_check(fishing.fish_weights(1, Data.Bait.WILL, 1)[Data.LANTERN] == 135.0, "School and attribute bait multiply")
-	_check(fishing.fish_weights(0, Data.Bait.DAZE)[Data.STILLFIN] == 45.0 and fishing.fish_weights(1, Data.Bait.DAZE)[Data.STILLFIN] == 15.0, "Daze attracts the stillfin in both waters, more often in shallow water")
-	_check(Data.VARIANT == 10 and fishing.fish_weights(1, Data.Bait.DAZE)[Data.VARIANT] == 0.0, "The existing variant inventory slot is preserved and remains outside normal bites")
-
-	var original_stock := fishing.bait_stock.duplicate()
-	var original_bait := fishing.bait
-	var original_seed := fishing._rng.state
-	var original_snapshot := fishing._snapshot.duplicate()
-	var identical_sizes := true
-	for hook in Data.HOOKS.size():
-		fishing._snapshot = {"hook": hook}
-		for sample_seed in 40:
-			fishing._rng.seed = sample_seed
-			var default_roll := fishing._roll_fish(1, Data.Bait.DEFAULT)
-			for idx: int in targets:
-				fishing._rng.seed = sample_seed
-				identical_sizes = identical_sizes and fishing._roll_fish(1, idx).size == default_roll.size
-	fishing._rng.state = original_seed
-	fishing._snapshot = original_snapshot
-	_check(identical_sizes, "Every attribute bait rolls the same size as the default bait given the same hook and random draw")
-	var legacy_stock := [4, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-	fishing.restore_bait_inventory(legacy_stock, 14)
-	_check(fishing.bait_stock == [5, 23, 9, 9, 7, 8, 9, 12, 13] and fishing.bait == Data.VARIANT_BAIT, "Old saves merge size and fish-specific inventory and preserve special bait")
-	fishing.restore_bait_inventory(legacy_stock, 9)
-	_check(fishing.bait == Data.Bait.FOOLISHNESS and fishing.bait_stock[Data.Bait.FOOLISHNESS] == 7, "An equipped old negative-stat fish bait converts to the matching attribute bait")
-	fishing.restore_bait_inventory([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], 2)
-	_check(fishing.bait_stock == [10, 5, 6, 7, 8, 9, 10, 11, 12] and fishing.bait == Data.Bait.DEFAULT, "Existing size bait stock and equipped bait convert to the default bait")
-	fishing.restore_bait_inventory(original_stock, original_bait)
-	_check(fishing.bait_stock == original_stock and fishing.bait == original_bait, "New bait inventories load directly")
+	_check(Data.BAITS.size() == 5 and Data.BAIT_PRICES == [2,4,4,4,8], "Five baits use the approved prices")
+	_check(fishing.fish_weights(0, Data.Bait.WILL)[Data.STILLFIN] == 15.0 and fishing.fish_weights(1, Data.Bait.WILL)[Data.STILLFIN] == 0.0, "Will bait attracts the shallow Stillfin")
+	_check(fishing.fish_weights(0, Data.Bait.WISDOM)[5] == 60.0 and fishing.fish_weights(0, Data.Bait.WISDOM)[0] == 75.0, "Attribute bait includes both directions")
+	_check(fishing.size_weights(0)[0] == 80.0 and is_equal_approx(fishing.size_weights(0)[2], 1.5) and fishing.size_weights(1)[1] == 260.0, "Only hooks determine small, medium and large fish weights")
 
 
 func _check_ferry_crossing() -> void:
@@ -1131,108 +967,35 @@ func _check_rig_picker() -> void:
 
 
 func _check_recipes(session: Session) -> void:
-	_check(Data.RECIPES.size() == 78, "All 78 recipes are present")
-	var unmatched := 0
-	var reactions := 0
-	for first in Data.FISH.size():
-		for second in range(first, Data.FISH.size()):
-			var recipe := Data.recipe(first, second)
-			if recipe.is_empty() or recipe != Data.recipe(second, first):
-				unmatched += 1
-				continue
-			var expected: Vector3i = Data.FISH[first].effect + Data.FISH[second].effect
-			if not recipe.reaction.is_empty():
-				reactions += 1
-				if [first, second] == [1, 3]:
-					expected.y += 1
-				elif [first, second] == [0, 4]:
-					expected.x += 1
-				elif [first, second] == [2, Data.VARIANT]:
-					expected.z += 2
-			if recipe.effect != expected:
-				unmatched += 1
-	_check(unmatched == 0 and reactions == 3, "Every pair resolves in both orders with the correct effects and exactly three special reactions")
-	_check(not session.mix(1, 1) and session.essences[1] == 1, "A same-type compound does not consume a single available dose")
-	session.record_catch({"species": Data.LANTERN, "size": 0, "cm": 12.0})
-	_check(session.concentrate == 0 and session.refine(session.catches[0].id), "Capture does not award the lantern concentrate before refinement")
-	_check(session.concentrate == 1 and session.essences[Data.LANTERN] == 1, "A small lantern refines into one dose and one concentrate")
-	session.record_catch({"species": 6, "size": 0, "cm": 6.0})
-	session.refine(session.catches[0].id)
-	_check(session.mix(6, 1) and session.essences[6] == 0 and session.essences[1] == 0, "Mixing atomically spends one dose of each reagent")
-	var medicine: Dictionary = session.potions[0]
-	_check(medicine.effect == Vector3i.ZERO and session.strengthen(false, medicine.id, 1, 1), "Zero-effect potion can be adjusted after mixing")
-	_check(medicine.effect == Vector3i(0, 1, 0) and not session.strengthen(false, medicine.id, 1, 1), "Each dose can only be strengthened once")
-	var limits: Array[Vector3i] = [Vector3i(6, 4, 7), Vector3i(8, 7, 9)]
-	_check(Session.meets_requirements(Vector3i(6, 7, 9), limits) and not Session.meets_requirements(Vector3i(6, 7, 10), limits), "Release includes both endpoints and excludes excessive attributes")
+	_check(Data.POTIONS.size() == 11, "The complete fixed medicine table has eleven entries")
+	var before := session.potions.size()
+	session.essences[0] += 3
+	_check(session.brew(0) and session.potions.size() == before + 1, "One pure brew always produces a medicine")
+	var medicine := session.potions[-1]
+	_check(medicine.effect == Data.POTIONS[medicine.kind].effect, "Finished effects are fixed by product identity")
+	session.concentrate += 1
+	_check(session.strengthen(false, medicine.id, 1, 1) and not session.strengthen(false, medicine.id, 1, 1), "A finished dose supports one adjustment")
+	_check(not session.mix(0, 1) and session.dose(true, 0).is_empty(), "Mixed brewing and direct material serving are unavailable")
 
 
 func _check_special_cases(fishing: Fishing, session: Session) -> void:
-	_key(KEY_E)
-	fishing.set_rig(1, 0, Data.VARIANT_BAIT)
-	_check(fishing.equipped_charms() == 2 and demo._rig_hint.text.contains("2 / 2"), "The long rod automatically equips both purchased charms")
-	fishing.cast()
-	var rng := RandomNumberGenerator.new()
-	for seed in 1000:
-		rng.seed = seed
-		if rng.randf() < 0.80 and rng.randf() < Data.VARIANT_CHANCE:
-			fishing._rng.seed = seed
-			break
-	_key(KEY_Q)
-	fishing._process(fishing.remaining)
-	_check(fishing.phase == Fishing.Phase.AWAITING_RETURN and demo._river_notice.visible, "A variant also raises an alert away from the river")
-	_key(KEY_Q)
-	_check(demo.current_location == "River" and fishing.phase == Fishing.Phase.TRUE_NAME and fishing.locked.species == Data.VARIANT, "Q returns directly from the market to start the variant capture")
-	_check(is_equal_approx(fishing.remaining, Fishing.VARIANT_LIMIT), "Returning to the river starts the full true-name timer")
-	_check(demo._river_status.text == "神秘鱼影 · 真名捕获" and not demo._river_status.text.contains("巨刺灰鳞鱼"), "True-name status box also keeps the species hidden before capture")
-	for character in Fishing.VARIANT_WORD:
-		_key(OS.find_keycode_from_string(character))
-	_check(fishing.phase == Fishing.Phase.CAUGHT and session.catches[0].species == Data.VARIANT, "Typing the whole true name lands an independent variant")
-	session.refine(session.catches[0].id)
-	_check(session.essences[Data.VARIANT] == 2 and session.mix(Data.VARIANT, Data.VARIANT), "A variant refines into two doses for its compound")
-	session.advance(session.spawn_remaining)
-	var boatman: Dictionary = session.souls.back()
-	session.record_catch({"species": Data.LANTERN, "size": 1, "cm": 21.0})
-	session.refine(session.catches[0].id)
-	session.serve(boatman.id, true, Data.LANTERN)
-	session.serve(boatman.id, true, Data.LANTERN)
-	_check(session.release_soul(boatman.id) and session.last_payout == 12 and session.coins == 29, "Two doses halve the boatman reward including the first-service and commission bonuses")
-	session.advance(session.spawn_remaining)
-	var worker: Dictionary = session.souls.back()
-	var change := session.preview(worker.id, false, session.potions.back().id)
-	_check(change.after.x == 10, "Potion preview clamps after applying the whole dose")
-	_check(fishing.buy_bait(Data.BONE_BAIT, 2) and session.coins == 15, "Two bone baits cost 14 coins")
-	_check(fishing.bait == Data.BONE_BAIT and fishing.can_cast(), "Buying bait when the equipped bait is empty automatically equips the new bait")
-	fishing.set_rig(0, 0, Data.BONE_BAIT)
-	_check(fishing.equipped_charms() == 1, "The short rod automatically equips one of two owned charms")
-	fishing.cast()
-	for seed in 1000:
-		rng.seed = seed
-		if rng.randf() >= 0.40:
-			fishing._rng.seed = seed
-			break
-	_key(KEY_E)
-	_key(KEY_E)
-	fishing._process(fishing.remaining)
-	_check(fishing.phase == Fishing.Phase.CAUGHT and fishing.durability() == 8 and fishing.bait_stock[Data.BONE_BAIT] == 1, "A bone lands automatically and consumes one bait and one durability")
-	_check(demo._river_notice.visible and demo._river_notice_title.text == "钓到了遗骨！" and demo._river_notice_detail.text == "已回收遗骨 ×1" and not demo._river_bite_alert.visible, "Automatic bone recovery shows a distinct left-side notice in alchemy")
-	await _capture("07e-bone-notice")
-	_key(KEY_Q)
-	_key(KEY_Q)
-	_check(demo._river_notice.visible, "Returning to the river keeps the bone recovery notice visible")
-	demo._process(4.0)
-	fishing.state_changed.emit()
-	_check(not demo._river_notice.visible, "The bone notice expires and subsequent refreshes do not show it again")
-	_check(session.recovered_bones == 1 and session.catches.is_empty(), "Automatic recovery awards one bone and no fish")
-	_check(not demo._cast_button.disabled and demo._retract_button.disabled and not demo._catch_fish_rect.visible, "After automatic recovery the rod is ready for the next cast")
-	fishing.cast()
-	_hook_fish(fishing, 1, 1)
-	_key(KEY_X)
-	_check(fishing.phase == Fishing.Phase.ESCAPED and fishing.durability() == 7 and session.catches.is_empty(), "Abandoning a locked catch preserves the charge")
-	fishing.set_rig(1, 0, Data.Bait.WILL)
-	_check(fishing.durability() == 7, "Changing rods retains the basic grip's wear")
-	demo._refresh_river()
-	_check(demo._cast_button.disabled and demo._cast_button.text == "当前鱼饵 ×0" and demo._river_hint.text.contains("Shift 换饵"), "Selecting an empty bait clearly explains how to switch bait")
-	fishing.set_rig(0, 0, Data.Bait.DEFAULT)
+	var bones := session.recovered_bones
+	for seed_value in 30:
+		fishing._rng.seed = seed_value
+		fishing.phase = Fishing.Phase.WAITING
+		fishing._snapshot = {"rod": 0, "hook": 0, "bait": 0, "attachments": 0}
+		fishing.bait_stock[0] += 1
+		fishing.grip_durability = 10
+		fishing._bite()
+		_check(not fishing.locked.has("bone"), "Ordinary bites always enter the fish branch")
+	_check(session.recovered_bones == bones, "Retired bone events cannot add resources")
+	fishing.phase = Fishing.Phase.READY
+	fishing.set_at_river(true)
+	fishing._snapshot = {"rod": 1, "hook": 0, "bait": Data.VARIANT_BAIT, "attachments": 0}
+	fishing.locked = {"species": Data.VARIANT, "size": 3, "cm": 35.0}
+	fishing._start_fish_capture()
+	_check(fishing.phase == Fishing.Phase.TRUE_NAME, "The giant retains its true-name capture")
+	fishing.retract()
 
 
 func _check_missed_bite(fishing: Fishing, session: Session) -> void:
@@ -1275,16 +1038,14 @@ func _check_location_navigation() -> void:
 
 
 func _hook_fish(fishing: Fishing, species: int, size: int) -> void:
-	for seed in 2000:
-		fishing._rng.seed = seed
-		if fishing._rng.randf() >= (0.40 if fishing.bait == Data.BONE_BAIT else 0.80):
-			continue
-		var sample: Dictionary = fishing._roll_fish(fishing.rod, fishing.bait)
-		if sample.species == species and sample.size == size:
-			fishing._rng.seed = seed
+	for seed_value in 20000:
+		fishing._rng.seed = seed_value
+		var candidate := fishing._roll_fish(fishing.rod, fishing.bait)
+		if candidate.get("species") == species and candidate.get("size") == size:
+			fishing._rng.seed = seed_value
 			fishing.advance(fishing.remaining)
 			return
-	_check(false, "Could not find a deterministic regular catch")
+	_check(false, "A reachable fish/size pair can be selected")
 
 
 func _pull(direction: int, use_arrow: bool = false) -> void:

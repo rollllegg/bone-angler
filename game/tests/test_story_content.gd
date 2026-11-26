@@ -21,8 +21,8 @@ func _run() -> void:
 	_check(_db.cases.has("wukong"), "wukong case exists")
 	_check(_db.cases.has("orpheus"), "orpheus case exists")
 	_check(_db.cases.has("anubis"), "anubis case exists")
-	_check(_db.get_scheduled_case(1, 4) == "wukong", "wukong is the fifth guest on day 1")
-	_check(_db.get_scheduled_case(1, 5) == "", "day 1's last seat is the disguised observer")
+	_check(_db.get_scheduled_case(1, 4) == "", "day 1's fifth seat is an ordinary guest")
+	_check(_db.get_scheduled_case(1, 5) == "wukong", "wukong is the sixth and final guest on day 1")
 	_check(_db.get_scheduled_case(2, 5) == "orpheus", "orpheus is the sixth guest on day 2")
 	_check(_db.get_scheduled_case(5, 5) == "anubis", "anubis closes the fifth day")
 	_check(_db.get_scheduled_case(2, 1) == "", "day 2 slot 1 is not a story slot")
@@ -49,6 +49,7 @@ func _run() -> void:
 func _check_wukong_data() -> void:
 	var data: Dictionary = _db.get_case("wukong")
 	_check(str(data.get("entry", "")) == "arrival", "wukong entry is arrival")
+	_check(str(data.get("initial_choices", "")) == "inspect" and not data.state.flags.has("clue.tail"), "wukong offers immediate investigation without a tail clue")
 	_check(not bool(data.get("requires_stats", true)), "wukong does not use the stat gate")
 	_check(data.has("potion"), "wukong has a potion rule")
 	_check(data.has("callout"), "wukong has a typed callout")
@@ -170,7 +171,7 @@ func _check_orpheus_data() -> void:
 	_check_all_text_keys(data)
 	_check_potion_scores(data, -1, 1, -1, "迷茫")
 	_check(int(data.state.flags["confused"].get("default", -1)) == 1, "orpheus starts confused")
-	_check(not bool(data.state.flags["clue.eurydice"].get("default", true)), "orpheus starts without a face clue")
+	_check(not data.state.flags.has("clue.eurydice") and not bool(data.state.flags["clue.lyre"].get("default", true)), "orpheus keeps only the lyre clue")
 
 
 func _check_orpheus_paths() -> void:
@@ -180,7 +181,7 @@ func _check_orpheus_paths() -> void:
 	var orpheus_choices: Array = path1["runtime"].visible_choices()
 	_check(_choice_kind(orpheus_choices, "admit") == "accept", "orpheus accept choice is marked")
 	_check(_choice_kind(orpheus_choices, "refuse") == "refuse", "orpheus refuse choice is marked")
-	_check(_choice_kind(orpheus_choices, "eurydice") == "", "orpheus clues stay normal choices")
+	_check(_choice_kind(orpheus_choices, "lyre") == "", "orpheus clues stay normal choices")
 	_choose(path1["runtime"], "admit")
 	_check(_aftermath_text(path1["runtime"]).contains("伪装成亡灵"), "orpheus unnamed aftermath hides the real name")
 	_check(not _aftermath_text(path1["runtime"]).contains("俄耳普斯转世"), "orpheus unnamed aftermath omits the bracket text")
@@ -261,19 +262,16 @@ func _check_orpheus_paths() -> void:
 	_settle(path6["runtime"])
 	_check(str(path6["runtime"].get_outcome().get("ledger", {}).get("who", "")) == "俄耳普斯", "orpheus named accept ledger")
 
-	# 7. The face question is a one-time charmed action.
+	# 7. The lyre can be inspected straight from the greeting, and only once.
 	var path7 = _new_path("orpheus")
+	_check(path7["runtime"].is_awaiting_choice() and _current_text(path7["runtime"]) == "欧律狄刻......", "orpheus offers investigation alongside his default line")
+	_check(not _has_choice(path7["runtime"], "eurydice"), "orpheus has no face investigation")
+	_choose(path7["runtime"], "lyre")
+	_check(path7["runtime"].get_node_id() == "inspect.lyre" and _current_text(path7["runtime"]) == "你要看我的里拉琴？", "orpheus uses the requested lyre line")
 	_settle(path7["runtime"])
-	_choose(path7["runtime"], "eurydice")
-	_check(path7["runtime"].get_node_id() == "inspect.eurydice", "orpheus face node")
-	_check(path7["runtime"].advance(), "orpheus face narration advances")
-	_check(path7["runtime"].advance(), "orpheus face narration finishes")
-	_check(_current_text(path7["runtime"]).contains("哈迪斯的神庙"), "orpheus face look reaches the temple")
-	_settle(path7["runtime"])
-	_check(bool(path7["runtime"].flags["clue.eurydice"]), "orpheus face clue is set")
-	_check(_has_choice(path7["runtime"], "eurydice"), "orpheus face choice stays visible")
-	_check(_choice_locked(path7["runtime"].visible_choices(), "eurydice"), "orpheus face choice is grayed out")
-	_check(_has_choice(path7["runtime"], "lyre"), "orpheus can still inspect the lyre")
+	_check(bool(path7["runtime"].flags["clue.lyre"]), "orpheus lyre clue is set")
+	_check(_has_choice(path7["runtime"], "lyre"), "orpheus lyre choice stays visible")
+	_check(_choice_locked(path7["runtime"].visible_choices(), "lyre"), "orpheus lyre choice is grayed out")
 
 	# 7b. A used Wukong clue stays visible and disabled.
 	var path7b = _new_path("wukong")
@@ -282,7 +280,7 @@ func _check_orpheus_paths() -> void:
 	_settle(path7b["runtime"])
 	_check(_has_choice(path7b["runtime"], "photo"), "wukong used clue stays visible")
 	_check(_choice_locked(path7b["runtime"].visible_choices(), "photo"), "wukong used clue is grayed out")
-	_check(not _choice_locked(path7b["runtime"].visible_choices(), "tail"), "wukong unused clue stays enabled")
+	_check(not _choice_locked(path7b["runtime"].visible_choices(), "staff") and not _has_choice(path7b["runtime"], "tail"), "wukong keeps the unused staff clue and removes the tail")
 
 	# 8. Callout failure returns to the hub and can be retried.
 	var path8 = _new_path("orpheus")
@@ -397,7 +395,7 @@ func _check_speaker_aliases() -> void:
 	orpheus["runtime"].resolve_callout(true)
 	_check(orpheus["runtime"].get_portrait_id() == "orpheus_revealed", "orpheus's true name reveals his face")
 	_settle(orpheus["runtime"])
-	_choose(orpheus["runtime"], "eurydice")
+	_choose(orpheus["runtime"], "lyre")
 	_check(str(orpheus["runtime"].current_step().get("speaker_name", "")) == "俄耳普斯", "orpheus speaks as the real name after the callout")
 
 

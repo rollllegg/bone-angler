@@ -13,6 +13,7 @@ const Shop := preload("res://scripts/demo/pixel_shop.gd")
 const Alchemy := preload("res://scripts/demo/alchemy_panel.gd")
 const Market := preload("res://scripts/demo/market_panel.gd")
 const StoryPanel := preload("res://scripts/demo/story_panel.gd")
+const StoryLab := preload("res://scripts/demo/story_lab.gd")
 const StoryHotspotLayer := preload("res://scripts/demo/story_hotspot_layer.gd")
 const JudgmentPanel := preload("res://scripts/demo/judgment_panel.gd")
 const EndingScreen := preload("res://scripts/demo/ending_screen.gd")
@@ -38,13 +39,13 @@ const FONT := preload("res://assets/fonts/fusion-pixel/fusion-pixel-12px-proport
 const FONT_FALLBACK := preload("res://assets/fonts/NotoSansSC.ttf")
 const CATCH_BOX_SIZES := [Vector2(184, 112), Vector2(236, 144), Vector2(288, 176), Vector2(310, 184)]
 const TUTORIAL_TIPS := {
-	"tip_mix": "在炼药台按 Shift 切到「配制复方」。两份原液可配成一剂新药，部分组合能中和负向药效。",
+	"tip_mix": "捕获鱼后原液自动入库。在炼药台选一种原液，消耗三份炼成一剂固定药效的成品。",
 	"tip_off_river_bite": "离开河岸也会继续候鱼。看到红色 ! 后，3 秒内按 Q 返回河岸开拉。",
 	"tip_day2_upper": "今日要求有属性上限。超标时可用静鳍鳅、泪纹鲦或墨眼鳉炼出的负向药剂调回区间。",
 	"tip_market_supply": "按 Q / E 前往市场补饵或升级钓组。握柄耐久归零后，可在市场临修或整修。",
 	"tip_concentrate": "获得了「浓缩的灵魂」。到炼药台的「强化成品」，可将一剂药的任一属性微调 ±1。",
 	"tip_story_guest": "特殊来客没有常规属性判定。留意对话，可端药或点击右侧按钮呼唤真名，再决定放行或拒绝。",
-	"tip_codex": "按 Tab 暂停并打开「冥河图鉴」，可查已钓鱼种的分布和已发现的配方。",
+	"tip_codex": "按 Tab 暂停并打开「冥河图鉴」，可查鱼种分布、原液产物概率与已发现的成品药。",
 }
 # Mouth positions measured in each original texture before rotation.
 const FISH_MOUTH_PIXELS := {
@@ -175,6 +176,8 @@ var _guest_state: Label
 var _arrival: Label
 var _service_fee: Label
 var _dialog: Label
+var _dialog_speaker: Label
+var _dialog_hint: Label
 var _payout_notice: Label
 var _dose_scroll: ScrollContainer
 var _dose_list: VBoxContainer
@@ -296,6 +299,7 @@ func _ready() -> void:
 	_stage.add_child(_title_transition)
 
 	shop.presentation_changed.connect(_refresh_shared)
+	story_stage.view_changed.connect(_on_story_view_changed)
 	qte.state_changed.connect(_refresh_river)
 	qte.state_changed.connect(_refresh_river_notice)
 	qte.bone_recovered.connect(_show_bone_notice)
@@ -580,7 +584,7 @@ func _build_shop_ui() -> void:
 	_dose_list = VBoxContainer.new()
 	_dose_list.add_theme_constant_override("separation", 8)
 	_dose_scroll.add_child(_dose_list)
-	_dose_empty = UI.label(_shop_ui, "暂无可用药剂\n按 E 前往炼药台提炼鱼获", Rect2(56, 548, 392, 86), 20, UI.MUTED)
+	_dose_empty = UI.label(_shop_ui, "暂无成品药\n按 E 前往炼药台，用三份原液炼药", Rect2(56, 548, 392, 86), 20, UI.MUTED)
 	_dose_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	UI.panel(_shop_ui, Rect2(44, 824, 416, 40), "wood_inset")
@@ -592,9 +596,17 @@ func _build_shop_ui() -> void:
 
 	# 3. Top-Center: Guest Speech Parchment Box (floating above guest, open counter!)
 	UI.panel(_shop_ui, Rect2(492, 112, 578, 116), "parchment")
-	_dialog = UI.label(_shop_ui, "", Rect2(516, 124, 530, 92), 22, UI.CREAM)
+	_dialog_speaker = UI.label(_shop_ui, "", Rect2(516, 122, 380, 22), 16, Color("eef2f8"))
+	_dialog_speaker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_dialog_speaker.hide()
+	_dialog = UI.label(_shop_ui, "", Rect2(516, 146, 530, 50), 21, UI.CREAM)
 	_dialog.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialog.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_dialog.gui_input.connect(_on_dialog_input)
+	_dialog_hint = UI.label(_shop_ui, "F 继续", Rect2(954, 192, 92, 18), 15, UI.GOLD)
+	_dialog_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_dialog_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_dialog_hint.hide()
 	_payout_notice = UI.label(_shop_ui, "", Rect2(516, 232, 530, 34), 20, UI.GOLD)
 
 	# 4. Top-Right: Compact Waiting Queue in Sky (keeps underworld gate 100% visible!)
@@ -603,6 +615,7 @@ func _build_shop_ui() -> void:
 	UI.label(_shop_ui, "门前等候 · A / D", Rect2(1142, 124, 184, 32), 20, UI.MINT)
 	_arrival = UI.label(_shop_ui, "", Rect2(1300, 126, 272, 28), 16, UI.MUTED)
 	_arrival.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_arrival.gui_input.connect(_on_story_lab_reset_input)
 
 	var q_scroll := UI.create_scroll(_shop_ui, Rect2(1102, 162, 474, 102))
 	_queue_box = HFlowContainer.new()
@@ -740,27 +753,28 @@ func _refresh_tutorial() -> void:
 func _show_tutorial_step() -> void:
 	if session.released_count > 0:
 		tutorial_step = 6
-		_tutorial_overlay.set_step(6, "引导完成 · 自由值班",
-			"自由安排垂钓、炼药和接待。按 Q / E 切换四个地点。\nTab 暂停查图鉴。Esc 暂停后可存档，或到\n「设置 → 操作菜单」查看全部按键。",
-			Rect2(), Vector2(507, 643))
+		_tutorial_overlay.set_step(6, "引导完成 · 自由值班", "钓鱼获得原液，三份同种原液炼一剂药。\n按 Q / E 切换地点，Tab 暂停查图鉴。", Rect2(), Vector2(507, 643))
 		return
-
-	var total_essences: int = session.essences.reduce(func(total: int, count: int) -> int: return total + count, 0)
-	var has_medicine := total_essences > 0 or not session.potions.is_empty()
-	var ready_to_release := session.can_release(Session.TUTORIAL_GUEST_ID)
-	if ready_to_release or has_medicine:
-		session.ensure_tutorial_guest()
-		_show_tutorial_reception(ready_to_release)
-	elif not session.catches.is_empty():
-		tutorial_step = 3
-		if current_location != "Alchemy":
-			_show_tutorial_target("去炼药台", "点击顶部「炼药」。从接待窗口按 E 也能到达。\n把刚钓到的鱼炼成接待来客用的原液。", _alchemy_button, Vector2(982, 120))
-		elif alchemy.active_tab != 0:
-			_show_tutorial_target("切回提炼鱼获", "按 Shift 切换页签，或点击「提炼鱼获」。", alchemy._tab_buttons[0], Vector2(46, 192))
-		else:
-			_show_tutorial_target("提炼原液", "从鱼篓选中鱼获，按 Space 或点击「确认提炼」。\n普通鱼体型越大，提炼出的原液越多。", alchemy.refine_button, Vector2(350, 681))
-	else:
+	var caught := session.codex_fish.has(Data.FISH[Data.RIVER_CARP].id)
+	if not caught:
 		_show_tutorial_fishing()
+		return
+	var usable := false
+	for potion in session.potions:
+		var preview := session.preview(Session.TUTORIAL_GUEST_ID, false, potion.id)
+		usable = usable or (not preview.is_empty() and session.is_eligible(preview.after))
+	if usable or session.can_release(Session.TUTORIAL_GUEST_ID):
+		_show_tutorial_reception(session.can_release(Session.TUTORIAL_GUEST_ID))
+		return
+	tutorial_step = 3
+	if current_location != "Alchemy":
+		_show_tutorial_target("去炼药台", "鱼获已自动转换为原液。\n点击顶部「炼药」，或从接待窗口按 E。", _alchemy_button, Vector2(982, 120))
+	elif alchemy.active_tab != 0:
+		_show_tutorial_target("切到纯炼制药", "按 Shift 或点击「纯炼制药」。", alchemy._tab_buttons[0], Vector2(46, 192))
+	elif alchemy.selected_source != Data.RIVER_CARP:
+		_show_tutorial_target("选择冥河原液", "选中左侧的冥河原液。三份同种原液可炼一剂。", alchemy.essence_cards[1], Vector2(350, 550))
+	else:
+		_show_tutorial_target("炼制成品药", "消耗三份冥河原液炼药。\n暖心药与升阶的通情药都能完成这位邮差的需求。", alchemy.mix_button, Vector2(350, 681))
 
 
 func _show_tutorial_fishing() -> void:
@@ -806,12 +820,12 @@ func _show_tutorial_reception(ready_to_release: bool) -> void:
 		_show_tutorial_target("放行来客", "按 Shift 或点击「放行」。一剂达标可拿全额奖金，\n从第二剂起，每多用一剂，奖金减半。", _release_button, Vector2(518, 670))
 	elif selected:
 		var preview := session.preview(shop.selected_id, _selected_dose[0], _selected_dose[1])
-		var message := "核对左上角的药效预览，再按 Space 或点击端药。\n邮差喝一份冥河原液，情感就能从 5 提升到 7。"
+		var message := "核对左上角的药效预览，再按 Space 或点击端药。\n给邮差选择能补充情感的成品药，达到当天要求即可。"
 		if not session.is_eligible(preview.after):
 			message = "预览显示这剂药还不能达标。可按 C 取消，\n重新选药，或端药后继续补足没达标的属性。"
 		_show_tutorial_target("端上药剂", message, _serve_button, Vector2(500, 690))
 	else:
-		var medicine := "选中「冥河原液」" if session.essences[Data.RIVER_CARP] > 0 else "选中一剂药"
+		var medicine := "选中暖心药或通情药"
 		var message := "按 W / S 或点击%s。绿色区间是当日达标线。\n左上角的半透明预览会显示饮药后是否「→ 达标」。" % medicine
 		_tutorial_overlay.set_step(4, "查看区间与药效", message, _tutorial_rect(soul_hud).merge(_tutorial_rect(_dose_scroll)), Vector2(500, 358))
 
@@ -828,7 +842,7 @@ func _show_tutorial_target(title: String, message: String, target: Control, card
 func _check_tutorial_tips() -> void:
 	var upper := session.requirements[1]
 	var conditions := {
-		"tip_mix": current_location == "Alchemy" and session.essences.reduce(func(total: int, count: int) -> int: return total + count, 0) >= 2,
+		"tip_mix": current_location == "Alchemy" and session.essences.reduce(func(total: int, count: int) -> int: return total + count, 0) >= 3,
 		"tip_off_river_bite": qte.phase == Fishing.Phase.AWAITING_RETURN,
 		"tip_day2_upper": session.day >= 2 and mini(upper.x, mini(upper.y, upper.z)) < Session.STAT_MAX,
 		"tip_market_supply": not river.casting and not qte.is_busy() and (qte.durability() <= 2 or qte.bait_stock[qte.bait] == 0),
@@ -875,52 +889,38 @@ func _start_story_lab() -> void:
 	story_lab = true
 	persist_save = false
 	started = true
-	session.start_shift()
-	session.advance(Session.GUESTS_PER_DAY * Data.ARRIVAL_MAX + 1.0)
-	_story_lab_clear_ordinary()
-	_story_lab_select_guest()
-	session.coins = 200
-	session.potions.clear()
-	session._add_potion("lab", "暖心药", Vector3i(0, 4, 0), -1, 0)
-	session._add_potion("lab", "极识药", Vector3i(10, 0, -4), -1, 0)
-	session._add_potion("lab", "零值药", Vector3i(1, 0, -1), -1, 0)
-	_show_location("Shop")
-	_refresh_shared()
-	print("Story lab: day %d, %d guest(s), %d potion(s)" % [
-		session.day,
-		session.souls.size(),
-		session.potions.size(),
-	])
+	_arrival.mouse_filter = Control.MOUSE_FILTER_STOP
+	_arrival.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_reset_story_lab()
 
 
-func _story_lab_next_day() -> void:
-	if not story_lab or session.day >= Session.DAY_COUNT:
+func _reset_story_lab() -> void:
+	if not story_lab:
 		return
-	# Drop the current queue, including any unresolved story guest.
-	session.story_runtimes.clear()
-	session.souls.clear()
-	session.awaiting_day_report = false
-	session.pending_day_report = {}
-	session.day_story_entries.clear()
-	session.last_story_outcome = ""
-	session.last_payout = 0
+	story_panel.cancel_callout()
+	judgment_panel.close()
+	_ending_screen.close()
+	story_director.cancel()
+	story_stage.reset()
 	shop.clear_departures()
+	shop.clear_story_sprite()
 	shop.selected_id = -1
 	shop.fed_flash = 0.0
-	session._open_day(session.day + 1)
-	session.advance(Session.GUESTS_PER_DAY * Data.ARRIVAL_MAX + 1.0)
-	_story_lab_clear_ordinary()
+	_story_last_soul_id = -1
+	_story_last_text = ""
+	_selected_dose = null
+	StoryLab.populate(session)
 	_story_lab_select_guest()
+	_show_location("Shop")
+	session.state_changed.emit()
 	_refresh_shared()
+	print("Story lab: day %d, %d special guest(s), %d potion(s); N restarts" % [session.day, session.souls.size(), session.potions.size()])
 
 
-func _story_lab_clear_ordinary() -> void:
-	for soul in session.souls.duplicate():
-		if soul.has("story_case") or bool(soul.get("fixed_stats", false)) or int(soul.case_id) == Data.DROWNED_LYRE_PLAYER:
-			continue
-		session._first_services[int(soul.case_id)] = true
-		session.released_count += 1
-		session.souls.erase(soul)
+func _on_story_lab_reset_input(event: InputEvent) -> void:
+	if story_lab and not session.paused and not story_panel.is_typing() and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_reset_story_lab()
+		_arrival.accept_event()
 
 
 func _story_lab_select_guest() -> void:
@@ -931,7 +931,7 @@ func _story_lab_select_guest() -> void:
 			shop.select_guest(int(soul.id))
 			return
 	for soul in session.souls:
-		if bool(soul.get("fixed_stats", false)) or int(soul.case_id) == Data.DROWNED_LYRE_PLAYER:
+		if int(soul.case_id) == Data.DROWNED_LYRE_PLAYER:
 			shop.select_guest(int(soul.id))
 			return
 	shop.select_guest(int(session.souls[0].id))
@@ -1040,14 +1040,14 @@ func save_progress(slot: int) -> bool:
 			entry["story_case"] = str(s.story_case)
 			entry["story_state"] = s.get("story_state", {})
 			entry["story_outcome"] = str(s.get("story_outcome", ""))
-		if bool(s.get("fixed_stats", false)):
-			entry["fixed_stats"] = true
-		if bool(s.get("anubis_disguise", false)):
-			entry["anubis_disguise"] = true
 		if str(s.get("story_echo", "")) != "":
 			entry["story_echo"] = str(s.story_echo)
 		saved_souls.append(entry)
 	var payload := {
+		"rules_version": Data.RULES_VERSION,
+		"alchemy_rules": session.save_rules(),
+		"codex_sources": session.codex_sources,
+		"variant_craft_unlocked": qte.variant_craft_unlocked,
 		"saved_at": Time.get_datetime_string_from_system(false, true).substr(0, 16),
 		"location": current_location,
 		"coins": session.coins,
@@ -1153,6 +1153,9 @@ func load_progress(slot: int) -> bool:
 				"effect": Vector3i(int(e[0]), int(e[1]), int(e[2])),
 				"attribute": int(p.get("attribute", -1)), "adjustment": int(p.get("adjustment", 0)),
 			})
+	var legacy_alchemy := int(data.get("rules_version", 0)) < Data.RULES_VERSION
+	if legacy_alchemy:
+		session.migrate_legacy_inventory()
 	session.restore_codex(data)
 	session.souls.clear()
 	var fees_to_recalculate: Array[Dictionary] = []
@@ -1171,17 +1174,19 @@ func load_progress(slot: int) -> bool:
 				soul["story_case"] = str(s.story_case)
 				soul["story_state"] = s.get("story_state", {})
 				soul["story_outcome"] = str(s.get("story_outcome", ""))
-			if bool(s.get("fixed_stats", false)):
-				soul["fixed_stats"] = true
-			if bool(s.get("anubis_disguise", false)):
-				soul["anubis_disguise"] = true
 			if str(s.get("story_echo", "")) != "":
 				soul["story_echo"] = str(s.story_echo)
-			if str(s.get("story_case", "")) == "" and not bool(s.get("fixed_stats", false)) and (from_v15 or not s.has("doses_used") or not s.has("fee")):
+			# Retire the old observer flags and restore ordinary service pricing.
+			var legacy_observer := bool(s.get("anubis_disguise", false)) or bool(s.get("fixed_stats", false))
+			if str(s.get("story_case", "")) == "" and (legacy_observer or from_v15 or not s.has("doses_used") or not s.has("fee")):
 				fees_to_recalculate.append(soul)
 			session.souls.append(soul)
 	var schedule: Dictionary = data.get("day_schedule", {})
 	session.restore_day(schedule)
+	if legacy_alchemy:
+		for soul in session.souls:
+			if not soul.has("story_case"):
+				fees_to_recalculate.append(soul)
 	for soul in fees_to_recalculate:
 		soul.fee = session.service_fee(soul.before)
 	session.story_state.run["run.day"] = session.day
@@ -1217,13 +1222,20 @@ func load_progress(slot: int) -> bool:
 		if equipped_bait in [4, 5, 6]:
 			equipped_bait = Data.Bait.DEFAULT
 	qte.restore_bait_inventory(stock, equipped_bait)
+	qte.variant_craft_unlocked = bool(data.get("variant_craft_unlocked", legacy_alchemy and qte.bait_stock[Data.VARIANT_BAIT] > 0))
 	qte.rod = clampi(int(data.get("rod", 0)), 0, qte.rods_owned.size() - 1)
 	qte.hook = clampi(int(data.get("hook", 0)), 0, qte.hooks_owned.size() - 1)
 	var saved_fishing: Dictionary = data.get("fishing", {})
 	if from_v15 and saved_fishing.get("snapshot") is Dictionary:
 		saved_fishing.snapshot.bait = qte.bait
+	if not from_v15 and stock.size() != Data.BAITS.size() and saved_fishing.get("snapshot") is Dictionary:
+		var mapping: Array = Data.LEGACY_BAIT_MAPS.get(stock.size(), [])
+		if not mapping.is_empty():
+			var old_bait := int(saved_fishing.snapshot.get("bait", 0))
+			saved_fishing.snapshot.bait = mapping[clampi(old_bait, 0, mapping.size() - 1)]
 	qte.clear_tutorial_catch()
 	qte.restore_pending(saved_fishing)
+	session.restore_rules(data.get("alchemy_rules", {}), legacy_alchemy)
 	_restore_tutorial(data.get("tutorial", {}), saved_fishing)
 	river.casting = bool(data.get("casting", false)) and not qte.is_busy()
 	river.cast_elapsed = float(data.get("cast_elapsed", 0.0))
@@ -1628,7 +1640,9 @@ func _handle_game_key(code: Key) -> bool:
 			_save_menu.handle_key(code)
 		return true
 	if _ending_screen != null and _ending_screen.is_active():
-		if code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
+		if story_lab and code == KEY_N:
+			_reset_story_lab()
+		elif code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
 			_ending_screen.advance()
 		return true
 	if started and not session.paused and current_location == "Shop" and story_panel != null and story_panel.is_typing():
@@ -1639,7 +1653,7 @@ func _handle_game_key(code: Key) -> bool:
 		return true
 	if day_report != null and day_report.visible:
 		if story_lab and code == KEY_N:
-			_story_lab_next_day()
+			_reset_story_lab()
 		elif code in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
 			_close_day_report()
 		return true
@@ -1648,7 +1662,7 @@ func _handle_game_key(code: Key) -> bool:
 	if session.paused:
 		return _pause_key(code)
 	if story_lab and code == KEY_N:
-		_story_lab_next_day()
+		_reset_story_lab()
 		return true
 	if code == KEY_ESCAPE:
 		_set_paused(true)
@@ -1727,7 +1741,7 @@ func _river_key(code: Key) -> bool:
 
 func _reception_key(code: Key) -> bool:
 	var story = _selected_story_runtime()
-	if story != null and story.has_pending_steps() and code == KEY_SPACE:
+	if story != null and story.has_pending_steps() and code == KEY_F:
 		_story_advance()
 		return true
 	match code:
@@ -1795,7 +1809,10 @@ func _clear_pull_input() -> void:
 
 
 func _refresh_summary() -> void:
-	_summary.text = "第 %d 天　鱼篓 %d　等候 %d　放行 %d / %d　渡魂币 %d" % [session.day, session.catches.size(), session.souls.size(), session.released_count, session.total_guests(), session.coins]
+	if story_lab:
+		_summary.text = "剧情测试　第 %d 天　等候 %d　渡魂币 %d　N 重置全部" % [session.day, session.souls.size(), session.coins]
+		return
+	_summary.text = "第 %d 天　原液 %d　等候 %d　放行 %d / %d　渡魂币 %d" % [session.day, session.essences.reduce(func(total: int, count: int) -> int: return total + count, 0), session.souls.size(), session.released_count, session.total_guests(), session.coins]
 
 
 func _show_bone_notice() -> void:
@@ -1861,12 +1878,15 @@ func _refresh_shared() -> void:
 			judgment_panel.close()
 		judging = false
 	session.set_story_open(typing or judging)
+	_dialog_hint.visible = story != null and story.has_pending_steps() and not session.paused and not typing and not judging
 	var revealed: bool = story != null and story.is_identity_revealed()
 	var linear := story != null and bool(story.case_data.get("linear", false))
 	var hearing_done := linear and bool(story.flags.get("judgment.done", false))
 	_story_action_button.visible = story != null and not story.is_closed() and (not linear or not revealed) and not hearing_done and not judging
 	_story_action_button.disabled = session.paused or judging
 	_release_button.size.x = 196 if _story_action_button.visible else 404
+	var speaker_name := ""
+	var speaker_gold := false
 	if story != null:
 		if not story.changed.is_connected(_refresh_shared):
 			story.changed.connect(_refresh_shared)
@@ -1876,20 +1896,23 @@ func _refresh_shared() -> void:
 		elif not shop.has_story_sprite() or story.is_awaiting_choice() or story.is_closed():
 			shop.set_story_sprite(portrait)
 		var step: Dictionary = story.current_step()
+		speaker_name = str(step.get("speaker_name", ""))
 		var line := str(step.get("text", ""))
 		if line == "":
 			_dialog.text = _story_last_text if _story_last_text != "" else story.get_greeting()
+			if speaker_name == "" and not selected.is_empty():
+				speaker_name = str(selected.get("name", ""))
 		else:
-			var speaker := str(step.get("speaker_name", ""))
-			_dialog.text = ("%s：%s" % [speaker, line]) if speaker != "" else line
+			_dialog.text = line
 			_story_last_text = _dialog.text
+		speaker_gold = revealed and speaker_name != ""
 		_dialog.mouse_filter = Control.MOUSE_FILTER_STOP if story.has_pending_steps() and not judging else Control.MOUSE_FILTER_IGNORE
 		if judging:
 			_guest_state.text = "将渡魂币放上天平"
-		elif story.has_pending_steps():
-			_guest_state.text = "空格 / 点击对话继续"
 		elif story.is_awaiting_choice():
 			_guest_state.text = "按 Shift 继续" if linear else "点击可疑处调查"
+		elif story.has_pending_steps():
+			_guest_state.text = "F / 点击对话继续"
 		elif revealed:
 			_guest_state.text = "真名已解放"
 		else:
@@ -1939,13 +1962,32 @@ func _refresh_shared() -> void:
 	elif session.is_complete():
 		var ending_lines := session.get_ending_lines()
 		_dialog.text = "\n".join(ending_lines) if not ending_lines.is_empty() else "五天的灵魂都已放行。"
+		speaker_name = ""
+		speaker_gold = false
 	elif story == null:
 		if selected.is_empty():
 			_dialog.text = "还没有来客，可以先去冥河备料。"
+			speaker_name = ""
 		elif selected.served:
 			_dialog.text = "饮药后感觉变化明显：\n%s" % Data.effect_text(selected.stats - selected.before)
+			speaker_name = str(selected.get("name", ""))
 		else:
 			_dialog.text = "请帮我补全灵魂，让我能通过冥府之门。"
+			speaker_name = str(selected.get("name", ""))
+
+	if speaker_name != "":
+		_dialog_speaker.text = speaker_name
+		_dialog_speaker.add_theme_color_override("font_color", UI.GOLD if speaker_gold else Color("eef2f8"))
+		_dialog_speaker.show()
+		_dialog.position = Vector2(516, 146)
+		_dialog.size = Vector2(530, 50)
+		_dialog.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	else:
+		_dialog_speaker.text = ""
+		_dialog_speaker.hide()
+		_dialog.position = Vector2(516, 128)
+		_dialog.size = Vector2(530, 68)
+		_dialog.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	_sync_story_cues(story if current_location == "Shop" and not session.paused else null)
 	if story_hotspots != null:
@@ -1971,7 +2013,8 @@ func _rebuild_queue() -> void:
 		_queue_buttons.append(btn)
 		var eligible := not soul.has("story_case") and session.can_release(sid)
 		var dot_col := UI.GOOD if eligible else UI.GOLD
-		var lbl := UI.label(btn, ("● " if eligible else "") + str(soul.name), Rect2(10, 2, 204, 26), 15, dot_col if is_sel else UI.CREAM)
+		var queue_name := str(soul.get("story_lab_label", soul.name)) if story_lab else str(soul.name)
+		var lbl := UI.label(btn, ("● " if eligible else "") + queue_name, Rect2(10, 2, 204, 26), 15, dot_col if is_sel else UI.CREAM)
 		lbl.clip_text = true
 
 
@@ -2079,7 +2122,7 @@ func _refresh_dose() -> void:
 		_dose_preview.add_theme_color_override("font_color", UI.MUTED)
 	else:
 		var after: Vector3i = preview.after
-		var ok := bool(selected.get("fixed_stats", false)) or session.is_eligible(after)
+		var ok := session.is_eligible(after)
 		_dose_preview.text = "预览饮后：%d / %d / %d　%s" % [after.x, after.y, after.z, "放行 %d 枚" % int(preview.reward) if ok else "仍需继续调整"]
 		_dose_preview.add_theme_color_override("font_color", UI.GOOD if ok else UI.GOLD)
 
@@ -2176,19 +2219,28 @@ func _on_dialog_input(event: InputEvent) -> void:
 func _sync_story_cues(story) -> void:
 	if story_director == null:
 		return
-	if story == null:
+	if story == null or not story.has_pending_steps():
 		_story_cue_key = ""
 		story_director.cancel()
+		story_stage.finish_inspection()
 		return
 	var step: Dictionary = story.current_step()
 	var identity := "%s|%d|%s" % [story.get_node_id(), story.step_index, str(step.get("key", ""))]
 	if identity == _story_cue_key:
 		return
+	if _story_cue_key.get_slice("|", 0) != story.get_node_id():
+		story_director.cancel()
+		story_stage.finish_inspection()
 	_story_cue_key = identity
 	if step.is_empty():
 		story_director.cancel()
 		return
 	story_director.play(str(step.get("key", "")), step.get("cues", []), story.get_context())
+
+
+func _on_story_view_changed() -> void:
+	if story_hotspots != null and story_hotspots.visible and current_location == "Shop" and not session.paused:
+		story_hotspots.refresh(_selected_story_runtime())
 
 
 func _show_ending() -> void:
@@ -2205,13 +2257,18 @@ func _show_ending() -> void:
 		story_director.cancel()
 	if story_stage != null:
 		story_stage.reset()
-	_ending_screen.show_ending(lines, str(session.story_state.world.get("world.anubis_result", "")) != "")
+	_ending_screen.show_ending(lines, str(session.story_state.world.get("world.anubis_result", "")) != "", story_lab)
 
 
 func _close_day_report() -> void:
 	if session.awaiting_day_report:
 		_audio.play(Audio.Cue.UI_CLICK)
 		session.close_day_report()
+		if story_lab and not session.is_complete():
+			StoryLab.prepare_day(session)
+			shop.clear_departures()
+			_story_lab_select_guest()
+			session.state_changed.emit()
 		_refresh_shared()
 
 
@@ -2328,7 +2385,7 @@ func _refresh_river() -> void:
 	match qte.phase:
 		Fishing.Phase.READY:
 			_river_status.text = "冥河很静。" if qte.last_message.is_empty() else qte.last_message
-			_river_hint.text = "空格抛竿，钓获可带去提炼。"
+			_river_hint.text = "空格抛竿，捕获后原液自动入库。"
 		Fishing.Phase.WAITING:
 			_river_status.text = "候鱼中…"
 			_river_hint.text = "按 X 收竿。离开河岸后看到上钩气泡，请在 3 秒内按 Q 返回。"
@@ -2346,7 +2403,7 @@ func _refresh_river() -> void:
 			_river_hint.text = "依次输入出现的字母，输错后从头开始。"
 		Fishing.Phase.CAUGHT:
 			_river_status.text = qte.last_message
-			_river_hint.text = "空格抛竿，继续钓鱼。" if qte.locked.has("bone") else "到炼药台查看鱼获并提炼，或再抛一竿。"
+			_river_hint.text = "空格抛竿，继续钓鱼。" if qte.locked.has("bone") else "原液已入库，可去炼药台制药，或再抛一竿。"
 		Fishing.Phase.ESCAPED:
 			_river_status.text = qte.last_message
 			_river_hint.text = "可以再次抛竿。"
@@ -2387,7 +2444,7 @@ func _process(delta: float) -> void:
 			_refresh_river_notice()
 	_refresh_river()
 	if story_lab:
-		_arrival.text = "N 下一天"
+		_arrival.text = "N / 点击：重置全部 NPC"
 	elif session.tutorial_pause_arrivals:
 		_arrival.text = "正在接待首单"
 	else:

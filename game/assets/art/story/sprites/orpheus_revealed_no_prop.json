@@ -1,0 +1,35 @@
+{
+  "id": "orpheus_revealed_no_prop",
+  "kind": "sprite",
+  "prompt": "Use case: precise-object-edit / background-extraction. Edit target: this exact tiny existing game character sprite. Make a matching prop-free variant for displaying the removed item in front of the character. Character identity to preserve: revealed Orpheus: same pale sad face, dark blue fringe, half-closed downcast eyes, blue-gray gold-trimmed hood, robe and boots. Remove ONLY the lyre: the whole golden/brown instrument protruding behind his right shoulder and side. There must be no staff, lyre or other held/carried object anywhere on this character. Restore any small obscured robe/arm pixels using the immediately neighboring original colors. Keep the original head, face, expression, hood, hair, hands, costume, silhouette, front-facing pose, body proportions, pixel scale, original palette and character placement otherwise unchanged. Especially do not redesign or enlarge the face. Keep the 48x64 logical pixel-art canvas and bottom foot anchor at pixel [24,62]; empty space after removing the prop must become genuinely transparent alpha. No background, shadow, text, watermark, or additional objects. Crisp chunky pixel art, nearest-neighbor blocks, no smooth edges or antialiasing. Transparent PNG.",
+  "source": "game/art/source/story/prop-showcase-v2/orpheus_revealed_no_prop/aligned-v2.perfect.png",
+  "source_sha256": "54df2b8685d52319e0f77754b97eaf2f64beec5ad36577afeee77e3f68e1a450",
+  "input_size": [
+    48,
+    64
+  ],
+  "output": "game/assets/art/story/sprites/orpheus_revealed_no_prop.png",
+  "output_sha256": "7e6b143d860db95b04808fc04628bacb735f8ac5a5caa5a9d978a0a2e3bf4ee4",
+  "output_size": [
+    48,
+    64
+  ],
+  "pixel_grid": null,
+  "watermark": "none",
+  "watermark_box": null,
+  "threshold": 245,
+  "min_component": 1,
+  "erode": 0,
+  "outline": 0,
+  "white_specks": 0,
+  "shadow": true,
+  "palette": 0,
+  "bbox": [
+    9,
+    6,
+    39,
+    62
+  ],
+  "processed_at_utc": "2026-11-26T10:56:46.302742+00:00",
+  "keep_canvas": true
+}

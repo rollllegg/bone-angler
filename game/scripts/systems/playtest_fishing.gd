@@ -31,6 +31,7 @@ var hooks_owned: Array[bool] = [true, false, false]
 var grip_durability := Data.GRIP_CAPACITY
 var quick_repair_available := true
 var charms_owned := 0
+var variant_craft_unlocked := false
 var bait_stock: Array[int] = []
 var scare := 0.0
 var wait_extension := 0.0
@@ -142,6 +143,8 @@ func set_rig(body: int, size_hook: int, selected_bait: int) -> bool:
 
 
 func buy_bait(index: int, quantity: int) -> bool:
+	if index == Data.VARIANT_BAIT and not variant_craft_unlocked:
+		return false
 	if quantity <= 0 or index < 0 or index >= bait_stock.size() or not session.spend(Data.BAIT_PRICES[index] * quantity):
 		return false
 	var auto_equipped := bait_stock[bait] == 0 and not is_busy()
@@ -506,9 +509,7 @@ func _bite() -> void:
 	var water: int = _snapshot.rod
 	if has_tutorial_catch():
 		locked = _fish_of_size(_tutorial_catch.x, _tutorial_catch.y)
-	elif _rng.randf() >= (0.40 if selected_bait == Data.BONE_BAIT else 0.80):
-		locked = {"bone": true}
-	elif water == 1 and selected_bait == Data.VARIANT_BAIT and _rng.randf() < Data.VARIANT_CHANCE:
+	elif water == 1 and selected_bait == Data.VARIANT_BAIT and variant_craft_unlocked and _rng.randf() < Data.VARIANT_CHANCE:
 		locked = {"species": Data.VARIANT, "size": 3, "cm": _rng.randf_range(30.0001, 38.0)}
 	else:
 		locked = _roll_fish(water, selected_bait)
@@ -672,7 +673,7 @@ func _land() -> void:
 		locked["finger_bones"] = bone_bonus
 		disturb([15.0, 20.0, 25.0, 30.0][size])
 		session.record_catch(locked)
-		last_message = "%s　%s，已入鱼篓。" % [Data.fish_name(species, size), Data.size_label(locked)]
+		last_message = "%s　%s，%s ×%d 已入库。" % [Data.fish_name(species, size), Data.size_label(locked), Data.FISH[species].essence, session.yield_for(locked)]
 		if bone_bonus > 0:
 			last_message += " 指骨 +%d" % bone_bonus
 	state_changed.emit()
@@ -684,3 +685,15 @@ func _fail(message: String) -> void:
 	disturb(15.0)
 	last_message = message
 	state_changed.emit()
+
+
+func can_unlock_variant_craft() -> bool:
+	return not variant_craft_unlocked and rods_owned[1]
+
+
+func unlock_variant_craft() -> bool:
+	if not can_unlock_variant_craft() or not session.spend(Data.VARIANT_CRAFT_COST):
+		return false
+	variant_craft_unlocked = true
+	state_changed.emit()
+	return true

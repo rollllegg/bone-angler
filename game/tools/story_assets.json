@@ -13,20 +13,28 @@
     {
       "id": "lyre",
       "kind": "prop",
-      "input": "game/art/source/story/lyre_raw.png",
-      "output": "game/assets/art/story/props/lyre.png",
+      "input": "game/art/source/story/lyre-showcase-v1/raw.perfect.png",
+      "output": "game/assets/art/story/props/lyre_showcase.png",
+      "pixelate": false,
+      "watermark": "none",
+      "palette": 16,
       "width": 40,
       "height": 40,
-      "prompt": "16-bit 像素风游戏道具图标，一把小型金色里拉琴，正面，居中，纯白背景，无阴影，无文字，轮廓清晰，深色描边，限制色板，512x512"
+      "prompt": "Use case: precise-object-edit / background-extraction. Edit target: the attached tiny pixel-art golden lyre. Create a clean standalone inventory/held-prop sprite for this same 2D pixel-art game. Preserve its front-facing symmetric golden U-shaped lyre silhouette, dark brown pixel outline, gold shading, small lower soundbox, and a few thin ivory strings. Critical change: remove ALL white infill between the individual strings and inside the frame; every gap between strings and the frame must be genuinely transparent alpha, exactly like the surrounding background. The strings themselves remain visible as separate narrow ivory vertical lines. Only the lyre, no character, hands, body, ground, shadows, panel, text, watermark, or other objects. Keep the full instrument uncropped and centered with transparent padding. Crisp chunky low-resolution pixel art designed for a 40x40 game sprite, enlarged with nearest-neighbor pixel blocks; limited warm gold/brown/ivory palette. No antialiasing, no smooth gradients. Transparent PNG with real transparency both outside and through the instrument."
     },
     {
       "id": "staff",
       "kind": "prop",
-      "input": "game/art/source/story/staff_raw.png",
-      "output": "game/assets/art/story/props/staff.png",
+      "input": "game/art/source/story/prop-showcase-v2/staff_clean/aligned-v2.perfect.png",
+      "output": "game/assets/art/story/props/staff_clean.png",
       "width": 48,
       "height": 64,
-      "prompt": "16-bit 像素风游戏道具图标，一根金色金箍棒，两端红色，斜放，居中，纯白背景，无阴影，无文字，深色描边，限制色板，512x512"
+      "prompt": "Use case: precise-object-edit / background-extraction. Edit ONLY this existing diagonal red-and-gold pixel-art staff sprite. Remove the residual neutral white/gray background specks on the upper-right tip and lower-left tip, replacing stray pixels outside the staff with genuine transparent alpha. Preserve the staff's exact full silhouette, diagonal lower-left to upper-right orientation, length, red and gold design, dark brown outline and warm golden highlights. No pale white or gray outline, no white specular dots, no extra objects, no character, no ground, no cast shadow, no text. Keep the same 48x64 logical pixel canvas and original placement, crisp nearest-neighbor pixel blocks, no antialiasing. Output a transparent PNG, with all original padding transparent.",
+      "pixelate": false,
+      "watermark": "none",
+      "keep_canvas": true,
+      "min_component": 1,
+      "shadow": false
     },
     {
       "id": "tail",
@@ -210,6 +218,62 @@
       "outline": 1,
       "white_specks": 8,
       "palette": 32
+    },
+    {
+      "id": "wukong_disguise_no_prop",
+      "kind": "sprite",
+      "input": "game/art/source/story/prop-showcase-v2/wukong_disguise_no_prop/aligned.perfect.png",
+      "output": "game/assets/art/story/sprites/wukong_disguise_no_prop.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: precise-object-edit / background-extraction. Edit target: this exact tiny existing game character sprite. Make a matching prop-free variant for displaying the removed item in front of the character. Character identity to preserve: hooded Wukong disguised as a ghost: dark plum hood hiding the eyes, orange mouth and monkey chin, same robe and boots. Remove ONLY the staff: both the upper-right red/gold protrusion and lower-left red/gold protrusion. There must be no staff, lyre or other held/carried object anywhere on this character. Restore any small obscured robe/arm pixels using the immediately neighboring original colors. Keep the original head, face, expression, hood, hair, hands, costume, silhouette, front-facing pose, body proportions, pixel scale, original palette and character placement otherwise unchanged. Especially do not redesign or enlarge the face. Keep the 48x64 logical pixel-art canvas and bottom foot anchor at pixel [24,62]; empty space after removing the prop must become genuinely transparent alpha. No background, shadow, text, watermark, or additional objects. Crisp chunky pixel art, nearest-neighbor blocks, no smooth edges or antialiasing. Transparent PNG.",
+      "pixelate": false,
+      "watermark": "none",
+      "keep_canvas": true,
+      "min_component": 1,
+      "shadow": true
+    },
+    {
+      "id": "wukong_monkey_no_prop",
+      "kind": "sprite",
+      "input": "game/art/source/story/prop-showcase-v2/wukong_monkey_no_prop/aligned.perfect.png",
+      "output": "game/assets/art/story/sprites/wukong_monkey_no_prop.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: precise-object-edit / background-extraction. Edit target: this exact tiny existing game character sprite. Make a matching prop-free variant for displaying the removed item in front of the character. Character identity to preserve: revealed Wukong: brown monkey face, golden headband, red/gold robe and same boots. Remove ONLY the staff: all protruding staff ends behind the shoulders and lower body. There must be no staff, lyre or other held/carried object anywhere on this character. Restore any small obscured robe/arm pixels using the immediately neighboring original colors. Keep the original head, face, expression, hood, hair, hands, costume, silhouette, front-facing pose, body proportions, pixel scale, original palette and character placement otherwise unchanged. Especially do not redesign or enlarge the face. Keep the 48x64 logical pixel-art canvas and bottom foot anchor at pixel [24,62]; empty space after removing the prop must become genuinely transparent alpha. No background, shadow, text, watermark, or additional objects. Crisp chunky pixel art, nearest-neighbor blocks, no smooth edges or antialiasing. Transparent PNG.",
+      "pixelate": false,
+      "watermark": "none",
+      "keep_canvas": true,
+      "min_component": 1,
+      "shadow": true
+    },
+    {
+      "id": "orpheus_front_no_prop",
+      "kind": "sprite",
+      "input": "game/art/source/story/prop-showcase-v2/orpheus_front_no_prop/aligned-v2.perfect.png",
+      "output": "game/assets/art/story/sprites/orpheus_front_no_prop.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: precise-object-edit / background-extraction. Edit target: this exact tiny existing game character sprite. Make a matching prop-free variant for displaying the removed item in front of the character. Character identity to preserve: hooded Orpheus: blue-gray gold-trimmed hood hiding his eyes, same pale closed mouth/chin, same dark blue-gray robe and boots. Remove ONLY the lyre: the whole golden/brown instrument protruding behind his right shoulder and side. There must be no staff, lyre or other held/carried object anywhere on this character. Restore any small obscured robe/arm pixels using the immediately neighboring original colors. Keep the original head, face, expression, hood, hair, hands, costume, silhouette, front-facing pose, body proportions, pixel scale, original palette and character placement otherwise unchanged. Especially do not redesign or enlarge the face. Keep the 48x64 logical pixel-art canvas and bottom foot anchor at pixel [24,62]; empty space after removing the prop must become genuinely transparent alpha. No background, shadow, text, watermark, or additional objects. Crisp chunky pixel art, nearest-neighbor blocks, no smooth edges or antialiasing. Transparent PNG.",
+      "pixelate": false,
+      "watermark": "none",
+      "keep_canvas": true,
+      "min_component": 1,
+      "shadow": true
+    },
+    {
+      "id": "orpheus_revealed_no_prop",
+      "kind": "sprite",
+      "input": "game/art/source/story/prop-showcase-v2/orpheus_revealed_no_prop/aligned-v2.perfect.png",
+      "output": "game/assets/art/story/sprites/orpheus_revealed_no_prop.png",
+      "width": 48,
+      "height": 64,
+      "prompt": "Use case: precise-object-edit / background-extraction. Edit target: this exact tiny existing game character sprite. Make a matching prop-free variant for displaying the removed item in front of the character. Character identity to preserve: revealed Orpheus: same pale sad face, dark blue fringe, half-closed downcast eyes, blue-gray gold-trimmed hood, robe and boots. Remove ONLY the lyre: the whole golden/brown instrument protruding behind his right shoulder and side. There must be no staff, lyre or other held/carried object anywhere on this character. Restore any small obscured robe/arm pixels using the immediately neighboring original colors. Keep the original head, face, expression, hood, hair, hands, costume, silhouette, front-facing pose, body proportions, pixel scale, original palette and character placement otherwise unchanged. Especially do not redesign or enlarge the face. Keep the 48x64 logical pixel-art canvas and bottom foot anchor at pixel [24,62]; empty space after removing the prop must become genuinely transparent alpha. No background, shadow, text, watermark, or additional objects. Crisp chunky pixel art, nearest-neighbor blocks, no smooth edges or antialiasing. Transparent PNG.",
+      "pixelate": false,
+      "watermark": "none",
+      "keep_canvas": true,
+      "min_component": 1,
+      "shadow": true
     }
   ],
   "outline": 0,

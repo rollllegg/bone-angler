@@ -9,12 +9,6 @@
 ## choice.photo.locked
 已调查
 
-## choice.tail
-看他的身后
-
-## choice.tail.locked
-已调查
-
 ## choice.staff
 问他背后那根“拐杖”
 
@@ -29,9 +23,6 @@
 
 ## inspect.photo
 孙：你说俺脸上有毛……哈哈，俺天生毛长得快，死前没洁面。
-
-## inspect.tail
-孙：你这骷髅，连招子都没了，用哪只眼看到有尾巴？
 
 ## inspect.staff
 孙：你问这个？这是你爷爷腿脚不行，拄的拐杖。

@@ -2,6 +2,8 @@ extends Node
 ## Applies story cues to the shop view: props, camera shake/zoom and screen flash/fade.
 ## Screen colours sit below the UI, so dialogue and buttons stay readable.
 
+signal view_changed
+
 const Catalog := preload("res://scripts/story/story_cue_catalog.gd")
 const PropLayer := preload("res://scripts/story/story_prop_layer.gd")
 
@@ -102,9 +104,21 @@ func finish_cue(cue: Dictionary) -> void:
 			_apply_prop(cue)
 
 
-func reset() -> void:
+func clear_props() -> void:
 	if _props != null:
 		_props.clear()
+	_refresh_shop()
+
+
+func finish_inspection() -> void:
+	clear_props()
+	# Repeated UI refreshes must not restart the return animation.
+	if not is_equal_approx(_zoom_target, 1.0):
+		_start_zoom(1.0, 0.25)
+
+
+func reset() -> void:
+	clear_props()
 	if _shop != null and _shop.has_method("clear_story_sprite"):
 		_shop.clear_story_sprite()
 	_refresh_shop()
@@ -271,5 +285,10 @@ func _update_transform() -> void:
 		offset = Vector2(sin(_clock * 83.0), cos(_clock * 61.0)) * amplitude
 		shake_scale = 1.04
 	var total_scale := _zoom_scale * shake_scale
-	_shop.scale = _base_scale * total_scale
-	_shop.position = _base_position + SHOP_CENTER * (1.0 - total_scale) + offset
+	var next_scale := _base_scale * total_scale
+	var next_position := _base_position + SHOP_CENTER * (1.0 - total_scale) + offset
+	var changed: bool = not _shop.scale.is_equal_approx(next_scale) or not _shop.position.is_equal_approx(next_position)
+	_shop.scale = next_scale
+	_shop.position = next_position
+	if changed:
+		view_changed.emit()
